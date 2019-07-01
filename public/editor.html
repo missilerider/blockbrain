@@ -1,0 +1,64 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Module editor</title>
+  <link rel="stylesheet" type="text/css" href="assets/css/stdMenu.css">
+  <script type="text/javascript" src="assets/js/jquery.min.js"></script>
+  <script src="/blockly/blockly_compressed.js"></script>
+  <script src="/blockly/blocks_compressed.js"></script>
+  <script src="/blockly/msg/js/en.js"></script>
+  <script src="/assets/js/blockly_generators.js"></script>
+  <script src="/assets/dyn/blocks.js"></script>
+  <script src="/assets/dyn/toolboxes.js"></script>
+  <script type="application/javascript" src="assets/js/template.js"></script>
+  <script type="application/javascript" src="assets/js/libApi.js"></script>
+  <script type="application/javascript" src="assets/js/editorLogic.js"></script>
+  <script src="/assets/js/jsTree/dist/jstree.min.js"></script>
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      background-color: #fff;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+    h1 {
+      font-weight: normal;
+      font-size: 140%;
+    }
+    table {
+      height: 100%;
+      width: 100%;
+    }
+    #blocklyArea {
+      height: 99%;
+    }
+  </style>
+</head>
+<body>
+  <div id="templateHeader"></div>
+  <div id="editorHeader">
+    <div class="menuL1"><a href="#" id="editorSave">Save</a></div>
+    <div class="menuL1"><a href="#" id="editorRevert">Revert</a></div>
+  </div>
+
+  <table>
+    <tr>
+      <td id="blocklyArea">
+      </td>
+    </tr>
+  </table>
+
+  <div id="blocklyDiv" style="position: absolute"></div>
+
+  <div id="toolboxContainer"></div>
+
+  <div id="templateFooter"></div>
+  <div id="blockLoader" style="visible:none"><xml id="blocks_xml"></xml/></div>
+</body>
+</html>

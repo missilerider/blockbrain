@@ -1,0 +1,20 @@
+{
+  "type": "obj_builder",
+  "message0": "%1 : %2",
+  "args0": [
+    {
+      "type": "field_input",
+      "name": "NAME",
+      "text": "default"
+    },
+    {
+      "type": "input_value",
+      "name": "PROP"
+    }
+  ],
+  "output": null,
+  "colour": 255,
+  "tooltip": "",
+  "helpUrl": "",
+  "mutator": "control_obj_builder"
+}

@@ -1,0 +1,25 @@
+{
+  "type": "obj_set",
+  "message0": "set %1 . %2 to %3",
+  "args0": [
+    {
+      "type": "field_variable",
+      "name": "VAR",
+      "variable": "obj"
+    },
+    {
+      "type": "field_input",
+      "name": "PROPERTY",
+      "text": "property"
+    },
+    {
+      "type": "input_value",
+      "name": "VALUE"
+    }
+  ],
+  "previousStatement": null,
+  "nextStatement": null,
+  "colour": 255,
+  "tooltip": "",
+  "helpUrl": ""
+}

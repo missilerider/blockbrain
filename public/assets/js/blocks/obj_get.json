@@ -1,0 +1,21 @@
+{
+  "type": "obj_get",
+  "message0": "get %1 . %2",
+  "args0": [
+    {
+      "type": "field_variable",
+      "name": "VAR",
+      "variable": "obj"
+    },
+    {
+      "type": "field_input",
+      "name": "PROPERTY",
+      "text": "field"
+    }
+  ],
+  "inputsInline": true,
+  "output": null,
+  "colour": 255,
+  "tooltip": "",
+  "helpUrl": ""
+}

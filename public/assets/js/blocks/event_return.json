@@ -1,0 +1,18 @@
+{
+  "type": "event_return",
+  "message0": "return %1",
+  "args0": [
+    {
+      "type": "input_value",
+      "name": "VAR",
+      "check": [
+        "json",
+        "String"
+      ]
+    }
+  ],
+  "previousStatement": null,
+  "colour": 135,
+  "tooltip": "",
+  "helpUrl": ""
+}

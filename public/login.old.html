@@ -1,0 +1,22 @@
+<html>
+<head>
+<script type="text/javascript">
+var last;
+function onLoad() {
+  var url = new URL(window.location.href);
+  document.getElementById("last").value = url.searchParams.get("last");
+}
+</script>
+</head>
+<body onload="onLoad()">
+  <div>
+  Login
+  </div>
+  <form action="login.run" method="post">
+    <div>Usuario <input type="text" name="user" /></div>
+    <div>Pass <input type="password" name="pwd" /></div>
+    <input type="hidden" name="last" id="last" />
+    <input type="submit" />
+  </form>
+</body>
+</html>

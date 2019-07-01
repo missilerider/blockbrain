@@ -1,0 +1,4 @@
+var obj;
+
+
+obj = inputData;

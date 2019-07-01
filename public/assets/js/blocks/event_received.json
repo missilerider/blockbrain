@@ -1,0 +1,18 @@
+{
+  "type": "event_received",
+  "message0": "on new event received %1 store data in %2",
+  "args0": [
+    {
+      "type": "input_dummy"
+    },
+    {
+      "type": "field_variable",
+      "name": "VAR",
+      "variable": "obj"
+    }
+  ],
+  "nextStatement": null,
+  "colour": 135,
+  "tooltip": "",
+  "helpUrl": ""
+}

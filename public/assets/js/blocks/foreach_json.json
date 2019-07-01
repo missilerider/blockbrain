@@ -1,0 +1,33 @@
+{
+  "type": "foreach_json",
+  "message0": "for each json property %1 value %2 in object  %3 %4 do %5",
+  "args0": [
+    {
+      "type": "field_variable",
+      "name": "PROP",
+      "variable": "prop"
+    },
+    {
+      "type": "field_variable",
+      "name": "VALUE",
+      "variable": "value"
+    },
+    {
+      "type": "field_variable",
+      "name": "OBJ",
+      "variable": "obj"
+    },
+    {
+      "type": "input_dummy"
+    },
+    {
+      "type": "input_statement",
+      "name": "INNERCODE"
+    }
+  ],
+  "previousStatement": null,
+  "nextStatement": null,
+  "colour": 135,
+  "tooltip": "",
+  "helpUrl": ""
+}

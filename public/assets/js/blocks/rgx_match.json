@@ -1,0 +1,39 @@
+{
+  "type": "rgx_match",
+  "message0": "regular expression %1 %2 matches in %3 store results in %4 %5 %6",
+  "args0": [
+    {
+      "type": "field_input",
+      "name": "REGEX",
+      "text": "^.*$"
+    },
+    {
+      "type": "input_dummy"
+    },
+    {
+      "type": "input_value",
+      "name": "TEXT",
+      "check": "String",
+      "align": "RIGHT"
+    },
+    {
+      "type": "field_variable",
+      "name": "RESULTS",
+      "variable": "obj"
+    },
+    {
+      "type": "input_dummy",
+      "align": "RIGHT"
+    },
+    {
+      "type": "input_statement",
+      "name": "FN_BODY"
+    }
+  ],
+  "inputsInline": false,
+  "previousStatement": null,
+  "nextStatement": null,
+  "colour": 160,
+  "tooltip": "Matches if text matches regular expression",
+  "helpUrl": ""
+}
