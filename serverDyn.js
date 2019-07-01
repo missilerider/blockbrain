@@ -139,11 +139,15 @@ async function blocksJs(req, res) {
 async function toolboxesJs(req, res) {
   prepare(res);
 
-  var baseXml = require('fs').readFileSync('public/assets/xml/toolboxBase.xml', 'utf8');
-  var baseJs = xml_js.xml2json(baseXml);
-
   var tbxs = await plugins.getToolboxes(conf);
   var ids = Object.keys(tbxs);
+
+  var baseXml = require('fs').readFileSync('public/assets/xml/toolbox.default.xml', 'utf8');
+  var baseJs = xml_js.xml2json(baseXml);
+
+  baseXml = xml_js.json2xml(baseJs);
+
+  log.dump("js", baseJs);
 
   var ret = "function getToolbox() {\n"
   ret += "return {\n";

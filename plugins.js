@@ -115,17 +115,28 @@ async function getToolboxes(conf) {
 
       var block = data[blockIds[n2]];
 
-      if('toolbox' in block) {
-        var toolboxData;
-        if(block.toolbox != undefined && block.toolbox.toolbox != undefined) {
-          if(!(block.toolbox.toolbox in ret)) ret[toolboxData.toolbox] = {};
+      if('toolbox' in block && 'toolbox' in block.toolbox) {
+        var tbName = block.toolbox.toolbox;
 
-          if(!(toolboxData.toolbox in ret)) ret[toolboxData.toolbox] = [];
-          ret[toolboxData.toolbox].push(blockName);
+        if(!(tbName in ret)) ret[tbName] = {
+          'events': [],
+          'functions': [],
+          'operations':[]
+        };
+
+        switch(block.toolbox.type) {
+          default:
+          case 'event':
+            ret[tbName].events.push(blockName);
+            break;
+          case 'function':
+            ret[tbName].functions.push(blockName);
+            break;
+          case 'operation':
+            ret[tbName].operations.push(blockName);
+            break;
         }
       }
-
-      log.dump(blockName, data[blockIds[n2]]);
     }
   }
   return ret;
