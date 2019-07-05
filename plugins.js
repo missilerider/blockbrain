@@ -108,34 +108,20 @@ async function getToolboxes(conf) {
   var ret = {};
   for(var n=0; n<libIds.length; n++) {
     var lib = blockLibs[libIds[n]];
-    var data = lib.getBlocks();
-    var blockIds = Object.keys(data);
-    for(var n2=0; n2 < blockIds.length; n2++) {
-      var blockName = libIds[n] + "." + blockIds[n2];
+    var data = lib.getToolbox();
 
-      var block = data[blockIds[n2]];
+    var tbIds = Object.keys(data);
 
-      if('toolbox' in block && 'toolbox' in block.toolbox) {
-        var tbName = block.toolbox.toolbox;
+    for(var n2=0; n2 < tbIds.length; n2++) {
+      var tb = data[tbIds[n2]];
+      var tbCatIds = Object.keys(tb);
+      for(var n3=0; n3<tbCatIds.length; n3++) {
+        var tbCat = tb[tbCatIds[n3]];
 
-        if(!(tbName in ret)) ret[tbName] = {
-          'events': [],
-          'functions': [],
-          'operations':[]
-        };
+        if(!(tbIds[n2] in ret)) ret[tbIds[n2]] = {};
+        if(!(ret[tbIds[n2]][tbCatIds[n3]])) ret[tbIds[n2]][tbCatIds[n3]] = [];
 
-        switch(block.toolbox.type) {
-          default:
-          case 'event':
-            ret[tbName].events.push(blockName);
-            break;
-          case 'function':
-            ret[tbName].functions.push(blockName);
-            break;
-          case 'operation':
-            ret[tbName].operations.push(blockName);
-            break;
-        }
+        ret[tbIds[n2]][tbCatIds[n3]].push(tb[tbCatIds[n3]]);
       }
     }
   }

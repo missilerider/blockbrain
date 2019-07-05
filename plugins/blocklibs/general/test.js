@@ -26,7 +26,8 @@ var pushStartBlock = {
   "toolbox": {
     "toolbox": "default",
     "type": "event",
-    "category": "test"
+    "category": "test",
+    "definition": "def1"
   }
 };
 
@@ -55,7 +56,8 @@ var consoleLogBlock = {
   "toolbox": {
     "toolbox": "default",
     "type": "function",
-    "category": "test"
+    "category": "test",
+    "definition": "def2"
   }
 };
 
@@ -70,8 +72,18 @@ function getServices() {
   return {};
 }
 
+function getToolbox() {
+  return {
+    "default": {
+      "events": '<block type="test.pushStart"></block>',
+      "functions": '<block type="test.consoleLog"></block>'
+    }
+  }
+}
+
 module.exports = {
   getInfo: getInfo,
   getBlocks: getBlocks,
-  getServices: getServices
+  getServices: getServices,
+  getToolbox: getToolbox
 }

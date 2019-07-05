@@ -139,27 +139,16 @@ async function blocksJs(req, res) {
 async function toolboxesJs(req, res) {
   prepare(res);
 
-  var baseXml = require('fs').readFileSync('public/assets/xml/toolbox.default.xml', 'utf8');
-
-  var baseJs = JSON.parse(xml_js.xml2json(baseXml, {compact: false, spaces: 0}));
-
-  var tbxs = await plugins.getToolboxes(conf);
-  var ids = Object.keys(tbxs);
-
   var ret = "";
 
-  ret += "function getToolbox(t) {\n";
-  ret += "var ret = '';\n";
-  ret += "switch(t) {\n";
+  var tbs = await plugns.getToolbox();
 
-  for(var n = 0; n < ids.length; n++) {
-    ret += "\tcase '" + ids[n] + "':\n"
-    var tbx = tbxs[ids[n]];
-    ret += "\t\tbreak;\n";
+  var tbsIds = Object.keys(tbs);
+  for(n=0; n < tbsIds.length; n++) {
+    var xml = self.getToolboxXml("default", tbs[tbsIds[n]]);
+    ret += "\n\n\n" + xml;
   }
-  ret += "\t}\n";
-  ret += "return ret;\n";
-  ret += "\n}";
+
   res.send(ret);
 }
 
@@ -169,6 +158,8 @@ async function toolboxesJson(req, res) {
   var tbxs = await plugins.getToolboxes(conf);
   res.send(JSON.stringify(tbxs));
 }
+
+async function getToolboxXml(name, data) {}
 
 module.exports = {
   config: config,
