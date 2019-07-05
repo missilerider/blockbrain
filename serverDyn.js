@@ -139,26 +139,35 @@ async function blocksJs(req, res) {
 async function toolboxesJs(req, res) {
   prepare(res);
 
+  var baseXml = require('fs').readFileSync('public/assets/xml/toolbox.default.xml', 'utf8');
+
+  var baseJs = JSON.parse(xml_js.xml2json(baseXml, {compact: false, spaces: 0}));
+
   var tbxs = await plugins.getToolboxes(conf);
   var ids = Object.keys(tbxs);
 
-  var baseXml = require('fs').readFileSync('public/assets/xml/toolbox.default.xml', 'utf8');
-  var baseJs = xml_js.xml2json(baseXml);
+  var ret = "";
 
-  baseXml = xml_js.json2xml(baseJs);
+  ret += "function getToolbox(t) {\n";
+  ret += "var ret = '';\n";
+  ret += "switch(t) {\n";
 
-  log.dump("js", baseJs);
-
-  var ret = "function getToolbox() {\n"
-  ret += "return {\n";
   for(var n = 0; n < ids.length; n++) {
+    ret += "\tcase '" + ids[n] + "':\n"
     var tbx = tbxs[ids[n]];
-    if(n>0) ret += ",\n";
-    ret += "\"" + ids[n] + "\": ";
-    ret += JSON.stringify(tbx, null, 2);
+    ret += "\t\tbreak;\n";
   }
-  ret += "\n};\n}";
+  ret += "\t}\n";
+  ret += "return ret;\n";
+  ret += "\n}";
   res.send(ret);
+}
+
+async function toolboxesJson(req, res) {
+  prepareJson(res);
+
+  var tbxs = await plugins.getToolboxes(conf);
+  res.send(JSON.stringify(tbxs));
 }
 
 module.exports = {
@@ -167,5 +176,6 @@ module.exports = {
   blockTree: blockTree,
   blocks: blocks,
   blocksJs: blocksJs,
-  toolboxesJs: toolboxesJs
+  toolboxesJs: toolboxesJs,
+  toolboxesJson: toolboxesJson
 };

@@ -162,6 +162,7 @@ app.use('/assets/dyn/blockTree.json', serverDyn.blockTree);
 app.use('/assets/dyn/blocks.js', serverDyn.blocksJs);
 app.use('/assets/dyn/blocks.json', serverDyn.blocks);
 app.use('/assets/dyn/toolboxes.js', serverDyn.toolboxesJs);
+app.use('/assets/dyn/toolboxes.json', serverDyn.toolboxesJson);
 
 app.use('/blockly', express.static('blockly'));
 app.use('/closure-library', express.static('closure-library'));
