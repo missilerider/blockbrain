@@ -23,10 +23,9 @@ function apiGetScript(id, callback) {
   });*/
 }
 
-function apiSaveScript(id, xml, js) {
+function apiSaveScript(id, xml) {
   apiDoPost("block/" + id, {
-		xml: xml,
-		js: js
+		xml: xml
 	}, function(res) {
     console.log("save!");
     console.dir(res);

@@ -28,6 +28,10 @@ var pushStartBlock = {
     "type": "event",
     "category": "test",
     "definition": "def1"
+  },
+  "run": (runtime, params) => {
+    console.log("Start!");
+    runtime.continue("1234");
   }
 };
 
@@ -58,6 +62,9 @@ var consoleLogBlock = {
     "type": "function",
     "category": "test",
     "definition": "def2"
+  },
+  "run": (runtime, params) => {
+
   }
 };
 
@@ -75,8 +82,8 @@ function getServices() {
 function getToolbox() {
   return {
     "default": {
-      "events": '<block type="test.pushStart"></block>',
-      "functions": '<block type="test.consoleLog"></block>'
+      "Events": '<block type="test.pushStart"></block>',
+      "Functions": '<block type="test.consoleLog"></block>'
     }
   }
 }

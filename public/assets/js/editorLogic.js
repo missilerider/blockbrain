@@ -25,9 +25,9 @@ function editorSave() {
   var xml = Blockly.Xml.workspaceToDom(workspace);
   var xmltxt = Blockly.Xml.domToText(xml);
 
-	Blockly.JavaScript.addReservedWords('Generated_Code_Output___');
-	var Generated_Code_Output___ = Blockly.JavaScript.workspaceToCode(workspace);
-  apiSaveScript(id, xmltxt, Generated_Code_Output___);
+	//Blockly.JavaScript.addReservedWords('Generated_Code_Output___');
+	//var Generated_Code_Output___ = Blockly.JavaScript.workspaceToCode(workspace);
+  apiSaveScript(id, xmltxt, "");
 };
 
 function editorRevert() {

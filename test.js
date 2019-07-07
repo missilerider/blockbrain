@@ -1,18 +1,32 @@
-var inputData = {"d1":"v1", "d2":"v2"};
+'use strict';
 
-var obj, prop, value;
+const fs = require('fs');
+const xml2json = require('xml2json');
+global.log = require('./log.js');
+const plugins = require('./plugins.js');
 
-obj = inputData;
-Object.keys(obj).forEach(function (objdata) {
-prop = objdata;value = obj[objdata];
-console.log(prop + " = " + value);
-});
-return;
+plugins.reload();
 
+var context = {
+  "continue": path => {
+    console.log("Ejecuta " + path);
+  },
+  "exit": (code = 0, message = "") => {
+    console.log("termina: " + code + ", " + message);
+  }
+}
 
-Object.keys(obj).forEach(function (objdata) {
-  var prop = objdata;
-  var value = obj[objdata];
+fs.readFile('./vault/1234.xml', function(err, data) {
+  var json = JSON.parse(xml2json.toJson(data, { reversible: false }));
 
-  console.log(prop + " = " + value);
+  json.xml.block.forEach(block => {
+    //console.dir(block);
+    plugins.getBlock(block.type, (err, block) => {
+      if(err) {
+        console.log("Error: " + block);
+      } else {
+        block.run(context, { "test": "1234" });
+      }
+    });
+  });
 });

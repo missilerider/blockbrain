@@ -15,7 +15,7 @@ function injectBlockly(readyCallback) {
   var blocklyDiv = document.getElementById('blocklyDiv');
   var options = {
 //    toolbox : document.getElementById('toolbox'),
-    toolbox: getToolbox(), 
+    toolbox: getToolbox("default"), 
     collapse : true,
     comments : true,
     disable : true,

@@ -27,13 +27,13 @@ function POSTblock(path, query, body) {
   if(path.length < 1) return { code: 404 }; // BlockID unspecified
   var id = path[0];
 
-	if(!body['xml'] || !body['js']) return { code: 399 };
+	if(!body['xml']) return { code: 399 };
 
 	var filename = conf.blocks.path + "/" + id;
 	try {
 		console.log("#" + filename + "#");
 		fs.writeFileSync(filename + ".xml", body.xml);
-		fs.writeFileSync(filename + ".js", body.js);
+//		fs.writeFileSync(filename + ".js", body.js);
 	} catch(e) {
 		console.dir(e.message);
 		return { code: 501, body: { ok: false, error: 1 } };

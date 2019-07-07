@@ -103,6 +103,24 @@ async function getBlocks(conf) {
   return ret;
 }
 
+function getBlock(blockName, callback) {
+  var matches;
+  if(matches = blockName.match(/^([^\.]*)\.(.*)/)) {
+    var libName = matches[1];
+    var blockName = matches[2];
+    if(libName in blockLibs) {
+      let blocks = blockLibs[libName].getBlocks();
+      if(blockName in blocks) {
+        callback(false, blocks[blockName]);
+      } else {
+        callback(true, "Block " + blockName + " does no exist in library " + libName);
+      }
+    } else {
+      callback(true, "Library " + libName + " does not exist");
+    }
+  }
+}
+
 async function getToolboxes(conf) {
   var libIds = Object.keys(blockLibs);
   var ret = {};
@@ -132,5 +150,6 @@ module.exports = {
   reload: reload,
   blockLibs: blockLibs,
   getBlocks: getBlocks,
+  getBlock: getBlock,
   getToolboxes: getToolboxes
 }

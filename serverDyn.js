@@ -2,7 +2,6 @@
 
 var fs = require('fs');
 const log = global.log;
-const xml_js = require('xml-js');
 const jsStringEscape = require('js-string-escape');
 
 var conf;
