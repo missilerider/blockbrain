@@ -1,0 +1,6 @@
+<category name="Events" colour="#5ba56d"></category>
+<category name="Procedures" colour="#5b93a5"></category>
+<sep></sep>
+<category name="Variables" colour="#A65C81" custom="VARIABLE"></category>
+<category name="Functions" colour="#9A5CA6" custom="PROCEDURE"></category>
+</xml>

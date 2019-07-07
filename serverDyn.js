@@ -3,6 +3,7 @@
 var fs = require('fs');
 const log = global.log;
 const xml_js = require('xml-js');
+const jsStringEscape = require('js-string-escape');
 
 var conf;
 var plugins = null;
@@ -136,18 +137,57 @@ async function blocksJs(req, res) {
   res.send(ret);
 }
 
+function genToolbox(part, isDefault = false) {
+  var ret = "";
+  switch(part) {
+    case "header":
+      ret = '<xml xmlns="http://www.w3.org/1999/xhtml" id="toolbox" style="display: none;">';
+      if(isDefault) {
+        ret += fs.readFileSync('./assets/toolbox.default.body.xml', 'utf8');
+      }
+      break;
+
+    case "footer":
+      ret = fs.readFileSync('./assets/toolbox.default.footer.xml', 'utf8');
+      break;
+  }
+
+  return ret;
+}
+
 async function toolboxesJs(req, res) {
   prepare(res);
 
   var ret = "";
 
-  var tbs = await plugns.getToolbox();
+  var tbs = await plugins.getToolboxes(conf);
+
+  ret += "function getToolbox(name) { \
+    switch(name) {\n";
 
   var tbsIds = Object.keys(tbs);
-  for(n=0; n < tbsIds.length; n++) {
-    var xml = self.getToolboxXml("default", tbs[tbsIds[n]]);
-    ret += "\n\n\n" + xml;
+  for(let n=0; n < tbsIds.length; n++) {
+    let tbTxt = "";
+    let tbId = tbsIds[n];
+
+    ret += "case '" + tbId + "': \nreturn \"";
+
+    tbTxt = genToolbox("header", tbId == "default");
+
+    var tbsCIds = Object.keys(tbs[tbId]);
+    for(let n=0; n < tbsCIds.length; n++) {
+      tbTxt += '<category name="' + tbsCIds[n] + '" colour="#000000">';
+      tbTxt += tbs[tbId][tbsCIds[n]];
+      tbTxt += '</category>';
+    }
+    tbTxt += genToolbox("footer", tbId == "default");
+
+    ret += jsStringEscape(tbTxt);
+
+    ret += "\";\n";
   }
+
+  ret += "}\n}";
 
   res.send(ret);
 }
