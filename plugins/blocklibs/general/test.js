@@ -64,7 +64,7 @@ var consoleLogBlock = {
     "definition": "def2"
   },
   "run": async (context) => {
-    console.log("Ejecuta consoleLog con el texto '" + await context.getParam('TXT') + "'");
+    console.log("consoleLog: " + await context.getParam('TXT'));
   }
 };
 

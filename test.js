@@ -6,7 +6,7 @@ if(global.log == undefined)
   global.log = require('./log.js');
 
 const log = global.log;
-log.setLogLevel("WARNING");
+log.setLogLevel("DEBUG");
 const plugins = require('./plugins.js');
 
 plugins.reload();
@@ -32,7 +32,6 @@ function findStatement(block, statementName) {
 }
 
 async function contextContinue(nextStatement) {
-  console.log(this.this.block.type + " ejecuta siguiente Statement: " + nextStatement);
   var newBlock  = null;
   try {
     newBlock = findStatement(this.program, nextStatement);
@@ -41,11 +40,21 @@ async function contextContinue(nextStatement) {
     return;
   }
   while(newBlock != null) {
-    var codeBlock = plugins.getBlockSync(newBlock.block.type);
+    var codeBlock;
+
+    try {
+      codeBlock = plugins.getBlockSync(newBlock.block.type);
+    } catch {
+      console.log("Block type not found:");
+      console.dir(newBlock.block);
+      throw new Error("Block not found: " + newBlock.block.type)
+    }
     let context = {
       continue: contextContinue,
       exit: contextExit,
       getParam: contextGetParam,
+      getField: contextGetField,
+      getValue: contextGetValue,
       program: newBlock.block,
       this: codeBlock
     };
@@ -82,7 +91,14 @@ async function contextGetParam(name) {
 }
 
 async function contextExecValue(val) {
-  var codeBlock = plugins.getBlockSync(val.type);
+  var codeBlock;
+  try {
+    codeBlock = plugins.getBlockSync(val.type);
+  } catch {
+    console.log("Block type not found:");
+    console.dir(val);
+    throw new Error("Block not found: " + val.type)
+  }
   var context = {
     execValue: contextExecValue,
     findName: contextFindName,
@@ -144,13 +160,17 @@ fs.readFile('./vault/1234.xml', function(err, data) {
           exit: contextExit,
           getParam: contextGetParam,
           getField: contextGetField,
-          findName: contextFindName,
+//          findName: contextFindName,
           program: block,
           this: codeBlock
         };
 
         codeBlock.run(context);
       }
+    }).then().catch(() => {
+      console.log("Block type not found:");
+      console.dir(block);
+      throw new Error("Block not found: " + block.type)
     });
   });
 });

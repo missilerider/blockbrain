@@ -125,7 +125,7 @@ async function getBlocks(conf) {
   return ret;
 }
 
-function getBlock(blockName, callback) {
+async function getBlock(blockName, callback) {
   var matches;
   if(matches = blockName.match(/^([^\.]*)\.(.*)/)) {
     var libName = matches[1];
@@ -143,6 +143,8 @@ function getBlock(blockName, callback) {
   } else {
     // No dot in name: default operator
     if(blockName in defaultLib) {
+      console.log("Default block: " + blockName);
+      console.dir(defaultLib[blockName]);
       callback(false, defaultLib[blockName]);
     } else {
       callback(true, "Block " + blockName + " does no exist in default library");
@@ -151,6 +153,7 @@ function getBlock(blockName, callback) {
 }
 
 function getBlockSync(blockName) {
+  console.log("11" +  blockName);
   var matches;
   if(matches = blockName.match(/^([^\.]*)\.(.*)/)) {
     var libName = matches[1];
@@ -166,9 +169,12 @@ function getBlockSync(blockName) {
       throw new Error("Library " + libName + " does not exist");
     }
   } else {
+    console.log("22" + blockName);
     // No dot in name: default operator
     if(blockName in defaultLib) {
-      return defaultLib[blockName];
+      log.dump("default", blockName);
+      var ret = defaultLib[blockName];
+      return ret;
     } else {
       throw new Error("Block " + blockName + " does no exist in default library");
     }
@@ -205,6 +211,6 @@ module.exports = {
   blockLibs: blockLibs,
   getBlocks: getBlocks,
   getBlock: getBlock,
-  getBlockSync: getBlockSync, 
+  getBlockSync: getBlockSync,
   getToolboxes: getToolboxes
 }

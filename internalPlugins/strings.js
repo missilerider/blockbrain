@@ -1,5 +1,6 @@
+const log = global.log;
+
 async function text(context) {
-  //return context.program.field['$t'];
   return context.getField("TEXT");
 }
 
@@ -86,10 +87,19 @@ async function text_trim(context) {
   }
 }
 
+async function text_print(context) {
+  var value  = await context.getValue("TEXT");
+  var logLevel = log.getLogLevel();
+  log.setLogLevel("INFO");
+  log.i(value);
+  log.setLogLevel(logLevel);
+}
+
 module.exports = {
   "text": { run: text },
   "text_join": { run: text_join },
   "text_charAt": { run: text_charAt },
   "text_changeCase": { run: text_changeCase },
-  "text_trim": { run: text_trim }
+  "text_trim": { run: text_trim },
+  "text_print": { run: text_print }
 }

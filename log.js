@@ -29,6 +29,11 @@ function setLogLevel(newLevel) {
   }
 }
 
+function getLogLevel(newLevel) {
+  const levels = [ "NONE", "FATAL", "ERROR", "WARNING", "INFO", "DEBUG" ];
+  return levels[logLevel];
+}
+
 function dump(v, d) { if(logLevel >= 5) doLog(v + " = " + JSON.stringify(d, null, 2), "DUMP"); }
 function d(t) { if(logLevel >= 5) doLog(t, "DEBUG"); }
 function i(t) { if(logLevel >= 4) doLog(t, "INFO"); }
@@ -38,6 +43,7 @@ function f(t) { if(logLevel >= 1) doLog(t, "FATAL"); }
 
 module.exports = {
   setLogLevel: setLogLevel,
+  getLogLevel: getLogLevel,
   dump: dump,
   d: d,
   i: i,
