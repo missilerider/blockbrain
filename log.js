@@ -14,11 +14,16 @@ function doLog(t, context) {
 function setLogLevel(newLevel) {
   switch(newLevel) {
     case "NONE": logLevel = 0; break;
+    case "F":
     case "FATAL": logLevel = 1; break;
+    case "E":
     case "ERROR": logLevel = 2; break;
+    case "W":
     case "WARN":
     case "WARNING": logLevel = 3; break;
+    case "I":
     case "INFO": logLevel = 4; break;
+    case "D":
     case "DEBUG": logLevel = 5; break;
     default: doLog("Incorrect log level: " + newLevel, "WARN");
   }
@@ -32,6 +37,7 @@ function e(t) { if(logLevel >= 2) doLog(t, "ERROR"); }
 function f(t) { if(logLevel >= 1) doLog(t, "FATAL"); }
 
 module.exports = {
+  setLogLevel: setLogLevel,
   dump: dump,
   d: d,
   i: i,

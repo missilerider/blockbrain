@@ -2,30 +2,154 @@
 
 const fs = require('fs');
 const xml2json = require('xml2json');
-global.log = require('./log.js');
+if(global.log == undefined)
+  global.log = require('./log.js');
+
+const log = global.log;
+log.setLogLevel("WARNING");
 const plugins = require('./plugins.js');
 
 plugins.reload();
 
-var context = {
-  "continue": path => {
-    console.log("Ejecuta " + path);
-  },
-  "exit": (code = 0, message = "") => {
-    console.log("termina: " + code + ", " + message);
+function findStatement(block, statementName) {
+  if('statement' in block) {
+    var sts;
+    if(!Array.isArray(block.statement)) {
+      sts = [ block.statement ];
+    } else {
+      sts = block.statement;
+    }
+    for(let n = 0; n < sts.length; n++) {
+      if(sts[n].name == statementName)
+        return sts[n];
+    }
+    log.e("Statement " + statementName + " not found but requested by node " + block.name);
+    return null; // Statement not found!
+  } else {
+    log.e("Block " + block.name + " does not have statements. Requested " + statementName + ".");
+    return null; // No statements to look for
   }
 }
 
-fs.readFile('./vault/1234.xml', function(err, data) {
-  var json = JSON.parse(xml2json.toJson(data, { reversible: false }));
+async function contextContinue(nextStatement) {
+  console.log(this.this.block.type + " ejecuta siguiente Statement: " + nextStatement);
+  var newBlock  = null;
+  try {
+    newBlock = findStatement(this.program, nextStatement);
+  } catch {
+    log.i("Execution stops due to error");
+    return;
+  }
+  while(newBlock != null) {
+    var codeBlock = plugins.getBlockSync(newBlock.block.type);
+    let context = {
+      continue: contextContinue,
+      exit: contextExit,
+      getParam: contextGetParam,
+      program: newBlock.block,
+      this: codeBlock
+    };
 
-  json.xml.block.forEach(block => {
-    //console.dir(block);
-    plugins.getBlock(block.type, (err, block) => {
+    await codeBlock.run(context);
+    if('next' in newBlock.block) {
+      newBlock = newBlock.block.next;
+    } else {
+      newBlock = null;
+    }
+  }
+}
+
+function contextExit(code = 0, message = "") {
+  console.log("Termina manualmente la ejecucion: " + code + ", " + message);
+}
+
+async function contextGetParam(name) {
+  var values;
+  if(Array.isArray(this.program.value)) {
+    values = this.program.value;
+  } else {
+    values = [ this.program.value ];
+  }
+
+  for(let n = 0; n < values.length; n++) {
+    if(values[n].name == name) {
+      var ret = await contextExecValue(values[n].block);
+      return ret;
+    }
+  }
+  log.e("Node does not contain value named " + name);
+  throw new Error("Node does not contain value named " + name);
+}
+
+async function contextExecValue(val) {
+  var codeBlock = plugins.getBlockSync(val.type);
+  var context = {
+    execValue: contextExecValue,
+    findName: contextFindName,
+    getField: contextGetField,
+    getValue: contextGetValue,
+    program: val,
+    this: codeBlock
+  };
+  return await codeBlock.run(context);
+}
+
+function contextFindName(obj, name) {
+  var data;
+  if(Array.isArray(obj)) {
+    data = obj;
+  } else {
+    data = [ obj ];
+  }
+
+  for(let n = 0; n < data.length; n++) {
+    if(data[n].name == name) return data[n];
+  }
+  return null;
+}
+
+function contextGetField(name) {
+  return contextFindName(this.program.field, name)['$t'];
+}
+
+async function contextGetValue(name) {
+  var valueBlock = contextFindName(this.program.value, name);
+  if('block' in valueBlock)
+    return await contextExecValue(valueBlock.block);
+  else if('shadow' in valueBlock)
+    return await contextExecValue(valueBlock.shadow);
+
+    log.e("Value not found: " + name);
+  throw new Error("Value not found!");
+}
+
+fs.readFile('./vault/1234.xml', function(err, data) {
+  var json = JSON.parse(xml2json.toJson(data, { reversible: false, trim: false }));
+
+  var blocks;
+  if(Array.isArray(json.xml.block)) {
+    blocks = json.xml.block;
+  } else {
+    blocks = [ json.xml.block ];
+  }
+
+  // Root elements
+  blocks.forEach(block => {
+    plugins.getBlock(block.type, async (err, codeBlock) => {
       if(err) {
-        console.log("Error: " + block);
+        console.log("Error: " + codeBlock);
       } else {
-        block.run(context, { "test": "1234" });
+        let context = {
+          continue: contextContinue,
+          exit: contextExit,
+          getParam: contextGetParam,
+          getField: contextGetField,
+          findName: contextFindName,
+          program: block,
+          this: codeBlock
+        };
+
+        codeBlock.run(context);
       }
     });
   });

@@ -6,71 +6,93 @@ const log = global.log;
 
 
 var blockLibs = {};
+var defaultLib = {};
 
 async function reload() {
   blockLibs = {};
   log.d("Inicia carga de plugins");
+  await defaultPlugins('./internalPlugins');
   await reloadPlugins('./plugins');
   log.d("reloadPlugins: " + JSON.stringify(Object.keys(blockLibs)));
   log.d(blockLibs);
 }
 
+async function defaultPlugins(dirname) {
+  var files = fs.readdirSync(dirname);
+  var fk = Object.keys(files);
+  for(var fn = 0; fn < fk.length; fn++) {
+    var file = files[fk[fn]];
+    var fromPath = path.join(dirname, file);
+    var toPath = path.join(dirname, file);
+
+    var stat = fs.statSync(fromPath);
+
+    if(stat.isFile()) {
+      try {
+        log.i("Reads file " + fromPath);
+        var lib = require('./' + fromPath);
+
+        var blocks = Object.keys(lib);
+
+        for(let n = 0; n < blocks.length; n++) {
+          defaultLib[blocks[n]] = lib[blocks[n]];
+        }
+      } catch(e) {
+        log.e("Error while loading default plugin from " + fromPath);
+        log.d(e.toString() + "(" + e.code + ")");
+        log.d("Stack " + fromPath + ": \n" + e.stack);
+      }
+    } else if(stat.isDirectory()) {
+      await defaultPlugins(fromPath);
+    }
+  }
+}
+
 async function reloadPlugins(dirname) {
   log.i("Reads directory " + dirname);
 
-  var files = fs.readdirSync(dirname);//, function (err, files) {
-/*    if (err) {
-      log.e("Could not list directory " + dirname);
-      return;
-    }*/
+  var files = fs.readdirSync(dirname);
 
-    var fk = Object.keys(files);
-    for(var fn = 0; fn < fk.length; fn++) {
-      //files.forEach(async function (file, index) {
-      var file = files[fk[fn]];
-      var fromPath = path.join(dirname, file);
-      var toPath = path.join(dirname, file);
+  var fk = Object.keys(files);
+  for(var fn = 0; fn < fk.length; fn++) {
+    //files.forEach(async function (file, index) {
+    var file = files[fk[fn]];
+    var fromPath = path.join(dirname, file);
+    var toPath = path.join(dirname, file);
 
-      var stat = fs.statSync(fromPath);//, async function (err, stat) {
-/*        if (err) {
-          log.e("Could not read file " + fromPath);
-          return;
-        }*/
+    var stat = fs.statSync(fromPath);
 
-        if(stat.isFile()) {
-          try {
-            log.i("Reads file " + fromPath);
-            var lib = require('./' + fromPath);
+    if(stat.isFile()) {
+      try {
+        log.i("Reads file " + fromPath);
+        var lib = require('./' + fromPath);
 
-            var methods = Object.keys(lib);
+        var methods = Object.keys(lib);
 
-            log.dump("lib", lib);
-            log.dump("methods", methods);
+        log.dump("lib", lib);
+        log.dump("methods", methods);
 
-            if(!('getInfo' in lib)) {
-              log.e("Module " + fromPath + ". Incorrect methods");
-            } else {
-              var info = lib.getInfo();
-              log.dump("getInfo", info);
-              if(info.id != null) {
-                blockLibs[info.id] = lib;
-                log.d("Loaded library '" + info.name + "':'" + info.id + "' from " + fromPath);
-                log.d(lib);
-              }
-            }
-          } catch(e) {
-            log.e("Error while loading plugin from " + fromPath);
-            log.d(e.toString() + "(" + e.code + ")");
-            log.d("Stack " + fromPath + ": \n" + e.stack);
+        if(!('getInfo' in lib)) {
+          log.e("Module " + fromPath + ". Incorrect methods");
+        } else {
+          var info = lib.getInfo();
+          log.dump("getInfo", info);
+          if(info.id != null) {
+            blockLibs[info.id] = lib;
+            log.d("Loaded library '" + info.name + "':'" + info.id + "' from " + fromPath);
+            log.d(lib);
           }
-
-        } else if(stat.isDirectory()) {
-          await reloadPlugins(fromPath);
         }
-//      });
+      } catch(e) {
+        log.e("Error while loading plugin from " + fromPath);
+        log.d(e.toString() + "(" + e.code + ")");
+        log.d("Stack " + fromPath + ": \n" + e.stack);
+      }
+
+    } else if(stat.isDirectory()) {
+      await reloadPlugins(fromPath);
     }
-//    });
-//  });
+  }
 }
 
 async function getBlocks(conf) {
@@ -118,6 +140,38 @@ function getBlock(blockName, callback) {
     } else {
       callback(true, "Library " + libName + " does not exist");
     }
+  } else {
+    // No dot in name: default operator
+    if(blockName in defaultLib) {
+      callback(false, defaultLib[blockName]);
+    } else {
+      callback(true, "Block " + blockName + " does no exist in default library");
+    }
+  }
+}
+
+function getBlockSync(blockName) {
+  var matches;
+  if(matches = blockName.match(/^([^\.]*)\.(.*)/)) {
+    var libName = matches[1];
+    var blockName = matches[2];
+    if(libName in blockLibs) {
+      let blocks = blockLibs[libName].getBlocks();
+      if(blockName in blocks) {
+        return blocks[blockName];
+      } else {
+        throw new Error("Block " + blockName + " does no exist in library " + libName);
+      }
+    } else {
+      throw new Error("Library " + libName + " does not exist");
+    }
+  } else {
+    // No dot in name: default operator
+    if(blockName in defaultLib) {
+      return defaultLib[blockName];
+    } else {
+      throw new Error("Block " + blockName + " does no exist in default library");
+    }
   }
 }
 
@@ -151,5 +205,6 @@ module.exports = {
   blockLibs: blockLibs,
   getBlocks: getBlocks,
   getBlock: getBlock,
+  getBlockSync: getBlockSync, 
   getToolboxes: getToolboxes
 }

@@ -29,9 +29,9 @@ var pushStartBlock = {
     "category": "test",
     "definition": "def1"
   },
-  "run": (runtime, params) => {
-    console.log("Start!");
-    runtime.continue("1234");
+  "run": async (context) => {
+    console.log("Ejecucion de pushStart");
+    context.continue("CMD");
   }
 };
 
@@ -63,8 +63,8 @@ var consoleLogBlock = {
     "category": "test",
     "definition": "def2"
   },
-  "run": (runtime, params) => {
-
+  "run": async (context) => {
+    console.log("Ejecuta consoleLog con el texto '" + await context.getParam('TXT') + "'");
   }
 };
 
