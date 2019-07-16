@@ -13,8 +13,6 @@ async function reload() {
   log.d("Inicia carga de plugins");
   await defaultPlugins('./internalPlugins');
   await reloadPlugins('./plugins');
-  log.d("reloadPlugins: " + JSON.stringify(Object.keys(blockLibs)));
-  log.d(blockLibs);
 }
 
 async function defaultPlugins(dirname) {
@@ -69,18 +67,13 @@ async function reloadPlugins(dirname) {
 
         var methods = Object.keys(lib);
 
-        log.dump("lib", lib);
-        log.dump("methods", methods);
-
         if(!('getInfo' in lib)) {
           log.e("Module " + fromPath + ". Incorrect methods");
         } else {
           var info = lib.getInfo();
-          log.dump("getInfo", info);
           if(info.id != null) {
             blockLibs[info.id] = lib;
             log.d("Loaded library '" + info.name + "':'" + info.id + "' from " + fromPath);
-            log.d(lib);
           }
         }
       } catch(e) {
@@ -153,7 +146,6 @@ async function getBlock(blockName, callback) {
 }
 
 function getBlockSync(blockName) {
-  console.log("11" +  blockName);
   var matches;
   if(matches = blockName.match(/^([^\.]*)\.(.*)/)) {
     var libName = matches[1];
@@ -169,10 +161,8 @@ function getBlockSync(blockName) {
       throw new Error("Library " + libName + " does not exist");
     }
   } else {
-    console.log("22" + blockName);
     // No dot in name: default operator
     if(blockName in defaultLib) {
-      log.dump("default", blockName);
       var ret = defaultLib[blockName];
       return ret;
     } else {

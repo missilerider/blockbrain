@@ -7,6 +7,7 @@ $(function() {
 
   loadTemplate();
   loadToolbox(function() {
+    Blockly.Variables.getOrCreateVariablePackage(workspace, null, 'msg', 'json');
     createCustomBlockly();
 
     apiGetScript(id, function(xml) {

@@ -6,6 +6,12 @@ function getInfo(env) {
   }
 }
 
+function sleep(ms){
+    return new Promise(resolve=>{
+        setTimeout(resolve,ms)
+    })
+}
+
 var pushStartBlock = {
   "block": {
     "type": "pushstart",
@@ -31,7 +37,8 @@ var pushStartBlock = {
   },
   "run": async (context) => {
     console.log("Ejecucion de pushStart");
-    context.continue("CMD");
+    console.dir(context.getMsg());
+    return await context.continue(context, "CMD");
   }
 };
 
@@ -64,7 +71,7 @@ var consoleLogBlock = {
     "definition": "def2"
   },
   "run": async (context) => {
-    console.log("consoleLog: " + await context.getParam('TXT'));
+    console.log("consoleLog: " + await context.getParam(context, 'TXT'));
   }
 };
 

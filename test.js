@@ -8,169 +8,29 @@ if(global.log == undefined)
 const log = global.log;
 log.setLogLevel("DEBUG");
 const plugins = require('./plugins.js');
+const executor = require('./executor.js');
 
-plugins.reload();
+async function main() {
+  await plugins.reload();
 
-function findStatement(block, statementName) {
-  if('statement' in block) {
-    var sts;
-    if(!Array.isArray(block.statement)) {
-      sts = [ block.statement ];
-    } else {
-      sts = block.statement;
+  executor.config({
+    plugins: plugins
+  })
+
+  var data = fs.readFileSync('./vault/1234.xml');
+
+  var execs = await executor.executeProgram(data, {
+    nodeTypeFilter: null,
+    msg: {
+      topic: "test",
+      payload: "contenido de prueba"
     }
-    for(let n = 0; n < sts.length; n++) {
-      if(sts[n].name == statementName)
-        return sts[n];
-    }
-    log.e("Statement " + statementName + " not found but requested by node " + block.name);
-    return null; // Statement not found!
-  } else {
-    log.e("Block " + block.name + " does not have statements. Requested " + statementName + ".");
-    return null; // No statements to look for
-  }
-}
-
-async function contextContinue(nextStatement) {
-  var newBlock  = null;
-  try {
-    newBlock = findStatement(this.program, nextStatement);
-  } catch {
-    log.i("Execution stops due to error");
-    return;
-  }
-  while(newBlock != null) {
-    var codeBlock;
-
-    try {
-      codeBlock = plugins.getBlockSync(newBlock.block.type);
-    } catch {
-      console.log("Block type not found:");
-      console.dir(newBlock.block);
-      throw new Error("Block not found: " + newBlock.block.type)
-    }
-    let context = {
-      continue: contextContinue,
-      exit: contextExit,
-      getParam: contextGetParam,
-      getField: contextGetField,
-      getValue: contextGetValue,
-      program: newBlock.block,
-      this: codeBlock
-    };
-
-    await codeBlock.run(context);
-    if('next' in newBlock.block) {
-      newBlock = newBlock.block.next;
-    } else {
-      newBlock = null;
-    }
-  }
-}
-
-function contextExit(code = 0, message = "") {
-  console.log("Termina manualmente la ejecucion: " + code + ", " + message);
-}
-
-async function contextGetParam(name) {
-  var values;
-  if(Array.isArray(this.program.value)) {
-    values = this.program.value;
-  } else {
-    values = [ this.program.value ];
-  }
-
-  for(let n = 0; n < values.length; n++) {
-    if(values[n].name == name) {
-      var ret = await contextExecValue(values[n].block);
-      return ret;
-    }
-  }
-  log.e("Node does not contain value named " + name);
-  throw new Error("Node does not contain value named " + name);
-}
-
-async function contextExecValue(val) {
-  var codeBlock;
-  try {
-    codeBlock = plugins.getBlockSync(val.type);
-  } catch {
-    console.log("Block type not found:");
-    console.dir(val);
-    throw new Error("Block not found: " + val.type)
-  }
-  var context = {
-    execValue: contextExecValue,
-    findName: contextFindName,
-    getField: contextGetField,
-    getValue: contextGetValue,
-    program: val,
-    this: codeBlock
-  };
-  return await codeBlock.run(context);
-}
-
-function contextFindName(obj, name) {
-  var data;
-  if(Array.isArray(obj)) {
-    data = obj;
-  } else {
-    data = [ obj ];
-  }
-
-  for(let n = 0; n < data.length; n++) {
-    if(data[n].name == name) return data[n];
-  }
-  return null;
-}
-
-function contextGetField(name) {
-  return contextFindName(this.program.field, name)['$t'];
-}
-
-async function contextGetValue(name) {
-  var valueBlock = contextFindName(this.program.value, name);
-  if('block' in valueBlock)
-    return await contextExecValue(valueBlock.block);
-  else if('shadow' in valueBlock)
-    return await contextExecValue(valueBlock.shadow);
-
-    log.e("Value not found: " + name);
-  throw new Error("Value not found!");
-}
-
-fs.readFile('./vault/1234.xml', function(err, data) {
-  var json = JSON.parse(xml2json.toJson(data, { reversible: false, trim: false }));
-
-  var blocks;
-  if(Array.isArray(json.xml.block)) {
-    blocks = json.xml.block;
-  } else {
-    blocks = [ json.xml.block ];
-  }
-
-  // Root elements
-  blocks.forEach(block => {
-    plugins.getBlock(block.type, async (err, codeBlock) => {
-      if(err) {
-        console.log("Error: " + codeBlock);
-      } else {
-        let context = {
-          continue: contextContinue,
-          exit: contextExit,
-          getParam: contextGetParam,
-          getField: contextGetField,
-//          findName: contextFindName,
-          program: block,
-          this: codeBlock
-        };
-
-        codeBlock.run(context);
-      }
-    }).then().catch(() => {
-      console.log("Block type not found:");
-      console.dir(block);
-      throw new Error("Block not found: " + block.type)
-    });
   });
-});
+
+  console.dir(execs);
+  console.log("Espera ejecuciones");
+  console.dir(await Promise.all(execs));
+  console.log("FIN de fin");
+}
+
+main();

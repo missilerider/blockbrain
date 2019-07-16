@@ -1,30 +1,30 @@
 const log = global.log;
 
 async function text(context) {
-  return context.getField("TEXT");
+  return context.getField(context, "TEXT");
 }
 
 async function text_join(context) {
-  var mut = parseInt(context.program.mutation.items);
+  var mut = parseInt(context.getProgram().mutation.items);
   var ret = "";
   for(let n = 0; n < mut; n++) {
     //ret += await context.execValue(context.program.value[n].block);
-    ret += await context.getValue("ADD" + n);
+    ret += await context.getValue(context, "ADD" + n);
   }
   return ret;
 }
 
 async function text_charAt(context) {
-  var where = context.getField("WHERE");
-  var value  = await context.getValue("VALUE");
+  var where = context.getField(context, "WHERE");
+  var value  = await context.getValue(context, "VALUE");
 
   switch(where) {
     case 'FROM_START':
-      var at = await context.getValue("AT");
+      var at = await context.getValue(context, "AT");
       return value.charAt(at);
 
     case 'FROM_END':
-      var at = await context.getValue("AT");
+      var at = await context.getValue(context, "AT");
       return value.charAt(value.length - at - 1);
 
     case 'FIRST':
@@ -44,8 +44,8 @@ async function text_charAt(context) {
 }
 
 async function text_changeCase(context) {
-  var optionCase = context.getField("CASE");
-  var value  = await context.getValue("TEXT");
+  var optionCase = context.getField(context, "CASE");
+  var value  = await context.getValue(context, "TEXT");
 
   switch(optionCase) {
     case "UPPERCASE":
@@ -68,8 +68,8 @@ async function text_changeCase(context) {
 }
 
 async function text_trim(context) {
-  var mode = context.getField("MODE");
-  var value  = await context.getValue("TEXT");
+  var mode = context.getField(context, "MODE");
+  var value  = await context.getValue(context, "TEXT");
 
   switch(mode) {
     case "BOTH":
@@ -88,7 +88,7 @@ async function text_trim(context) {
 }
 
 async function text_print(context) {
-  var value  = await context.getValue("TEXT");
+  var value  = await context.getValue(context, "TEXT");
   var logLevel = log.getLogLevel();
   log.setLogLevel("INFO");
   log.i(value);
