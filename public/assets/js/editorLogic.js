@@ -7,8 +7,9 @@ $(function() {
 
   loadTemplate();
   loadToolbox(function() {
+    //Blockly.Variables.predefinedVars.push("msg");
 //    Blockly.Variables.getOrCreateVariablePackage(workspace, null, 'msg', 'json');
-    
+
     createCustomBlockly();
 
     apiGetScript(id, function(xml) {

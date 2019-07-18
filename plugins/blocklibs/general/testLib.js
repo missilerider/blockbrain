@@ -6,12 +6,6 @@ function getInfo(env) {
   }
 }
 
-function sleep(ms){
-    return new Promise(resolve=>{
-        setTimeout(resolve,ms)
-    })
-}
-
 var pushStartBlock = {
   "block": {
     "type": "pushstart",

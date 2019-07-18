@@ -80,8 +80,6 @@ function contextExit(code = 0, message = "") {
 
 async function contextGetParam(context, name) {
   var values;
-  console.log("progrtama: " + name);
-  console.dir(program);
   if(Array.isArray(program.value)) {
     values = program.value;
   } else {
@@ -189,7 +187,7 @@ function prepare(options) {
   plugins = options.plugins;
   program = options.program;
   block = options.block;
-  msg = options.msg;
+  vars["msg"] = options.msg;
 }
 
 function clone2(context, options) {
