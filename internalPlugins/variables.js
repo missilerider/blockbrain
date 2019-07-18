@@ -2,14 +2,13 @@ async function variables_set(context) {
   var varName = context.getField(context, "VAR");
   var varValue = await context.getValue(context, "VALUE");
 
-  context.setVar(varName, varValue);
+  context.setVar(context, varName, varValue);
 }
 
 async function variables_get(context) {
   var varName = context.getField(context, "VAR");
 
-  console.dir(context.var);
-  return context.getVar(varName);
+  return context.getVar(context, varName);
 }
 
 module.exports = {

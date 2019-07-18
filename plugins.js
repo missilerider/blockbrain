@@ -60,7 +60,7 @@ async function reloadPlugins(dirname) {
 
     var stat = fs.statSync(fromPath);
 
-    if(stat.isFile()) {
+    if(stat.isFile() && fromPath.match(/.*\.js/)) {
       try {
         log.i("Reads file " + fromPath);
         var lib = require('./' + fromPath);

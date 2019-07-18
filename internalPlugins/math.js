@@ -23,11 +23,39 @@ async function math_change(context) {
 
   log.d(varName + " += " + delta);
 
-  context.setVar(varName, context.getVar(varName) + delta);
+  context.setVar(context, varName, context.getVar(context, varName) + delta);
+}
+
+async function math_modulo(context) {
+  var dividend = parseFloat(await context.getValue(context, "DIVIDEND"));
+  var divisor = parseFloat(await context.getValue(context, "DIVISOR"));
+
+  return dividend % divisor;
+}
+
+async function math_single(context) {
+  var op = parseFloat(context.getField(context, "OP"));
+  var num = parseFloat(await context.getValue(context, "NUM"));
+  log.dump("op", op);
+  log.dump("num", num);
+
+  switch(op) {
+    case "ROOT": return Math.sqrt(num);
+    case "ABS": return Math.abs(num);
+    case "NEG": return -1 * num;
+    case "LN": return Math.log(num);
+    case "LOG10": return Math.log10(num);
+    case "EXP": return Math.exp(num);
+    case "POW10": return Math.pow(10, num);
+  }
+
+  return num;
 }
 
 module.exports = {
   "math_number": { run: math_number },
   "math_arithmetic": { run: math_arithmetic },
-  "math_change": { run: math_change }
+  "math_change": { run: math_change },
+  math_modulo: { run: math_modulo },
+  math_single: { run: math_single }
 }

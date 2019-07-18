@@ -31,7 +31,7 @@ function findStatement(block, statementName) {
   }
 }
 
-async function contextContinue(nextStatement) {
+async function contextContinue(context, nextStatement) {
   var newBlock  = null;
   var lastRet = undefined;
   try {

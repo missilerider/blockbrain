@@ -113,19 +113,16 @@ function cleanVarName(varName) {
   return varName;
 }
 
-function contextGetVar(varName) {
+function contextGetVar(context, varName) {
   log.d("getVar(" + varName + ")");
   var v = cleanVarName(varName);
-  console.dir(this.var);
-  return this.var[v];
+  return vars[v];
 }
 
-function contextSetVar(varName, newValue) {
+function contextSetVar(context, varName, newValue) {
   log.d("setVar(" + varName + ")");
   var v = cleanVarName(varName);
-  //log.dump("SetVar", this.var);
-  this.var[v] = newValue;
-  //log.dump("SetVar", this.var);
+  vars[v] = newValue;
 }
 
 async function contextExecValue(context, val) {
