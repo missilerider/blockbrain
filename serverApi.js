@@ -3,43 +3,58 @@
 var fs = require('fs');
 const log = global.log;
 
+var blocks = require('./serverApi/blocks.js');
+var services = require('./serverApi/services.js');
+
 var conf;
+var plugins;
 
-function config(config) {
-  conf = config;
+function config(params) {
+  conf = params.config;
+  plugins = params.plugins;
 }
 
-function GETblock(path, query) {
-  if(path.length < 1) return { code: 404 }; // BlockID unspecified
-  var id = path[0];
+async function _dispatcher(req, res, next) {
+  ret = await dispatcher(req, res, next);
 
-  var filename = conf.blocks.path + "/" + id + ".xml";
-	console.log(filename);
-  if(fs.existsSync(filename)) {
-    var data = fs.readFileSync(filename, "utf8");
-    return { code: 200, type: "application/xml; charset=utf-8", body: data };
-  } else {
-    return { code: 404 }
+  res.type('application/json');
+
+  res.json(ret);
+}
+
+async function dispatcher(req, res, next) {
+  log.d("API: " + req.method + " " + req._parsedUrl.pathname);
+  var path = req._parsedUrl.pathname.split("/");
+  path.shift(); // ""
+  path.shift(); // "api"
+  path.shift(); // "v1"
+
+  res.type('application/json');
+
+  if(path.length < 1) {
+    res.json({ code: 404 });
+    return;
   }
+
+  let data = {
+    preparexml: () => { res.type("application/xml; charset=utf-8"); },
+    req: req,
+    res: res,
+    next: next,
+    config: conf,
+    plugins: plugins, 
+    path: path
+  }
+
+  switch(path[0]) {
+    case "blocks": return blocks.dispatcher(data);
+    case "services": return services.dispatcher(data);
+  }
+
+  res.json({ code: 404 });
 }
 
-function POSTblock(path, query, body) {
-  if(path.length < 1) return { code: 404 }; // BlockID unspecified
-  var id = path[0];
 
-	if(!body['xml']) return { code: 399 };
-
-	var filename = conf.blocks.path + "/" + id;
-	try {
-		console.log("#" + filename + "#");
-		fs.writeFileSync(filename + ".xml", body.xml);
-//		fs.writeFileSync(filename + ".js", body.js);
-	} catch(e) {
-		console.dir(e.message);
-		return { code: 501, body: { ok: false, error: 1 } };
-	}
-  return { code: 200, body: { ok: true } };
-}
 
 function GETlocal(path, query) {
   return { code: 400, body: "Funcion GETlocal no definida" };
@@ -62,12 +77,5 @@ function GETping(path, query) {
 
 module.exports = {
   config: config,
-  GET: {
-    block: GETblock,
-    local: GETlocal,
-    ping: GETping
-  },
-  POST: {
-    block: POSTblock
-  }
+  dispatcher: dispatcher,
 };

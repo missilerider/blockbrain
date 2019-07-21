@@ -17,14 +17,14 @@ function apiDoPost(method, data, callback) {
 }
 
 function apiGetScript(id, callback) {
-  apiDoGet("block/" + id, null, callback, "xml");/*function(res) {
+  apiDoGet("blocks/" + id, null, callback, "xml");/*function(res) {
     console.log("callback API");
     console.dir(res);
   });*/
 }
 
 function apiSaveScript(id, xml) {
-  apiDoPost("block/" + id, {
+  apiDoPost("blocks/" + id, {
 		xml: xml
 	}, function(res) {
     console.log("save!");

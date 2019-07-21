@@ -10,6 +10,20 @@ var plugins = null;
 const cacheDir = "/.cache";
 const cacheTree = "blockTree.json";
 
+function dispatcher(req, res, next) {
+	switch(req._parsedUrl.pathname) {
+		case '/assets/dyn/blockLoader.js': return blockLoader;
+		case '/assets/dyn/blockTree.json': return blockTree;
+		case '/assets/dyn/blocks.js': return blocksJs;
+		case '/assets/dyn/blocks.json': return blocks;
+		case '/assets/dyn/toolboxes.js': return toolboxesJs;
+		case '/assets/dyn/toolboxes.json': return toolboxesJson;
+		default:
+			res.status(404);
+			break;
+	}
+}
+
 function config(data) {
   conf = data.config;
   plugins = data.plugins;
@@ -202,6 +216,7 @@ async function getToolboxXml(name, data) {}
 
 module.exports = {
   config: config,
+  dispatcher: dispatcher,
   blockLoader: blockLoader,
   blockTree: blockTree,
   blocks: blocks,

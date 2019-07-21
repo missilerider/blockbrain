@@ -4,15 +4,22 @@ const fs = require('fs');
 const path = require('path');
 const log = global.log;
 
-
 var blockLibs = {};
 var defaultLib = {};
+var services = {};
+
+// External events
+var onReloadEvents = [];
 
 async function reload() {
   blockLibs = {};
   log.d("Inicia carga de plugins");
   await defaultPlugins('./internalPlugins');
   await reloadPlugins('./plugins');
+
+  services = createServiceList();
+
+  onReloadEvents.forEach((cb) => { cb(); });
 }
 
 async function defaultPlugins(dirname) {
@@ -196,11 +203,32 @@ async function getToolboxes(conf) {
   return ret;
 }
 
+function createServiceList(conf) {
+  var libIds = Object.keys(blockLibs);
+  let ret = {};
+  for(var n=0; n<libIds.length; n++) {
+    let srv = blockLibs[libIds[n]].getServices();
+    let srvIds = Object.keys(srv);
+    for(let s = 0; s < srvIds.length; s++) {
+      ret[srvIds[s]] = srv[srvIds[s]];
+    }
+  }
+  return ret;
+}
+
+function getServices(conf) {
+  return services;
+}
+
+function onReload(cb) { console.dir(onReloadEvents); onReloadEvents.push(cb); }
+
 module.exports = {
   reload: reload,
   blockLibs: blockLibs,
   getBlocks: getBlocks,
   getBlock: getBlock,
   getBlockSync: getBlockSync,
-  getToolboxes: getToolboxes
+  getToolboxes: getToolboxes,
+  getServices: getServices,
+  onReload: onReload
 }

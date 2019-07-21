@@ -1,3 +1,7 @@
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
 function getInfo(env) {
   return {
     "id": "test",
@@ -69,6 +73,34 @@ var consoleLogBlock = {
   }
 };
 
+var testService = {
+  getInfo: () => { return {
+    methods: ["start", "stop", "status"],
+    name: "Test service",
+    description: "Test service for testing API and integration mechanisms"
+
+  }},
+  status: () => { return 0; },
+  start: () => { return true; },
+  stop: () => { return true; },
+  run: async (srv) => {
+    log.d("Starting...");
+    await sleep(1000);
+    srv.status = 1;
+    log.d("Started");
+    console.dir(srv);
+
+    while(!srv.stop) {
+      console.log("Servicio vivo!");
+      await sleep(1000);
+    }
+    log.d("Stopping");
+    await sleep(2000);
+    log.d("Stopped");
+    srv.status = 0;
+  }
+}
+
 function getBlocks() {
   return {
     "pushStart": pushStartBlock,
@@ -77,7 +109,7 @@ function getBlocks() {
 }
 
 function getServices() {
-  return {};
+  return { "testService": testService };
 }
 
 function getToolbox() {

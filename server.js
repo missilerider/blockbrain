@@ -16,12 +16,22 @@ const serverApi = require('./serverApi.js');
 const serverDyn = require('./serverDyn.js');
 
 var plugins = require('./plugins.js');
+var services = require('./services.js');
 
-console.log("start");
+log.d("Server start");
 
 var conf = utils.loadConfig();
-serverApi.config(conf);
+serverApi.config({
+  "config": conf,
+  "plugins": plugins
+});
+
 serverDyn.config({
+  "config": conf,
+  "plugins": plugins
+});
+
+services.config({
   "config": conf,
   "plugins": plugins
 });
@@ -75,9 +85,9 @@ function checkAuth(req, res, next, done) {
     if(req.session.user)
       return done(req, res, next);
 
-  if(req.query && req.query.headers && req.query.headers['X-BlockBrain-API-Key'])
-    if(runtime.apiKeys[req.query.get('X-BlockBrain-API-Key')] &&
-      runtime.apiKeys[req.query.get('X-BlockBrain-API-Key')].enabled) {
+  if(req.headers && req.headers['x-blockbrain-api-key'])
+    if(runtime.apiKeys[req.headers['x-blockbrain-api-key']] &&
+      runtime.apiKeys[req.headers['x-blockbrain-api-key']].enabled) {
         return done(req, res, next);
       }
 
@@ -120,6 +130,11 @@ app.post('/login.run', (req, res, next) => {
 app.get('/', (req, res, next) => { res.redirect(301, '/index.html'); });
 
 // API calls
+app.use('/api/v1/*', (req, res, next) =>  {
+  checkAuth(req, res, next, serverApi.dispatcher);
+});
+
+/*
 app.get('/api/v1/*', (req, res, next) => {
   checkAuth(req, res, next, function(req, res, next) {
     var path = req._parsedUrl.pathname.split("/");
@@ -155,7 +170,7 @@ app.post('/api/v1/*', (req, res, next) => {
 		if(resp['body']) res.send(resp.body);
 		res.end();
 	});
-});
+});*/
 
 app.use('/assets/dyn/blockLoader.js', serverDyn.blockLoader);
 app.use('/assets/dyn/blockTree.json', serverDyn.blockTree);
@@ -184,8 +199,16 @@ app.use('/', function(req, res, next) {
   })
 });
 
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
 // General load
-plugins.reload();
+plugins.reload().then(() => {
+  // Starts automatic services
+  log.i("Starting services on startup");
+  services.start("testService");
+});
 
 app.listen(PORT, HOST);
 console.log(`Running on http://${HOST}:${PORT}`);
