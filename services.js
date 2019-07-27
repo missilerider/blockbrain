@@ -3,17 +3,30 @@
 var plugins = null;
 var conf = null;
 var services = [];
+var utils = null;
 
 var serviceData = {};
 var servicePromise = {};
+
+const statusName = {
+  0: {
+    0: "stopped",
+    1: "starting"
+  },
+  1: {
+    0: "stopping",
+    1: "running"
+  }
+}
 
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
 function config(params) {
-  plugins = params.plugins,
-  conf = params.config
+  plugins = params.plugins;
+  conf = params.config;
+  utils = params.utils;
 
   plugins.onReload(onPluginsReload);
 }
@@ -22,13 +35,28 @@ function onPluginsReload() {
   services = plugins.getServices();
 }
 
-function status(srvName) {
-  return 123;
+function status(srvName, extended = false) {
+  if(!(srvName in services)) {
+    log.e("Service status " + srvName + " not found");
+    return { status: "unknown" };
+  }
+
+  if(!(srvName in serviceData)) {
+    return { status: "stopped" };
+    }
+
+  let ret = { status: statusName[serviceData[srvName].status][serviceData[srvName].desiredStatus]};
+
+  if(extended && services[srvName].getInfo().methods.includes("status")) {
+    ret.extended = services[srvName].status();
+  }
+
+  return ret;
 }
 
 async function start(srvName, callbackFinish) {
   if(!(srvName in services)) {
-    log.e("Service " + srvName + " not found");
+    log.e("Service start " + srvName + " not found");
     return;
   }
 
@@ -57,12 +85,12 @@ async function start(srvName, callbackFinish) {
 
 async function stop(srvName, callbackFinish) {
   if(!(srvName in services)) {
-    log.e("Service " + srvName + " not found");
+    log.e("Service stop " + srvName + " not found");
     return;
   }
 
   if(!(srvName in serviceData && srvName in servicePromise)) {
-    log.e("Service " + srvName + " not started");
+    log.e("Service stop " + srvName + " not started");
   }
 
   serviceData[srvName].stop = true;
@@ -74,12 +102,12 @@ async function stop(srvName, callbackFinish) {
 
 async function waitForStatusSync(srvName, status, maxMillis, callback) {
   if(!(srvName in services)) {
-    log.e("Service " + srvName + " not found");
+    log.e("Service wait " + srvName + " not found");
     return;
   }
 
   if(!(srvName in serviceData && srvName in servicePromise)) {
-    log.e("Service " + srvName + " not started");
+    log.e("Service wait " + srvName + " not started");
   }
 
   // Dirty solution!
@@ -94,10 +122,18 @@ async function waitForStatusSync(srvName, status, maxMillis, callback) {
   return serviceData[srvName].status == status;
 }
 
+function setStartOnBoot(srvName, start) {
+  if(!(srvName in conf.startupServices)) return false;
+  conf.startupServices[srvName] = start;
+  utils.saveStartupServices(conf.startupServices);
+}
+
 module.exports = {
   config: config,
   start: start,
   stop: stop,
   status: status,
-  waitForStatusSync: waitForStatusSync
+  waitForStatusSync: waitForStatusSync,
+  getServices: () => { return services; },
+  setStartOnBoot: setStartOnBoot
 }

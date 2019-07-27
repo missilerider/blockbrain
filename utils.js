@@ -1,12 +1,21 @@
 'use strict';
 
 const crypto = require('crypto');
+const fs = require('fs');
 const log = global.log;
 
 var currentConfig;
+var plugins;
+var services;
+
+function config(params) {
+  currentConfig = params.config;
+  plugins = params.plugins;
+  services = params.services;
+}
 
 function loadConfig() {
-  var conf = {
+  var defaultConf = {
     "endpoint": {
       "port": 80,
       "bind": "0.0.0.0"
@@ -29,6 +38,18 @@ function loadConfig() {
     }
   };
 
+  var defaultStartupServices = {
+    "importantService": false
+  }
+
+
+  var userConf = JSON.parse(fs.readFileSync('config/blockbrain.json'));
+
+  var userStartupServices = JSON.parse(fs.readFileSync('config/startupServices.json'));
+
+  var conf = Object.assign(defaultConf, userConf);
+  conf.startupServices = Object.assign(defaultStartupServices, userStartupServices);
+
   if(conf.security && conf.security.users)
     conf.security.users.forEach(function (u) {
       if(!u.hasOwnProperty("sha256"))
@@ -38,6 +59,10 @@ function loadConfig() {
   currentConfig = conf;
 
   return conf;
+}
+
+function saveStartupServices(startupServices) {
+  fs.writeFileSync('config/startupServices.json', JSON.stringify(startupServices));
 }
 
 function login(req, res) {
@@ -69,9 +94,19 @@ function stringify(o, depth = 1) {
   }
 }
 
+function endpoint(req, res, next) {
+  console.dir(Object.keys(req));
+  console.dir(req.body);
+  plugins;
+  res.json('{"result":"OK"}');
+}
+
 module.exports = {
+  config: config,
   loadConfig: loadConfig,
+  saveStartupServices: saveStartupServices,
   login: login,
   sha256: sha256,
-  stringify: stringify
+  stringify: stringify,
+  endpoint: endpoint
 };

@@ -137,13 +137,22 @@ async function blocks(req, res) {
 
 async function blocksJs(req, res) {
   prepare(res);
-  var blocks = await plugins.getBlocks(conf);
-  var ids = Object.keys(blocks);
-
   var ret = "function createCustomBlockly() {\n"
   ret += "Blockly.defineBlocksWithJsonArray([\n";
-  for(var n = 0; n < ids.length; n++) {
+
+	let blocks = await plugins.getDefaultBlocks(conf);
+  let ids = Object.keys(blocks);
+
+	for(let n = 0; n < ids.length; n++) {
     if(n>0) ret += ",\n";
+    ret += JSON.stringify(blocks[ids[n]]);
+  }
+
+	blocks = await plugins.getBlocks(conf);
+  ids = Object.keys(blocks);
+
+  for(let n = 0; n < ids.length; n++) {
+    ret += ",\n";
     ret += JSON.stringify(blocks[ids[n]]);
   }
   ret += "])};";

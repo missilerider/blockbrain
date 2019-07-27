@@ -95,6 +95,18 @@ async function reloadPlugins(dirname) {
   }
 }
 
+async function getDefaultBlocks(conf) {
+  var libIds = Object.keys(defaultLib);
+  var ret = {};
+  for(var n=0; n<libIds.length; n++) {
+    var lib = defaultLib[libIds[n]];
+    if("block" in lib) {
+      ret[libIds[n]] = lib.block;
+    }
+  }
+  return ret;
+}
+
 async function getBlocks(conf) {
   var libIds = Object.keys(blockLibs);
   var ret = {};
@@ -121,7 +133,6 @@ async function getBlocks(conf) {
       }
     }
   }
-  log.dump("Devuelve", ret);
   return ret;
 }
 
@@ -225,6 +236,7 @@ function onReload(cb) { console.dir(onReloadEvents); onReloadEvents.push(cb); }
 module.exports = {
   reload: reload,
   blockLibs: blockLibs,
+  getDefaultBlocks: getDefaultBlocks,
   getBlocks: getBlocks,
   getBlock: getBlock,
   getBlockSync: getBlockSync,

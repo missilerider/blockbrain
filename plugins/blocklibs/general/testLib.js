@@ -80,7 +80,7 @@ var testService = {
     description: "Test service for testing API and integration mechanisms"
 
   }},
-  status: () => { return 0; },
+  status: () => { return "Logging on console"; },
   start: () => { return true; },
   stop: () => { return true; },
   run: async (srv) => {

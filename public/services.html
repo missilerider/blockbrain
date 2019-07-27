@@ -12,8 +12,10 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
   <!-- Material Kit CSS -->
   <link href="assets/css/material-dashboard.css?v=2.1.1" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="assets/js/jquery.js"></script>
+  <script src="assets/js/plugins/bootstrap-notify.js"></script>
+  <script src="assets/js/vue.js"></script>
+  <script src="assets/js/axios.min.js"></script>
 </head>
 
 <body>
@@ -70,8 +72,57 @@
                     <h4 class="card-title">Global service management</h4>
                   </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body table-responsive">
                     {{ message }} The place is close to Barceloneta Beach and bus stop just 2 min by walk and near to "Naviglio" where you can enjoy the main night life in Barcelona...
+                    <table class="table table-hover">
+                      <thead class="text-warning">
+                        <tr>
+                          <th>Name</th>
+                          <th>Description</th>
+                          <th>Service ID</th>
+                          <th>Status</th>
+                          <th class="text-center">Run at boot</th>
+                          <th class="text-right">Operation</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(srv, srvId) in services">
+                          <td>
+                            {{ srv.name }}
+                          </td>
+                          <td>
+                            {{ srv.description }}
+                          </td>
+                          <td>
+                            {{ srvId }}
+                          </td>
+                          <td>
+                            {{ srv.status.status }}
+                          </td>
+                          <td>
+                            <div class="form-check text-center">
+                              <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" value="" :checked="srv.startOnBoot" v-model="srv.startOnBoot" @change="updateServiceOnBoot(srvId)">
+                                <span class="form-check-sign">
+                                  <span class="check"></span>
+                                </span>
+                              </label>
+                            </div>
+                          </td>
+                          <td class="td-actions text-right">
+                            <button v-if="srv.status.status=='stopped'" type="button" rel="tooltip" title="Start" class="btn btn-primary btn-link btn-sm" v-on:click="startService(srvId)">
+                              <i class="material-icons">play_arrow</i>
+                            </button>
+                            <button v-if="srv.status.status=='running'" type="button" rel="tooltip" title="Restart" class="btn btn-warning btn-link btn-sm" v-on:click="restartService(srvId)">
+                              <i class="material-icons">replay</i>
+                            </button>
+                            <button v-if="srv.status.status=='running'" type="button" rel="tooltip" title="Stop" class="btn btn-danger btn-link btn-sm" v-on:click="stopService(srvId)">
+                              <i class="material-icons">stop</i>
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                 </div>
               </div>
             </div>

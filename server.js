@@ -21,20 +21,17 @@ var services = require('./services.js');
 log.d("Server start");
 
 var conf = utils.loadConfig();
-serverApi.config({
-  "config": conf,
-  "plugins": plugins
-});
+var globalSetup = {
+  config: conf,
+  plugins: plugins,
+  services: services,
+  utils: utils
+};
 
-serverDyn.config({
-  "config": conf,
-  "plugins": plugins
-});
-
-services.config({
-  "config": conf,
-  "plugins": plugins
-});
+utils.config(globalSetup);
+services.config(globalSetup);
+serverApi.config(globalSetup);
+serverDyn.config(globalSetup);
 
 console.dir(conf);
 
@@ -134,43 +131,7 @@ app.use('/api/v1/*', (req, res, next) =>  {
   checkAuth(req, res, next, serverApi.dispatcher);
 });
 
-/*
-app.get('/api/v1/*', (req, res, next) => {
-  checkAuth(req, res, next, function(req, res, next) {
-    var path = req._parsedUrl.pathname.split("/");
-    var method = path[3];
-    path.splice(0, 4);
-    var query = req.query;
-    var resp = { code: 404 };
-		if(serverApi.GET['block'])
-			resp = serverApi.GET['block'](path, query);
-
-    if(resp['code']) res.status(resp.code);
-    if(resp['type']) res.type(resp.type);
-    if(resp['headers']) Object.keys(resp.headers).forEach(h => { res.set(h, resp.headers[h]); });
-    if(resp['body']) res.send(resp.body);
-    res.end();
-  });
-});
-
-// API calls
-app.post('/api/v1/*', (req, res, next) => {
-	checkAuth(req, res, next, function(req, res, next) {
-		var path = req._parsedUrl.pathname.split("/");
-		var method = path[3];
-		path.splice(0, 4);
-		var query = req.query;
-		var resp = { code: 404 };
-		if(serverApi.POST['block'])
-			resp = serverApi.POST['block'](path, query, req.body);
-
-		if(resp['code']) res.status(resp.code);
-		if(resp['type']) res.type(resp.type);
-		if(resp['headers']) Object.keys(resp.headers).forEach(h => { res.set(h, resp.headers[h]); });
-		if(resp['body']) res.send(resp.body);
-		res.end();
-	});
-});*/
+app.post('/endpoint', utils.endpoint);
 
 app.use('/assets/dyn/blockLoader.js', serverDyn.blockLoader);
 app.use('/assets/dyn/blockTree.json', serverDyn.blockTree);
@@ -207,7 +168,10 @@ const sleep = (milliseconds) => {
 plugins.reload().then(() => {
   // Starts automatic services
   log.i("Starting services on startup");
-  services.start("testService");
+  Object.keys(conf.startupServices).forEach(id => {
+    if(conf.startupServices[id])
+      services.start(id);
+  });
 });
 
 app.listen(PORT, HOST);
