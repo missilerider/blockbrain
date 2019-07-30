@@ -68,12 +68,18 @@ async function logic_ternary(context) {
   return opIf ? opThen : opElse;
 }
 
+function getBlocks() {
+  return {
+    "controls_if": { run: controls_if },
+    "logic_operation": { run: logic_operation },
+    "logic_boolean": { run: logic_boolean },
+    "logic_null": { run: logic_null },
+    "logic_negate": { run: logic_negate },
+    "logic_compare": { run: logic_compare },
+    "logic_ternary": { run: logic_ternary }
+  }
+}
+
 module.exports = {
-  "controls_if": { run: controls_if },
-  "logic_operation": { run: logic_operation },
-  "logic_boolean": { run: logic_boolean },
-  "logic_null": { run: logic_null },
-  "logic_negate": { run: logic_negate },
-  "logic_compare": { run: logic_compare },
-  "logic_ternary": { run: logic_ternary }
+  getBlocks: getBlocks
 }

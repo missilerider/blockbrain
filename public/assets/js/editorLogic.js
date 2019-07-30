@@ -10,14 +10,14 @@ $(function() {
     //Blockly.Variables.predefinedVars.push("msg");
 //    Blockly.Variables.getOrCreateVariablePackage(workspace, null, 'msg', 'json');
 
-    createCustomBlockly();
+/*    createCustomBlockly();
 
     apiGetScript(id, function(xml) {
       var s = new XMLSerializer();
       var newXmlStr = s.serializeToString(xml);
       var bxml = Blockly.Xml.textToDom(newXmlStr);
       Blockly.Xml.domToWorkspace(bxml, workspace);
-    });
+    });*/
   });
 
   $('#editorSave').click(editorSave);

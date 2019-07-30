@@ -1,22 +1,31 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-  <meta charset="utf-8">
   <title>Module editor</title>
-  <link rel="stylesheet" type="text/css" href="assets/css/stdMenu.css">
-  <script type="text/javascript" src="assets/js/jquery.min.js"></script>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <!--     Fonts and icons     -->
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+  <!-- Material Kit CSS -->
+  <link href="assets/css/material-dashboard.css?v=2.1.1" rel="stylesheet" />
+  <script src="assets/js/jquery.js"></script>
+  <script src="assets/js/plugins/bootstrap-notify.js"></script>
+  <script src="assets/js/vue.js"></script>
+  <script src="assets/js/axios.min.js"></script>
+
+<!--  <link rel="stylesheet" type="text/css" href="assets/css/stdMenu.css">-->
   <script src="/blockly/blockly_compressed.js"></script>
   <script src="/blockly/blocks_compressed.js"></script>
   <script src="/blockly/msg/js/en.js"></script>
   <script src="/assets/js/blockly_generators.js"></script>
   <script src="/assets/dyn/blocks.js"></script>
   <script src="/assets/dyn/toolboxes.js"></script>
-  <script type="application/javascript" src="assets/js/template.js"></script>
-  <script type="application/javascript" src="assets/js/libApi.js"></script>
-  <script type="application/javascript" src="assets/js/editorLogic.js"></script>
   <script src="/assets/js/jsTree/dist/jstree.min.js"></script>
-
+<!--
   <style>
     html, body {
       height: 100%;
@@ -38,27 +47,57 @@
     #blocklyArea {
       height: 99%;
     }
-  </style>
+  </style>-->
 </head>
 <body>
-  <div id="templateHeader"></div>
-  <div id="editorHeader">
-    <div class="menuL1"><a href="#" id="editorSave">Save</a></div>
-    <div class="menuL1"><a href="#" id="editorRevert">Revert</a></div>
+  <div id="app" class="wrapper">
+    <div class="sidebar" data-color="purple" data-background-color="white">
+      <div class="logo">
+        <a href="index.html" class="simple-text logo-mini">
+          BlockBrain
+        </a>
+      </div>
+      <div class="sidebar-wrapper">
+        <nav-sidebar></nav-sidebar>
+      </div>
+    </div>
+
+    <div class="main-panel">
+      <!--<nav-bar></nav-bar>-->
+      <div class="content" style="padding-top: 0px; margin-top: 0px">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header card-header-tabs card-header-primary">
+                  <button v-b-tooltip.hover class="btn btn-rose btn-sm btn-round" data-placement="top" title="Tooltip on top" v-on:click="saveBlock">
+                    <i class="material-icons">save</i>
+                  </button>
+                  <button class="btn btn-info btn-sm btn-round" v-on:click="showProperties">
+                    <i class="material-icons">list</i>
+                  </button>
+                  <button class="btn btn-danger btn-sm btn-round" v-on:click="revertBlock">
+                    <i class="material-icons">replay</i>
+                  </button>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-12" id="blocklyArea" style="height:800px">
+                      <div id="blocklyDiv" style="position:absolute"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="blocklyDiv"></div>
+    <div id="toolboxContainer"></div>
   </div>
-
-  <table>
-    <tr>
-      <td id="blocklyArea">
-      </td>
-    </tr>
-  </table>
-
-  <div id="blocklyDiv" style="position: absolute"></div>
-
-  <div id="toolboxContainer"></div>
-
-  <div id="templateFooter"></div>
-  <div id="blockLoader" style="visible:none"><xml id="blocks_xml"></xml/></div>
+  <script src="/assets/js/vue/template.vue.js"></script>
+  <script src="/assets/js/vue/editor.vue.js"></script>
 </body>
 </html>

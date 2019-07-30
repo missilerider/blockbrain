@@ -6,6 +6,7 @@ const log = global.log;
 
 var blockLibs = {};
 var defaultLib = {};
+var defaultToolboxes = [];
 var services = {};
 
 // External events
@@ -37,10 +38,17 @@ async function defaultPlugins(dirname) {
         log.i("Reads file " + fromPath);
         var lib = require('./' + fromPath);
 
-        var blocks = Object.keys(lib);
+        if("getBlocks" in lib) {
+          if("getToolbox" in lib) {
+            defaultToolboxes.push(lib.getToolbox());
+          }
 
-        for(let n = 0; n < blocks.length; n++) {
-          defaultLib[blocks[n]] = lib[blocks[n]];
+          let libBlocks = lib.getBlocks();
+          var blocks = Object.keys(libBlocks);
+
+          for(let n = 0; n < blocks.length; n++) {
+            defaultLib[blocks[n]] = libBlocks[blocks[n]];
+          }
         }
       } catch(e) {
         log.e("Error while loading default plugin from " + fromPath);
@@ -190,8 +198,27 @@ function getBlockSync(blockName) {
 }
 
 async function getToolboxes(conf) {
-  var libIds = Object.keys(blockLibs);
   var ret = {};
+  for(var n=0; n<defaultToolboxes.length; n++) {
+    var data = defaultToolboxes[n];
+
+    var tbIds = Object.keys(data);
+
+    for(var n2=0; n2 < tbIds.length; n2++) {
+      var tb = data[tbIds[n2]];
+      var tbCatIds = Object.keys(tb);
+      for(var n3=0; n3<tbCatIds.length; n3++) {
+        var tbCat = tb[tbCatIds[n3]];
+
+        if(!(tbIds[n2] in ret)) ret[tbIds[n2]] = {};
+        if(!(ret[tbIds[n2]][tbCatIds[n3]])) ret[tbIds[n2]][tbCatIds[n3]] = [];
+
+        ret[tbIds[n2]][tbCatIds[n3]].push(tb[tbCatIds[n3]]);
+      }
+    }
+  }
+
+  var libIds = Object.keys(blockLibs);
   for(var n=0; n<libIds.length; n++) {
     var lib = blockLibs[libIds[n]];
     var data = lib.getToolbox();
@@ -211,6 +238,7 @@ async function getToolboxes(conf) {
       }
     }
   }
+
   return ret;
 }
 

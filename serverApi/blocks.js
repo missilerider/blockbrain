@@ -50,7 +50,8 @@ function POSTblock(data) {
 	try {
 		console.log("#" + filename + "#");
 		fs.writeFileSync(filename + ".xml", data.req.body.xml);
-//		fs.writeFileSync(filename + ".js", body.js);
+
+    //data.utils.reloadScript(filename + ".xml", data.req.body.xml);
 	} catch(e) {
 		console.dir(e.message);
 		data.res.json({ code: 501, body: { ok: false, error: 1 } });

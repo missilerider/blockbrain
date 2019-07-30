@@ -37,7 +37,13 @@ async function controls_flow_statements(context) {
   }
 }
 
+function getBlocks() {
+  return {
+    "controls_repeat_ext": { run: controls_repeat_ext },
+    "controls_flow_statements": { run: controls_flow_statements }
+  }
+}
+
 module.exports = {
-  "controls_repeat_ext": { run: controls_repeat_ext },
-  "controls_flow_statements": { run: controls_flow_statements }
+  getBlocks: getBlocks
 }

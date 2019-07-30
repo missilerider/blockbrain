@@ -52,10 +52,16 @@ async function math_single(context) {
   return num;
 }
 
+function getBlocks() {
+  return {
+    math_number: { run: math_number },
+    math_arithmetic: { run: math_arithmetic },
+    math_change: { run: math_change },
+    math_modulo: { run: math_modulo },
+    math_single: { run: math_single }
+  }
+}
+
 module.exports = {
-  "math_number": { run: math_number },
-  "math_arithmetic": { run: math_arithmetic },
-  "math_change": { run: math_change },
-  math_modulo: { run: math_modulo },
-  math_single: { run: math_single }
+  getBlocks: getBlocks
 }

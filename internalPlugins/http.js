@@ -23,6 +23,22 @@ var httpEndpointBlock = {
   }
 }
 
+function getBlocks() {
+  return {
+    "http_endpoint": httpEndpointBlock
+  };
+}
+
+function getToolbox() {
+  return {
+    "default": {
+      "Events": ' \
+        <block type="http_endpoint"></block>'
+    }
+  }
+}
+
 module.exports = {
-  "http_endpoint": httpEndpointBlock
+  getBlocks: getBlocks,
+  getToolbox: getToolbox
 }

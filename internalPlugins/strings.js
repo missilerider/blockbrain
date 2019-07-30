@@ -95,11 +95,17 @@ async function text_print(context) {
   log.setLogLevel(logLevel);
 }
 
+function getBlocks() {
+  return {
+    "text": { run: text },
+    "text_join": { run: text_join },
+    "text_charAt": { run: text_charAt },
+    "text_changeCase": { run: text_changeCase },
+    "text_trim": { run: text_trim },
+    "text_print": { run: text_print }
+  }
+}
+
 module.exports = {
-  "text": { run: text },
-  "text_join": { run: text_join },
-  "text_charAt": { run: text_charAt },
-  "text_changeCase": { run: text_changeCase },
-  "text_trim": { run: text_trim },
-  "text_print": { run: text_print }
+  getBlocks: getBlocks
 }

@@ -101,6 +101,14 @@ function endpoint(req, res, next) {
   res.json('{"result":"OK"}');
 }
 
+function reloadScript(file, xml = null) {
+  let fileReal = fs.realpathSync(file);
+  if(xml == null) {
+    xml = fs.readfileSync(fileReal);
+  }
+  
+}
+
 module.exports = {
   config: config,
   loadConfig: loadConfig,

@@ -9,11 +9,13 @@ var services = require('./serverApi/services.js');
 var conf;
 var plugins;
 var srv;
+var utils;
 
 function config(params) {
   conf = params.config;
   plugins = params.plugins;
   srv = params.services;
+  utils = params.utils;
 }
 
 async function _dispatcher(req, res, next) {
@@ -40,13 +42,14 @@ async function dispatcher(req, res, next) {
 
   let data = {
     preparexml: () => { res.type("application/xml; charset=utf-8"); },
-    sleep: (milliseconds) => { return new Promise(resolve => setTimeout(resolve, milliseconds)) }, 
+    sleep: (milliseconds) => { return new Promise(resolve => setTimeout(resolve, milliseconds)) },
     req: req,
     res: res,
     next: next,
     config: conf,
     plugins: plugins,
     services: srv,
+    utils: utils, 
     path: path
   }
 

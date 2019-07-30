@@ -11,7 +11,13 @@ async function variables_get(context) {
   return context.getVar(context, varName);
 }
 
+function getBlocks() {
+  return {
+    "variables_set": { run: variables_set },
+    "variables_get": { run: variables_get }
+  }
+}
+
 module.exports = {
-  "variables_set": { run: variables_set },
-  "variables_get": { run: variables_get }
+  getBlocks: getBlocks
 }
