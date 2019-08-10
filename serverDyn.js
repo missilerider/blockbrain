@@ -184,10 +184,18 @@ async function toolboxesJs(req, res) {
 
   var tbs = await plugins.getToolboxes(conf);
 
+	var tbsIds = Object.keys(tbs);
+
+	ret += "var toolboxes = [\n";
+	for(let n = 0; n < tbsIds.length; n++) {
+		if(n!=0) ret += ", \n";
+		ret += "\t'" + tbsIds[n] + "'";
+	}
+	ret += "\n];\n\n";
+
   ret += "function getToolbox(name) { \
     switch(name) {\n";
 
-  var tbsIds = Object.keys(tbs);
   for(let n=0; n < tbsIds.length; n++) {
     let tbTxt = "";
     let tbId = tbsIds[n];

@@ -13,7 +13,6 @@
   <!-- Material Kit CSS -->
   <link href="assets/css/material-dashboard.css?v=2.1.1" rel="stylesheet" />
   <script src="assets/js/jquery.js"></script>
-  <script src="assets/js/plugins/bootstrap-notify.js"></script>
   <script src="assets/js/vue.js"></script>
   <script src="assets/js/axios.min.js"></script>
 
@@ -25,29 +24,6 @@
   <script src="/assets/dyn/blocks.js"></script>
   <script src="/assets/dyn/toolboxes.js"></script>
   <script src="/assets/js/jsTree/dist/jstree.min.js"></script>
-<!--
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-    }
-    body {
-      background-color: #fff;
-      font-family: sans-serif;
-      overflow: hidden;
-    }
-    h1 {
-      font-weight: normal;
-      font-size: 140%;
-    }
-    table {
-      height: 100%;
-      width: 100%;
-    }
-    #blocklyArea {
-      height: 99%;
-    }
-  </style>-->
 </head>
 <body>
   <div id="app" class="wrapper">
@@ -70,14 +46,27 @@
             <div class="col-md-12">
               <div class="card">
                 <div class="card-header card-header-tabs card-header-primary">
-                  <button v-b-tooltip.hover class="btn btn-rose btn-sm btn-round" data-placement="top" title="Tooltip on top" v-on:click="saveBlock">
+                  <span v-on:click="setToolbox('default')" style="cursor:pointer" data-toggle="tooltip" data-placement="top" title="Select default toolbox">Toolbox</span>&nbsp;
+                  <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {{ toolboxName }}
+                  </button>
+                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="z-index:999">
+                    <a class="dropdown-item" href="#" v-for="tbName in toolboxNames" v-on:click="setToolbox(tbName)" >{{ tbName }}</a>
+                  </div>
+                  <button class="btn btn-rose btn-sm btn-round" data-toggle="tooltip" data-placement="top" title="Save blocks" v-on:click="saveBlock">
                     <i class="material-icons">save</i>
                   </button>
-                  <button class="btn btn-info btn-sm btn-round" v-on:click="showProperties">
+                  <button class="btn btn-info btn-sm btn-round" data-toggle="tooltip" data-placement="top" title="Show block options pane" v-on:click="showProperties">
                     <i class="material-icons">list</i>
                   </button>
-                  <button class="btn btn-danger btn-sm btn-round" v-on:click="revertBlock">
+                  <button class="btn btn-danger btn-sm btn-round" data-toggle="tooltip" data-placement="top" title="Revert blocks to initial status" v-on:click="revertBlock">
                     <i class="material-icons">replay</i>
+                  </button>
+                  <button class="btn btn-info btn-sm btn-round" :disabled="!canUndo" data-toggle="tooltip" data-placement="top" title="Show block options pane" v-on:click="undo">
+                    <i class="material-icons">undo</i>
+                  </button>
+                  <button class="btn btn-danger btn-sm btn-round" :disabled="!canRedo" data-toggle="tooltip" data-placement="top" title="Revert blocks to initial status" v-on:click="redo">
+                    <i class="material-icons">redo</i>
                   </button>
                 </div>
                 <div class="card-body">
@@ -97,6 +86,45 @@
     <div id="blocklyDiv"></div>
     <div id="toolboxContainer"></div>
   </div>
+  <!--   Core JS Files   -->
+  <script src="assets/js/core/jquery.min.js"></script>
+  <script src="assets/js/core/popper.min.js"></script>
+  <script src="assets/js/core/bootstrap-material-design.min.js"></script>
+  <script src="assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+  <!-- Plugin for the momentJs  -->
+  <script src="assets/js/plugins/moment.min.js"></script>
+  <!--  Plugin for Sweet Alert -->
+  <script src="assets/js/plugins/sweetalert2.js"></script>
+  <!-- Forms Validations Plugin -->
+  <script src="assets/js/plugins/jquery.validate.min.js"></script>
+  <!-- Plugin for the Wizard, full documentation here: https://github.com/VinceG/twitter-bootstrap-wizard -->
+  <script src="assets/js/plugins/jquery.bootstrap-wizard.js"></script>
+  <!--	Plugin for Select, full documentation here: http://silviomoreto.github.io/bootstrap-select -->
+  <script src="assets/js/plugins/bootstrap-selectpicker.js"></script>
+  <!--  Plugin for the DateTimePicker, full documentation here: https://eonasdan.github.io/bootstrap-datetimepicker/ -->
+  <script src="assets/js/plugins/bootstrap-datetimepicker.min.js"></script>
+  <!--  DataTables.net Plugin, full documentation here: https://datatables.net/  -->
+  <script src="assets/js/plugins/jquery.dataTables.min.js"></script>
+  <!--	Plugin for Tags, full documentation here: https://github.com/bootstrap-tagsinput/bootstrap-tagsinputs  -->
+  <script src="assets/js/plugins/bootstrap-tagsinput.js"></script>
+  <!-- Plugin for Fileupload, full documentation here: http://www.jasny.net/bootstrap/javascript/#fileinput -->
+  <script src="assets/js/plugins/jasny-bootstrap.min.js"></script>
+  <!--  Full Calendar Plugin, full documentation here: https://github.com/fullcalendar/fullcalendar    -->
+  <script src="assets/js/plugins/fullcalendar.min.js"></script>
+  <!-- Vector Map plugin, full documentation here: http://jvectormap.com/documentation/ -->
+  <script src="assets/js/plugins/jquery-jvectormap.js"></script>
+  <!--  Plugin for the Sliders, full documentation here: http://refreshless.com/nouislider/ -->
+  <script src="assets/js/plugins/nouislider.min.js"></script>
+  <!-- Include a polyfill for ES6 Promises (optional) for IE11, UC Browser and Android browser support SweetAlert -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/2.4.1/core.js"></script>
+  <!-- Library for adding dinamically elements -->
+  <script src="assets/js/plugins/arrive.min.js"></script>
+  <!-- Chartist JS -->
+  <script src="assets/js/plugins/chartist.min.js"></script>
+  <!--  Notifications Plugin    -->
+  <script src="assets/js/plugins/bootstrap-notify.js"></script>
+  <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
+  <script src="../assets/js/material-dashboard.min.js?v=2.1.1" type="text/javascript"></script>
   <script src="/assets/js/vue/template.vue.js"></script>
   <script src="/assets/js/vue/editor.vue.js"></script>
 </body>

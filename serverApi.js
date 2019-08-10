@@ -3,8 +3,9 @@
 var fs = require('fs');
 const log = global.log;
 
-var blocks = require('./serverApi/blocks.js');
-var services = require('./serverApi/services.js');
+var apiBlocks = require('./serverApi/apiBlocks.js');
+var apiServices = require('./serverApi/apiServices.js');
+var apiSystem = require('./serverApi/apiSystem.js');
 
 var conf;
 var plugins;
@@ -49,13 +50,14 @@ async function dispatcher(req, res, next) {
     config: conf,
     plugins: plugins,
     services: srv,
-    utils: utils, 
+    utils: utils,
     path: path
   }
 
   switch(path[0]) {
-    case "blocks": return blocks.dispatcher(data);
-    case "services": return services.dispatcher(data);
+    case "blocks": return apiBlocks.dispatcher(data);
+    case "services": return apiServices.dispatcher(data);
+    case "system": return apiSystem.dispatcher(data);
   }
 
   res.json({ code: 404 });

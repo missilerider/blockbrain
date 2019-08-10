@@ -2,12 +2,19 @@ var app = new Vue({
   el: '#app',
   data: {
     message: 'Hello Vue!',
+    revertedBlocks: null,
     services: {},
     blockId: null,
     workspace: null,
     blocklyArea: null,
     blocklyDiv: null,
-    options: null
+    options: null,
+    toolboxName: "default",
+    toolboxNames: toolboxes,
+    selectedBlockId: null,
+    canUndo: false,
+    canRedo: false,
+    undone: 0
   },
   mounted() {
     // Prepare elements
@@ -26,6 +33,9 @@ var app = new Vue({
       createCustomBlockly(); // From serverDyn
 
       that.loadBlock(this.blockId);
+
+      // Dirty solution for toolbox z-index
+      $('.blocklyToolboxDiv').css("zIndex", 1);
     });
   },
   methods: {
@@ -50,9 +60,9 @@ var app = new Vue({
       .then(function(resp) {
         if(resp.headers["content-type"].includes("application/xml")) {
           var s = new XMLSerializer();
-          //var newXmlStr = s.serializeToString(resp.data);
           var bxml = Blockly.Xml.textToDom(resp.data);
           Blockly.Xml.domToWorkspace(bxml, that.workspace);
+          that.revertedBlocks = bxml;
         } else {
           console.error("Bad response from API server: " + resp.body);
         }
@@ -62,7 +72,7 @@ var app = new Vue({
       this.blocklyArea = document.getElementById('blocklyArea');
       this.blocklyDiv = document.getElementById('blocklyDiv');
       this.options = {
-        toolbox: getToolbox("default"),
+        toolbox: getToolbox(this.toolboxName),
         collapse : true,
         comments : true,
         disable : true,
@@ -78,6 +88,8 @@ var app = new Vue({
         oneBasedIndex : true
       };
       this.workspace = Blockly.inject(this.blocklyDiv, this.options);
+
+      this.workspace.addChangeListener(this.blocklyEvent);
 
       if(readyCallback) readyCallback();
 
@@ -122,11 +134,53 @@ var app = new Vue({
         that.showNotification('Block <b>' + that.blockId + '</b> saved', 'info', 'save', 200);
       });
     },
+    blocklyEvent: function(event) {
+      if(event.type == "ui") {
+        if(event.element == "selected") {
+          this.selectBlock(event.newValue); // Can be null
+        }
+      }
+      this.canUndo = this.workspace.undoStack_.length > 0;
+      //console.log(event);
+    },
+    selectBlock: function(blockId) {
+      this.selectedBlockId = blockId;
+      if(blockId != null) {
+        this.selectedBlock = this.workspace.getBlockById(blockId);
+        if(this.selectedBlock == null) {
+          this.selectedBlockId = null;
+        } else {
+          console.log(this.selectedBlock.type);
+        }
+      } else {
+        this.selectedBlock = null;
+      }
+    },
+    setToolbox: function(toolboxName) {
+      this.toolboxName = toolboxName;
+      this.workspace.updateToolbox(getToolbox(this.toolboxName));
+    },
     revertBlock: function() {
-      alert("revert! " + this.blockId);
+      if(confirm("Revert will replace your current workspace with the original once you started the editor. Continue?")) {
+        this.workspace.clear();
+        Blockly.Xml.domToWorkspace(this.revertedBlocks, this.workspace);
+      }
     },
     showProperties: function() {
+      console.log(this.workspace.undoStack_.length);
       alert("props! " + this.blockId);
+    },
+    undo: function() {
+      this.workspace.undo(false);
+      this.canRedo = true;
+      this.undone++;
+      this.canUndo = this.workspace.undoStack_.length > 0;
+    },
+    redo: function() {
+      this.workspace.undo(true);
+      this.canUndo = true;
+      this.undone--;
+      this.canRedo = this.undone > 0;
     }
   }
 })

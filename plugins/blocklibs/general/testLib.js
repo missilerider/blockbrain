@@ -28,7 +28,7 @@ var pushStartBlock = {
     "helpUrl": ""
   },
   "toolbox": {
-    "toolbox": "default",
+    "toolbox": "dummy",
     "type": "event",
     "category": "test",
     "definition": "def1"
@@ -63,7 +63,7 @@ var consoleLogBlock = {
     };
   },
   "toolbox": {
-    "toolbox": "default",
+    "toolbox": "dummy",
     "type": "function",
     "category": "test",
     "definition": "def2"
@@ -114,7 +114,7 @@ function getServices() {
 
 function getToolbox() {
   return {
-    "default": {
+    "dummy": {
       "Events": '<block type="test.pushStart"></block>',
       "Functions": '<block type="test.consoleLog"></block>'
     }

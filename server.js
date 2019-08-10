@@ -147,7 +147,7 @@ app.use('/assets', express.static('public/assets'));
 app.use('/', function(req, res, next) {
   checkAuth(req, res, next, function(req, res, next) {
     const path = req.originalUrl.replace(/\?.*$/, '');
-    console.log("Static ok: " + path  + " = " + __dirname + '/public' + path);
+    log.d("Static: " + path  + " = " + __dirname + '/public' + path);
     try {
       res.sendFile(path, {root: __dirname + '/public'}, (err) => {
         res.end();
@@ -166,6 +166,7 @@ const sleep = (milliseconds) => {
 
 // General load
 plugins.reload().then(() => {
+  //plugins.getToolboxes(conf).then((s) => {console.dir(s);});
   // Starts automatic services
   log.i("Starting services on startup");
   Object.keys(conf.startupServices).forEach(id => {

@@ -2,11 +2,16 @@
 
 const crypto = require('crypto');
 const fs = require('fs');
+const xml2json = require('xml2json');
+
 const log = global.log;
 
 var currentConfig;
 var plugins;
 var services;
+
+var eventIndex = {};
+var scriptCache = {};
 
 function config(params) {
   currentConfig = params.config;
@@ -34,7 +39,8 @@ function loadConfig() {
       ]
     },
     "system": {
-      "helpUrl": "/help"
+      "helpUrl": "/help",
+      "useCache": true
     }
   };
 
@@ -57,6 +63,8 @@ function loadConfig() {
       });
 
   currentConfig = conf;
+
+  console.dir(conf);
 
   return conf;
 }
@@ -101,12 +109,61 @@ function endpoint(req, res, next) {
   res.json('{"result":"OK"}');
 }
 
-function reloadScript(file, xml = null) {
-  let fileReal = fs.realpathSync(file);
-  if(xml == null) {
-    xml = fs.readfileSync(fileReal);
+function clearEventRef(file) {
+  let ids = Object.keys(eventIndex);
+  for(let n = 0; n < ids; n++) {
+    eventIndex[ids[n]] = eventIndex[ids[n]].filter(v => v != file);
   }
-  
+}
+
+function clearEventRef(file) {
+  let ids = Object.keys(eventIndex);
+  for(let n = 0; n < ids; n++) {
+    eventIndex[ids[n]] = eventIndex[ids[n]].filter(v => v != file);
+  }
+}
+
+function loadScript(file) {
+  let fileReal = fs.realpathSync(file);
+  return fs.readfileSync(fileReal);
+}
+
+function reloadScript(file, xml = null) {
+  if(xml == null) {
+    xml = loadScript(file);
+  }
+
+  if(currentConfig.system.useCache) {
+    scriptCache[file] = xml;
+  }
+
+  clearEventRef(file);
+
+  let json = JSON.parse(xml2json.toJson(xml, { reversible: false, trim: false }));
+  if(!("block" in json.xml)) {
+    log.w("Cannot refresh contents of an empty or faulty block");
+  } else {
+    json.xml.block.forEach((b) => {
+
+      console.dir(b);
+
+    });
+  }
+
+  console.dir(Object.keys(scriptCache));
+}
+
+function getScript(file) {
+  if(file in scriptCache)
+    return scriptCache;
+
+  let xml = loadScript(file);
+
+  if(currentConfig.system.useCache) {
+    scriptCache[file] = xml;
+  }
+
+  return xml;
 }
 
 module.exports = {
@@ -116,5 +173,7 @@ module.exports = {
   login: login,
   sha256: sha256,
   stringify: stringify,
-  endpoint: endpoint
+  endpoint: endpoint,
+  reloadScript: reloadScript,
+  getScript: getScript
 };
