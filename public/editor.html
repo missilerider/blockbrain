@@ -22,6 +22,7 @@
   <script src="/blockly/msg/js/en.js"></script>
   <script src="/assets/js/blockly_generators.js"></script>
   <script src="/assets/dyn/blocks.js"></script>
+  <script src="/assets/dyn/blockProps.js"></script>
   <script src="/assets/dyn/toolboxes.js"></script>
   <script src="/assets/js/jsTree/dist/jstree.min.js"></script>
 </head>
@@ -80,6 +81,33 @@
             </div>
           </div>
         </div>
+        <div class="row" v-if="this.selectedBlock && ('customProperties' in selectedBlock)">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header card-header-tabs card-header-primary">
+                Properties - [{{ selectedBlock.type }}]
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-12" id="blocklyArea">
+                    <div v-for="field in customPropertiesTemplates[selectedBlock.type].form">
+                      <component :is="customPropComponent(field.type)"
+                        v-bind="field"
+                        :value="selectedBlock.customProperties[field.name]"
+                        @changed="setProperty">
+                      </component>
+<!--
+:name="field.name"
+:desc="field.desc"
+:size="field.size"
+-->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -126,6 +154,7 @@
   <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="../assets/js/material-dashboard.min.js?v=2.1.1" type="text/javascript"></script>
   <script src="/assets/js/vue/template.vue.js"></script>
+  <script src="/assets/js/vue/customproperties.vue.js"></script>
   <script src="/assets/js/vue/editor.vue.js"></script>
 </body>
 </html>

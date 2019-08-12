@@ -44,7 +44,7 @@ function GETblock(data) {
 // Save block
 function POSTblock(data) {
 	if(!data.req.body['xml']) {
-    sata.res.json({ code: 399 });
+    data.res.json({ code: 399 });
     return true;
   }
 
@@ -53,7 +53,7 @@ function POSTblock(data) {
 		fs.writeFileSync(filename + ".xml", data.req.body.xml);
     data.utils.reloadScript(filename + ".xml", data.req.body.xml);
 	} catch(e) {
-		console.dir(e.message);
+//		console.dir(e.message);
 		data.res.json({ code: 501, body: { ok: false, error: 1 } });
     return true;
 	}

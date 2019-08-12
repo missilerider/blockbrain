@@ -1,0 +1,4 @@
+{
+  "persistency": true,
+  "vaultFile": "./config/services/keyValue.vault.json"
+}

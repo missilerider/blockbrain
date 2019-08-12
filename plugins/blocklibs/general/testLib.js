@@ -33,6 +33,26 @@ var pushStartBlock = {
     "category": "test",
     "definition": "def1"
   },
+  "properties": {
+    "form": [
+      {
+        "name": "test",
+        "desc": "Test",
+        "type": "text",
+        "width": 12
+      },
+      {
+        "type": "textarea",
+        "name": "multiline",
+        "desc": "Super texto",
+        "width": 12,
+        "rows": 4,
+      }
+    ],
+    "default": {
+      "test": "Texto de test por defecto"
+    }
+  },
   "run": async (context) => {
     console.log("Ejecucion de pushStart");
     console.dir(context.getMsg());

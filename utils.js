@@ -23,7 +23,8 @@ function loadConfig() {
   var defaultConf = {
     "endpoint": {
       "port": 80,
-      "bind": "0.0.0.0"
+      "bind": "0.0.0.0",
+      "path": "msg"
     },
     "blocks": {
       "path": "./vault"
@@ -69,6 +70,13 @@ function loadConfig() {
   return conf;
 }
 
+function loadServiceConfig(srvName) {
+  try {
+    return JSON.parse(fs.readFileSync('config/services/' + srvName + '.json'));
+  } catch {}
+  return {};
+}
+
 function saveStartupServices(startupServices) {
   fs.writeFileSync('config/startupServices.json', JSON.stringify(startupServices));
 }
@@ -105,20 +113,15 @@ function stringify(o, depth = 1) {
 function endpoint(req, res, next) {
   console.dir(Object.keys(req));
   console.dir(req.body);
+  console.dir(eventIndex);
+  console.dir(Object.keys(scriptCache));
   plugins;
-  res.json('{"result":"OK"}');
+  res.json({"result":"OK"});
 }
 
 function clearEventRef(file) {
   let ids = Object.keys(eventIndex);
-  for(let n = 0; n < ids; n++) {
-    eventIndex[ids[n]] = eventIndex[ids[n]].filter(v => v != file);
-  }
-}
-
-function clearEventRef(file) {
-  let ids = Object.keys(eventIndex);
-  for(let n = 0; n < ids; n++) {
+  for(let n = 0; n < ids.length; n++) {
     eventIndex[ids[n]] = eventIndex[ids[n]].filter(v => v != file);
   }
 }
@@ -139,18 +142,23 @@ function reloadScript(file, xml = null) {
 
   clearEventRef(file);
 
+  let inserted = {};
+
   let json = JSON.parse(xml2json.toJson(xml, { reversible: false, trim: false }));
   if(!("block" in json.xml)) {
     log.w("Cannot refresh contents of an empty or faulty block");
   } else {
     json.xml.block.forEach((b) => {
+      if(!(b.type in inserted)) {
+        inserted[b.type] = true; // Don't insert twice
 
-      console.dir(b);
+        if(!(b.type in eventIndex)) // If event does not exist
+          eventIndex[b.type] = [];
 
+        eventIndex[b.type].push(file);
+      }
     });
   }
-
-  console.dir(Object.keys(scriptCache));
 }
 
 function getScript(file) {
@@ -169,6 +177,7 @@ function getScript(file) {
 module.exports = {
   config: config,
   loadConfig: loadConfig,
+  loadServiceConfig: loadServiceConfig,
   saveStartupServices: saveStartupServices,
   login: login,
   sha256: sha256,

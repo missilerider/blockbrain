@@ -197,6 +197,34 @@ function getBlockSync(blockName) {
   }
 }
 
+function getBlockCustomPropertiesSync() {
+  let ret = {};
+  let libIds = Object.keys(defaultLib);
+  for(let n=0; n<libIds.length; n++) {
+    let lib = defaultLib[libIds[n]];
+    if("properties" in lib) {
+      ret[libIds[n]] = lib.properties;
+    }
+  }
+
+
+  libIds = Object.keys(blockLibs);
+  for(let n=0; n<libIds.length; n++) {
+    let lib = blockLibs[libIds[n]];
+    let blocks = lib.getBlocks();
+    let bIds = Object.keys(blocks);
+    for(let m=0; m<bIds.length; m++) {
+      let block = blocks[bIds[m]];
+
+      if("properties" in block) {
+        ret[libIds[n] + "." + bIds[m]] = block.properties;
+      }
+    }
+  }
+
+  return ret;
+}
+
 async function getToolboxes(conf) {
   var ret = {};
   for(var n=0; n<defaultToolboxes.length; n++) {
@@ -268,6 +296,7 @@ module.exports = {
   getBlocks: getBlocks,
   getBlock: getBlock,
   getBlockSync: getBlockSync,
+  getBlockCustomPropertiesSync: getBlockCustomPropertiesSync,
   getToolboxes: getToolboxes,
   getServices: getServices,
   onReload: onReload

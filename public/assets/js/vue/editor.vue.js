@@ -1,7 +1,7 @@
 var app = new Vue({
   el: '#app',
   data: {
-    message: 'Hello Vue!',
+    customPropertiesTemplates: customPropertiesTemplates,
     revertedBlocks: null,
     services: {},
     blockId: null,
@@ -12,6 +12,7 @@ var app = new Vue({
     toolboxName: "default",
     toolboxNames: toolboxes,
     selectedBlockId: null,
+    selectedBlock: null,
     canUndo: false,
     canRedo: false,
     undone: 0
@@ -30,9 +31,10 @@ var app = new Vue({
       //Blockly.Variables.predefinedVars.push("msg");
   //    Blockly.Variables.getOrCreateVariablePackage(workspace, null, 'msg', 'json');
 
-      createCustomBlockly(); // From serverDyn
+      createCustomBlockly(); // Adds custom blocks, default and from plugins
+      createCustomBlocklyProps(); // Adds custom properties mutators
 
-      that.loadBlock(this.blockId);
+      that.loadBlock(that.blockId);
 
       // Dirty solution for toolbox z-index
       $('.blocklyToolboxDiv').css("zIndex", 1);
@@ -146,11 +148,20 @@ var app = new Vue({
     selectBlock: function(blockId) {
       this.selectedBlockId = blockId;
       if(blockId != null) {
+        this.selectedBlock = null; // Force Vue redraw
         this.selectedBlock = this.workspace.getBlockById(blockId);
         if(this.selectedBlock == null) {
           this.selectedBlockId = null;
         } else {
-          console.log(this.selectedBlock.type);
+          if(!('customProperties' in this.selectedBlock) && this.selectedBlock.type in this.customPropertiesTemplates) {
+            // Custom properties should exist. Writing default
+            this.selectedBlock.customProperties = {};
+            let def = this.customPropertiesTemplates[this.selectedBlock.type].default;
+            var that = this;
+            Object.keys(def).forEach(function(p) {
+              that.selectedBlock.customProperties[p] = def[p];
+            });
+          }
         }
       } else {
         this.selectedBlock = null;
@@ -181,6 +192,17 @@ var app = new Vue({
       this.canUndo = true;
       this.undone--;
       this.canRedo = this.undone > 0;
+    },
+    customPropComponent: function(t) {
+      switch(t) {
+        case "hr": return "property-hr";
+        case "text": return "property-text";
+        case "textarea": return "property-textarea";
+        default: return "";
+      }
+    },
+    setProperty(prop, val) {
+      this.selectedBlock.customProperties[prop] = val;
     }
   }
 })

@@ -131,14 +131,9 @@ app.use('/api/v1/*', (req, res, next) =>  {
   checkAuth(req, res, next, serverApi.dispatcher);
 });
 
-app.post('/endpoint', utils.endpoint);
+app.post('/' + conf.endpoint.path, utils.endpoint);
 
-app.use('/assets/dyn/blockLoader.js', serverDyn.blockLoader);
-app.use('/assets/dyn/blockTree.json', serverDyn.blockTree);
-app.use('/assets/dyn/blocks.js', serverDyn.blocksJs);
-app.use('/assets/dyn/blocks.json', serverDyn.blocks);
-app.use('/assets/dyn/toolboxes.js', serverDyn.toolboxesJs);
-app.use('/assets/dyn/toolboxes.json', serverDyn.toolboxesJson);
+app.use('/assets/dyn/*', serverDyn.dispatcher);
 
 app.use('/blockly', express.static('blockly'));
 app.use('/closure-library', express.static('closure-library'));

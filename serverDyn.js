@@ -12,12 +12,13 @@ const cacheTree = "blockTree.json";
 
 function dispatcher(req, res, next) {
 	switch(req._parsedUrl.pathname) {
-		case '/assets/dyn/blockLoader.js': return blockLoader;
-		case '/assets/dyn/blockTree.json': return blockTree;
-		case '/assets/dyn/blocks.js': return blocksJs;
-		case '/assets/dyn/blocks.json': return blocks;
-		case '/assets/dyn/toolboxes.js': return toolboxesJs;
-		case '/assets/dyn/toolboxes.json': return toolboxesJson;
+		case '/assets/dyn/blockLoader.js': return blockLoader(req, res, next);
+		case '/assets/dyn/blockTree.json': return blockTree(req, res, next);
+		case '/assets/dyn/blocks.js': return blocksJs(req, res, next);
+		case '/assets/dyn/blocks.json': return blocks(req, res, next);
+		case '/assets/dyn/blockProps.js': return blockPropsJs(req, res, next);
+		case '/assets/dyn/toolboxes.js': return toolboxesJs(req, res, next);
+		case '/assets/dyn/toolboxes.json': return toolboxesJson(req, res, next);
 		default:
 			res.status(404);
 			break;
@@ -229,15 +230,48 @@ async function toolboxesJson(req, res) {
   res.send(JSON.stringify(tbxs));
 }
 
-async function getToolboxXml(name, data) {}
+async function blockPropsJs(req, res, next) {
+  res.type('application/javascript');
+
+  let ret = "";
+
+	ret += "customMutationToDom = function() {\n";
+	ret += "\tvar container = document.createElement('mutation');\n";
+	ret += "\tcontainer.setAttribute('customproperties', JSON.stringify(this.customProperties));\n";
+	ret += "\treturn container;\n";
+	ret += "};\n\n";
+
+	ret += "customDomToMutation = function(xmlElement) {\n";
+	ret += "\ttry {\n";
+	ret += "\t\tthis.customProperties = JSON.parse(xmlElement.getAttribute('customproperties'));\n";
+	ret += "\t} catch {};\n";
+	ret += "};\n\n";
+
+  ret += "function createCustomBlocklyProps() {\n";
+
+	let props = plugins.getBlockCustomPropertiesSync();
+
+  let ids = Object.keys(props);
+
+	for(let n = 0; n < ids.length; n++) {
+		ret += "\tBlockly.Blocks['" + ids[n] + "']['mutationToDom'] = customMutationToDom;\n";
+		ret += "\tBlockly.Blocks['" + ids[n] + "']['domToMutation'] = customDomToMutation;\n";
+  }
+
+  ret += "};\n\n";
+
+	ret += "customPropertiesTemplates = {\n";
+
+	for(let n = 0; n < ids.length; n++) {
+		ret += "\t\"" + ids[n] + "\": " + JSON.stringify(props[ids[n]]) + ", \n";
+  }
+
+	ret += "};";
+
+  res.send(ret);
+}
 
 module.exports = {
   config: config,
-  dispatcher: dispatcher,
-  blockLoader: blockLoader,
-  blockTree: blockTree,
-  blocks: blocks,
-  blocksJs: blocksJs,
-  toolboxesJs: toolboxesJs,
-  toolboxesJson: toolboxesJson
+  dispatcher: dispatcher
 };

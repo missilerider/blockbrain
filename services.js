@@ -68,10 +68,18 @@ async function start(srvName, callbackFinish) {
     }
   }
 
-  if(serviceData[srvName] == 1) return false;
+  if(serviceData[srvName].start) return false;
+
+  // Reload config when service starts
+  serviceData[srvName].config = utils.loadServiceConfig(srvName);
 
   serviceData[srvName].stop = false;
   serviceData[srvName].desiredStatus = 1;
+
+  if('start' in services[srvName]) {
+    services[srvName].start(serviceData[srvName]);
+  }
+
   servicePromise[srvName] = services[srvName].run(serviceData[srvName]).then(() => {
     delete servicePromise[srvName];
     serviceData[srvName].stop = true;
@@ -95,6 +103,11 @@ async function stop(srvName, callbackFinish) {
 
   serviceData[srvName].stop = true;
   serviceData[srvName].desiredStatus = 0;
+
+  if('stop' in services[srvName]) {
+    services[srvName].stop(serviceData[srvName]);
+  }
+
   if(callbackFinish) {
     servicePromise[srvName].then(callbackFinish);
   }
@@ -123,7 +136,6 @@ async function waitForStatusSync(srvName, status, maxMillis, callback) {
 }
 
 function setStartOnBoot(srvName, start) {
-  if(!(srvName in conf.startupServices)) return false;
   conf.startupServices[srvName] = start;
   utils.saveStartupServices(conf.startupServices);
 }
