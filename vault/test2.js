@@ -1,4 +1,0 @@
-var obj;
-
-
-obj = inputData;

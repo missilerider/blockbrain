@@ -43,26 +43,6 @@ function GEThealth(data) {
   return true;
 }
 
-// Save block
-function POSTblock(data) {
-	if(!data.req.body['xml']) {
-    sata.res.json({ code: 399 });
-    return true;
-  }
-
-	var filename = data.config.blocks.path + "/" + data.blockId;
-	try {
-		fs.writeFileSync(filename + ".xml", data.req.body.xml);
-    data.utils.reloadScript(filename + ".xml", data.req.body.xml);
-	} catch(e) {
-		console.dir(e.message);
-		data.res.json({ code: 501, body: { ok: false, error: 1 } });
-    return true;
-	}
-  data.res.json({ code: 200, body: { ok: true } });
-  return true;
-}
-
 module.exports = {
   dispatcher: dispatcher
 }

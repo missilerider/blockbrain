@@ -51,7 +51,7 @@ function POSTblock(data) {
 	var filename = data.config.blocks.path + "/" + data.blockId;
 	try {
 		fs.writeFileSync(filename + ".xml", data.req.body.xml);
-    data.utils.reloadScript(filename + ".xml", data.req.body.xml);
+    data.utils.buildScriptRefs(filename + ".xml");
 	} catch(e) {
 //		console.dir(e.message);
 		data.res.json({ code: 501, body: { ok: false, error: 1 } });

@@ -159,6 +159,19 @@ const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
+try {
+  log.i("Script pre-load start");
+  utils.scriptReload(conf.blocks.path).then(() => {
+    console.log("Recarga de scripts finalizada");
+  }).catch((e) => {
+    log.e("scriptReload");
+    log.e(e.message);
+    log.e(e.stack);
+  })
+} catch(e) {
+  log.e(e.message);
+}
+
 // General load
 plugins.reload().then(() => {
   //plugins.getToolboxes(conf).then((s) => {console.dir(s);});

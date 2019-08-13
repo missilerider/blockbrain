@@ -23,6 +23,42 @@
   <script src="/assets/js/jsTree/dist/jstree.min.js"></script>
   <script type="application/javascript" src="assets/js/indexLogic.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <!-- item template -->
+  <script type="text/x-template" id="item-template">
+    <li>
+      <div
+        :class="{bold: isFolder}"
+        @click="toggle"
+        @dblclick="makeFolder">
+        {{ item.name }}
+        <span v-if="isFolder">[{{ isOpen ? '-' : '+' }}]</span>
+      </div>
+      <ul v-show="isOpen" v-if="isFolder">
+        <tree-item
+          class="item"
+          v-for="(child, index) in item.children"
+          :key="index"
+          :item="child"
+          @make-folder="$emit('make-folder', $event)"
+          @add-item="$emit('add-item', $event)"
+        ></tree-item>
+        <li class="add" @click="$emit('add-item', item)">+</li>
+      </ul>
+    </li>
+  </script>
+  <style>
+  .item {
+  cursor: pointer;
+}
+.bold {
+  font-weight: bold;
+}
+ul {
+  padding-left: 1em;
+  line-height: 1.5em;
+  list-style-type: dot;
+}
+  </style>
 </head>
 
 <body>
@@ -95,7 +131,15 @@
                   <h3 class="card-title">Block browser</h3>
                 </div>
                 <div class="card-body">
-                  <div id="jstree"></div>
+                  <!--<div id="jstree"></div>-->
+                  <ul id="demo">
+                    <tree-item
+                      class="item"
+                      :item="treeData"
+                      @make-folder="makeFolder"
+                      @add-item="addItem"
+                    ></tree-item>
+                  </ul>
                 </div>
                 <div class="card-footer">
                   <div class="stats">
@@ -505,7 +549,7 @@
     </div>
   </div>
   <script src="/assets/js/vue/template.vue.js"></script>
-  <script src="/assets/js/vue/index.vue.js"></script>
+  <script src="/assets/js/vue/blocks.vue.js"></script>
 </body>
 
 </html>

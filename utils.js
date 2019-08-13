@@ -41,7 +41,7 @@ function loadConfig() {
     },
     "system": {
       "helpUrl": "/help",
-      "useCache": true
+      "disableCache": false
     }
   };
 
@@ -64,8 +64,6 @@ function loadConfig() {
       });
 
   currentConfig = conf;
-
-  console.dir(conf);
 
   return conf;
 }
@@ -111,11 +109,7 @@ function stringify(o, depth = 1) {
 }
 
 function endpoint(req, res, next) {
-  console.dir(Object.keys(req));
-  console.dir(req.body);
   console.dir(eventIndex);
-  console.dir(Object.keys(scriptCache));
-  plugins;
   res.json({"result":"OK"});
 }
 
@@ -126,27 +120,24 @@ function clearEventRef(file) {
   }
 }
 
+// Returns file contents
 function loadScript(file) {
   let fileReal = fs.realpathSync(file);
-  return fs.readfileSync(fileReal);
+  log.d("Reads script file " + fileReal);
+  return fs.readFileSync(fileReal);
 }
 
-function reloadScript(file, xml = null) {
-  if(xml == null) {
-    xml = loadScript(file);
-  }
-
-  if(currentConfig.system.useCache) {
-    scriptCache[file] = xml;
-  }
-
+// Rebuilds script root node references
+function buildScriptRefs(file) {
   clearEventRef(file);
 
   let inserted = {};
 
-  let json = JSON.parse(xml2json.toJson(xml, { reversible: false, trim: false }));
-  if(!("block" in json.xml)) {
-    log.w("Cannot refresh contents of an empty or faulty block");
+  let json = getScript(file);
+
+  if(!("block" in json.xml) || !(Array.isArray(json.xml.block))) {
+    log.w("Cannot refresh contents of an empty or faulty block in " + file);
+    return false;
   } else {
     json.xml.block.forEach((b) => {
       if(!(b.type in inserted)) {
@@ -159,19 +150,48 @@ function reloadScript(file, xml = null) {
       }
     });
   }
+
+  return true;
 }
 
+// Returns json script and caches if needed
 function getScript(file) {
-  if(file in scriptCache)
-    return scriptCache;
-
-  let xml = loadScript(file);
-
-  if(currentConfig.system.useCache) {
-    scriptCache[file] = xml;
+  if(!currentConfig.system.disableCache) {
+    if(file in scriptCache)
+      return scriptCache[file];
   }
 
-  return xml;
+  let xml = loadScript(file);
+  let json = JSON.parse(xml2json.toJson(xml, { reversible: false, trim: false }));
+
+  if(!currentConfig.system.disableCache) {
+    scriptCache[file] = json;
+    buildScriptRefs(file);
+  }
+
+  return json;
+}
+
+async function scriptReload(dirname) {
+  var files = fs.readdirSync(dirname);
+
+  var fk = Object.keys(files);
+  for(var fn = 0; fn < fk.length; fn++) {
+    //files.forEach(async function (file, index) {
+    var file = files[fk[fn]];
+    var fromPath = dirname + '/' + file;
+
+    var stat = fs.statSync(fromPath);
+
+    if(stat.isFile() && fromPath.match(/.*\.xml/)) {
+      buildScriptRefs(fromPath);
+    } else if(stat.isDirectory()) {
+      scriptReload(fromPath);
+    }
+  }
+
+  console.dir(eventIndex);
+  console.dir(Object.keys(scriptCache));
 }
 
 module.exports = {
@@ -183,6 +203,7 @@ module.exports = {
   sha256: sha256,
   stringify: stringify,
   endpoint: endpoint,
-  reloadScript: reloadScript,
-  getScript: getScript
+  buildScriptRefs: buildScriptRefs,
+  getScript: getScript,
+  scriptReload: scriptReload
 };
