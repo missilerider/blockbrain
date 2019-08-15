@@ -56,7 +56,7 @@ var pushStartBlock = {
   "run": async (context) => {
     console.log("Ejecucion de pushStart");
     console.dir(context.getMsg());
-    return await context.continue(context, "CMD");
+    return await context.continue("CMD");
   }
 };
 
@@ -89,7 +89,7 @@ var consoleLogBlock = {
     "definition": "def2"
   },
   "run": async (context) => {
-    console.log("consoleLog: " + await context.getParam(context, 'TXT'));
+    console.log("consoleLog: " + await context.getParam('TXT'));
   }
 };
 

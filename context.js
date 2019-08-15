@@ -1,16 +1,5 @@
 'use strict';
 
-var program = undefined;
-var block = undefined;
-var vars = {};
-var runFlow = {
-  step: 0,
-  flowState: 0
-};
-var msg = {};
-var plugins = {};
-var stack = [];
-
 function findStatement(blockCode, statementName) {
   if('statement' in blockCode) {
     var sts;
@@ -32,38 +21,38 @@ function findStatement(blockCode, statementName) {
   }
 }
 
-async function contextContinue(currentContext, nextStatement) {
+async function contextContinue(nextStatement) {
   var newBlock  = null;
   var lastRet = undefined;
   try {
-    newBlock = findStatement(currentContext.getProgram(), nextStatement);
+    newBlock = findStatement(this.getProgram(), nextStatement);
   } catch(e) {
     log.i("Execution stops due to error");
     log.d(e.stack);
     return;
   }
   while(newBlock != null) {
-    var codeBlock;
+    let codeBlock;
 
     try {
-      codeBlock = currentContext.getPlugins().getBlockSync(newBlock.block.type);
+      codeBlock = this.getPlugins().getBlockSync(newBlock.block.type);
     } catch {
       console.log("Block type not found:");
       console.dir(newBlock.block);
       throw new Error("Block not found: " + newBlock.block.type)
     }
 
-    currentContext.push();
-    currentContext.jump({
+    this.push();
+    this.jump({
       program: newBlock.block,
       block: codeBlock
     });
 
-    runFlow.step++;
-    log.d("RUN: " + newBlock.block.type);
-    await codeBlock.run(currentContext);
-    currentContext.pop();
-    if('next' in newBlock.block && !currentContext.getRunFlow().flowState) {
+    this.runFlow.step++;
+    log.d("RUN: " + newBlock.block.type + " (" + this.vars.msg.id + ")");
+    await codeBlock.run(this);
+    this.pop();
+    if('next' in newBlock.block && !this.getRunFlow().flowState) {
       newBlock = newBlock.block.next;
     } else {
       newBlock = null;
@@ -71,24 +60,24 @@ async function contextContinue(currentContext, nextStatement) {
 
     //updateContext(this, context);
   }
-  return currentContext.getMsg();
+  return this.getMsg();
 }
 
 function contextExit(code = 0, message = "") {
   console.log("Termina manualmente la ejecucion: " + code + ", " + message);
 }
 
-async function contextGetParam(context, name) {
+async function contextGetParam(name) {
   var values;
-  if(Array.isArray(program.value)) {
-    values = program.value;
+  if(Array.isArray(this.program.value)) {
+    values = this.program.value;
   } else {
-    values = [ program.value ];
+    values = [ this.program.value ];
   }
 
   for(let n = 0; n < values.length; n++) {
     if(values[n].name == name) {
-      var ret = await contextExecValue(context, values[n].block);
+      var ret = await this.execValue(values[n].block);
       return ret;
     }
   }
@@ -96,12 +85,12 @@ async function contextGetParam(context, name) {
   throw new Error("Node does not contain value named " + name);
 }
 
-function contextGetMutation(context, name, defaultValue) {
+function contextGetMutation(name, defaultValue) {
   log.d("getMutation(" + name + ")");
 
-  if('mutation' in context.getProgram()) {
-    if(name in context.getProgram().mutation) {
-      return context.getProgram().mutation[name];
+  if('mutation' in this.getProgram()) {
+    if(name in this.getProgram().mutation) {
+      return this.getProgram().mutation[name];
     }
   }
   return defaultValue;
@@ -111,23 +100,23 @@ function cleanVarName(varName) {
   return varName;
 }
 
-function contextGetVar(context, varName) {
-  log.d("getVar(" + varName + ")");
+function contextGetVar(varName) {
+  //log.d("getVar(" + varName + ")");
   var v = cleanVarName(varName);
-  return vars[v];
+  return this.vars[v];
 }
 
-function contextSetVar(context, varName, newValue) {
-  log.d("setVar(" + varName + ")");
+function contextSetVar(varName, newValue) {
+  //log.d("setVar(" + varName + ")");
   var v = cleanVarName(varName);
-  vars[v] = newValue;
+  this.vars[v] = newValue;
 }
 
-async function contextExecValue(context, val) {
-  log.d("execValue(" + val.type + ")");
+async function contextExecValue(val) {
+  //log.d("execValue(" + val.type + ")");
   var codeBlock;
   try {
-    codeBlock = plugins.getBlockSync(val.type);
+    codeBlock = this.plugins.getBlockSync(val.type);
   } catch {
     console.log("Block type not found:");
     console.dir(val);
@@ -135,20 +124,21 @@ async function contextExecValue(context, val) {
   }
   //var context = thisContext;//createContext({ program: val, block: codeBlock });
 
-  context.push(val, codeBlock);
+  this.push(val, codeBlock);
 
-  program = val;
-  block = codeBlock;
+  this.program = val;
+  this.block = codeBlock;
 
-  context.step();
-  log.d("RUN: " + val.type);
-  let ret = await codeBlock.run(context);
-  context.pop();
+  this.step();
+  log.d("EXECval: " + val.type);
+  console.log("Ejecuta " + this.vars.msg.id);
+  let ret = await codeBlock.run(this);
+  this.pop();
   return ret;
 }
 
-function contextFindName(context, obj, name) {
-  log.d("contextFindName: " + name);
+function contextFindName(obj, name) {
+  //log.d("contextFindName: " + name);
   var data;
   if(Array.isArray(obj)) {
     data = obj;
@@ -162,19 +152,19 @@ function contextFindName(context, obj, name) {
   return null;
 }
 
-function contextGetField(context, name) {
-  log.d("getField(" + name + ")")
-  return contextFindName(context, context.getProgram().field, name)['$t'];
+function contextGetField(name) {
+  //log.d("getField(" + name + ")")
+  return this.findName(this.getProgram().field, name)['$t'];
 }
 
-async function contextGetValue(context, name) {
-  log.d("getValue(" + name + ")");
+async function contextGetValue(name) {
+  //log.d("getValue(" + name + ")");
 
-  var valueBlock = contextFindName(context, context.getProgram().value, name);
+  var valueBlock = this.findName(this.getProgram().value, name);
   if('block' in valueBlock)
-    return await contextExecValue(context, valueBlock.block);
+    return await this.execValue(valueBlock.block);
   else if('shadow' in valueBlock)
-    return await contextExecValue(context, valueBlock.shadow);
+    return await this.execValue(valueBlock.shadow);
 
     log.e("Value not found: " + name);
   throw new Error("Value not found!");
@@ -184,10 +174,10 @@ function prepare(options) {
   if(!options.program || !options.block) {
     throw new Error("Parameters program and block are mandatory");
   }
-  plugins = options.plugins;
-  program = options.program;
-  block = options.block;
-  vars["msg"] = options.msg;
+  this.plugins = options.plugins;
+  this.program = options.program;
+  this.block = options.block;
+  this.vars["msg"] = options.msg;
 }
 
 function clone2(context, options) {
@@ -195,52 +185,70 @@ function clone2(context, options) {
     throw new Error("Parameters program and block are mandatory");
   }
 
-  runFlow = context.getRunFlow();
-  vars = context.getVars();
-  plugins = context.getPlugins();
+  this.runFlow = this.getRunFlow();
+  this.vars = this.getVars();
+  this.plugins = this.getPlugins();
 }
 
 function contextUpdate(options) {
-  runFlow = options.runFlow;
-  vars = options.vars;
+  this.runFlow = options.runFlow;
+  this.vars = options.vars;
 }
 
 function push() {
-  stack.push({
-    program: program,
-    block: block
+  this.stack.push({
+    program: this.program,
+    block: this.block
   });
 }
 
 function pop() {
-  let restore = stack.pop();
-  program = restore.program;
-  block = restore.block;
+  let restore = this.stack.pop();
+  this.program = restore.program;
+  this.block = restore.block;
 }
 
+function Context() {
+  this.program = undefined;
+  this.block = undefined;
+  this.vars = {};
+  this.runFlow = {
+    step: 0,
+    flowState: 0
+  };
+  this.msg = {};
+  this.plugins = {};
+  this.stack = [];
+}
+
+Context.prototype.execValue = contextExecValue;
+Context.prototype.findName = contextFindName;
+
+  // Public funcs
+Context.prototype.continue = contextContinue;
+Context.prototype.exit = contextExit;
+Context.prototype.getParam = contextGetParam;
+Context.prototype.getField = contextGetField;
+Context.prototype.getValue = contextGetValue;
+Context.prototype.getMutation = contextGetMutation;
+Context.prototype.getVar = contextGetVar;
+Context.prototype.setVar = contextSetVar;
+Context.prototype.getMsg = function() { return this.vars.msg; };
+Context.prototype.getVars = function() { return this.vars; };
+Context.prototype.getRunFlow = function() { return this.runFlow; };
+Context.prototype.update = contextUpdate;
+Context.prototype.step = function() { this.runFlow.step++; };
+Context.prototype.clone2 = clone2;
+Context.prototype.prepare = prepare;
+Context.prototype.getPlugins = function() { return this.plugins; };
+Context.prototype.getProgram = function() { return this.program; };
+Context.prototype.getBlock = function() { return this.block; };
+Context.prototype.jump = function(options) { this.program = options.program; this.block = options.block; };
+Context.prototype.push = push;
+Context.prototype.pop = pop;
+Context.prototype.sleep = function(ms) { return new Promise(resolve => { setTimeout(resolve,ms); }) };
+
+
 module.exports = {
-  continue: contextContinue,
-  exit: contextExit,
-  getParam: contextGetParam,
-  getField: contextGetField,
-  getValue: contextGetValue,
-  getMutation: contextGetMutation,
-  getVar: contextGetVar,
-  setVar: contextSetVar,
-  program: program,
-  this: block,
-  getMsg: () => { return msg; },
-  getVars: () => { return vars; },
-  getRunFlow: () => { return runFlow; },
-  update: contextUpdate,
-  step: () => { runFlow.step++; },
-  clone2: clone2,
-  prepare: prepare,
-  getPlugins: () => { return plugins; },
-  getProgram: () => { return program; },
-  getBlock: () => { return block; },
-  jump: (options) => { program = options.program; block = options.block; },
-  push: push,
-  pop: pop,
-  sleep: (ms) => { return new Promise(resolve => { setTimeout(resolve,ms); }) }
+  Context: Context
 }

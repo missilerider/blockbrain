@@ -63,8 +63,8 @@ var writeKeyBlock = {
     }
   },
   "run": async (context) => {
-    let key = context.getField(context, 'KEY');
-    let value = await context.getValue(context, 'VALUE');
+    let key = context.getField('KEY');
+    let value = await context.getValue('VALUE');
     data[key] = value;
     console.log("Key set: " + key + " = " + value);
   }
@@ -113,9 +113,9 @@ var readKeyBlock = {
     }
   },
   "run": async (context) => {
-    let key = context.getField(context, 'KEY');
+    let key = context.getField('KEY');
     console.dir(data);
-//    let value = await context.getValue(context, 'VALUE');
+//    let value = await context.getValue('VALUE');
     if(key in data) return data[key];
     else {
       return null;

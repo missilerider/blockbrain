@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const xml2json = require('xml2json');
+const executor = require('./executor.js');
 
 const log = global.log;
 
@@ -17,6 +18,8 @@ function config(params) {
   currentConfig = params.config;
   plugins = params.plugins;
   services = params.services;
+
+  executor.config(params);
 }
 
 function loadConfig() {
@@ -108,9 +111,37 @@ function stringify(o, depth = 1) {
   }
 }
 
-function endpoint(req, res, next) {
-  console.dir(eventIndex);
+async function endpoint(req, res, next) {
+  let ret = await executeEvent('http_endpoint', req.body);
+
+  console.log("endpoint ret:");
+  console.dir(ret);
   res.json({"result":"OK"});
+}
+
+async function executeEvent(eventName, vars) {
+  let proms = [];
+  if(eventName in eventIndex) {
+    log.d("Ejecucion de " + eventName + " en ficheros ");
+    log.dump("eventIndex", eventIndex[eventName]);
+    for(let n = 0; n < eventIndex[eventName].length; n++) {
+      let script = eventIndex[eventName][n];
+      let json = getScript(script);
+      log.d("Execute " + eventName + " from " + script);
+      proms = proms.concat(await executor.executeProgramJson(json, {
+        nodeTypeFilter: eventName,
+        msg: vars
+      }));
+    }
+
+    let ret = await Promise.all(proms).then(ret => {
+      return ret;
+    });
+
+    return ret;
+  } else {
+    return null;
+  }
 }
 
 function clearEventRef(file) {
@@ -129,16 +160,21 @@ function loadScript(file) {
 
 // Rebuilds script root node references
 function buildScriptRefs(file) {
+  log.d("buildScriptRefs " + file);
   clearEventRef(file);
 
   let inserted = {};
 
+  delete scriptCache[file];
+
   let json = getScript(file);
 
-  if(!("block" in json.xml) || !(Array.isArray(json.xml.block))) {
+  if(!("block" in json.xml)) {
     log.w("Cannot refresh contents of an empty or faulty block in " + file);
     return false;
   } else {
+    if(!Array.isArray(json.xml.block))
+      json.xml.block = [json.xml.block];
     json.xml.block.forEach((b) => {
       if(!(b.type in inserted)) {
         inserted[b.type] = true; // Don't insert twice
@@ -166,13 +202,14 @@ function getScript(file) {
 
   if(!currentConfig.system.disableCache) {
     scriptCache[file] = json;
-    buildScriptRefs(file);
+    //buildScriptRefs(file);
   }
 
   return json;
 }
 
 async function scriptReload(dirname) {
+  log.d("scriptReload " + dirname);
   var files = fs.readdirSync(dirname);
 
   var fk = Object.keys(files);
@@ -183,8 +220,9 @@ async function scriptReload(dirname) {
 
     var stat = fs.statSync(fromPath);
 
-    if(stat.isFile() && fromPath.match(/.*\.xml/)) {
+    if(stat.isFile() && fromPath.match(/.*\.xml$/)) {
       buildScriptRefs(fromPath);
+      //getScript(fromPath);
     } else if(stat.isDirectory()) {
       scriptReload(fromPath);
     }
@@ -203,6 +241,7 @@ module.exports = {
   sha256: sha256,
   stringify: stringify,
   endpoint: endpoint,
+  executeEvent: executeEvent,
   buildScriptRefs: buildScriptRefs,
   getScript: getScript,
   scriptReload: scriptReload

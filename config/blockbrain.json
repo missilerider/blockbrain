@@ -24,5 +24,8 @@
         }
       }
     }
+  },
+  "system": {
+    "disableCache": false
   }
 }

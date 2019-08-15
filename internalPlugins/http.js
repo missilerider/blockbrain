@@ -19,7 +19,7 @@ var httpEndpointBlock = {
   },
   "run":
     async (context) => {
-      return await context.continue(context, "CODE");
+      return await context.continue("CODE");
   }
 }
 

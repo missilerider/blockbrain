@@ -1,14 +1,14 @@
 async function variables_set(context) {
-  var varName = context.getField(context, "VAR");
-  var varValue = await context.getValue(context, "VALUE");
+  var varName = context.getField("VAR");
+  var varValue = await context.getValue("VALUE");
 
-  context.setVar(context, varName, varValue);
+  context.setVar(varName, varValue);
 }
 
 async function variables_get(context) {
-  var varName = context.getField(context, "VAR");
+  var varName = context.getField("VAR");
 
-  return context.getVar(context, varName);
+  return context.getVar(varName);
 }
 
 function getBlocks() {

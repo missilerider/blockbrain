@@ -1,6 +1,7 @@
 'use strict';
 
 const xml2json = require('xml2json');
+const contextFactory = require('./context.js');
 const log = global.log;
 
 var plugins = null;
@@ -11,8 +12,11 @@ function config(options) {
 
 async function executeProgram(xmlProgram, options) {
   let json = JSON.parse(xml2json.toJson(xmlProgram, { reversible: false, trim: false }));
+  return executeProgramJson(json, options);
+}
 
-  var blocks;
+async function executeProgramJson(json, options) {
+  let blocks;
   if(Array.isArray(json.xml.block)) {
     blocks = json.xml.block;
   } else {
@@ -20,8 +24,6 @@ async function executeProgram(xmlProgram, options) {
   }
 
   let ret = []; // Return promises
-
-  plugins.test = "plugins test!!";
 
   for(let b = 0; b < blocks.length; b++) {
     let block = blocks[b];
@@ -31,13 +33,16 @@ async function executeProgram(xmlProgram, options) {
       // Get block from plugin library
       log.d("Get block " + block.type);
       let codeBlock = plugins.getBlockSync(block.type);//, async (err, codeBlock) => {
-      var context = require('./context.js');
+      var context = new contextFactory.Context();
       context.prepare({
         plugins: plugins,
         program: block,
         block: codeBlock,
         msg: options.msg
       });
+
+      context.vars.msg.id = b;
+      console.dir(context.vars.msg);
 
       context.step();
       // Run and keep promise
@@ -51,5 +56,6 @@ async function executeProgram(xmlProgram, options) {
 
 module.exports = {
   executeProgram: executeProgram,
+  executeProgramJson: executeProgramJson,
   config: config
 }

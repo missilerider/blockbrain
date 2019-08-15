@@ -2,27 +2,27 @@ const log = global.log;
 
 async function controls_if(context) {
   var cond;
-  var mutElseIf = context.getMutation(context, 'elseif', 0);
-  var mutElse = context.getMutation(context, 'else', false);
+  var mutElseIf = context.getMutation('elseif', 0);
+  var mutElse = context.getMutation('else', false);
 
   for(let n = 0; n <= mutElseIf; n++) {
-    cond = await context.getValue(context, 'IF' + n);
+    cond = await context.getValue('IF' + n);
     if(cond) {
-      await context.continue(context, "DO" + n);
+      await context.continue("DO" + n);
       return;
     }
   }
 
   if(mutElse) {
-    await context.continue(context, "ELSE");
+    await context.continue("ELSE");
     return;
   }
 }
 
 async function logic_operation(context) {
-  var op = context.getField(context, "OP");
-  var a = await context.getValue(context, "A");
-  var b = await context.getValue(context, "B");
+  var op = context.getField("OP");
+  var a = await context.getValue("A");
+  var b = await context.getValue("B");
 
   switch(op) {
     case "OR": return a || b;
@@ -32,7 +32,7 @@ async function logic_operation(context) {
 }
 
 async function logic_boolean(context) {
-  return context.getField(context, "BOOL") == "TRUE";
+  return context.getField("BOOL") == "TRUE";
 }
 
 async function logic_null(context) {
@@ -40,13 +40,13 @@ async function logic_null(context) {
 }
 
 async function logic_negate(context) {
-  return !(await context.getValue(context, "BOOL"));
+  return !(await context.getValue("BOOL"));
 }
 
 async function logic_compare(context) {
-  var op = context.getField(context, "OP");
-  var a = await context.getValue(context, "A");
-  var b = await context.getValue(context, "B");
+  var op = context.getField("OP");
+  var a = await context.getValue("A");
+  var b = await context.getValue("B");
 
   switch(op) {
     case "EQ": return a == b;
@@ -61,9 +61,9 @@ async function logic_compare(context) {
 }
 
 async function logic_ternary(context) {
-  var opIf = await context.getValue(context, "IF");
-  var opThen = await context.getValue(context, "THEN");
-  var opElse = await context.getValue(context, "ELSE");
+  var opIf = await context.getValue("IF");
+  var opThen = await context.getValue("THEN");
+  var opElse = await context.getValue("ELSE");
 
   return opIf ? opThen : opElse;
 }

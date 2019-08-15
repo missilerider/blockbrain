@@ -11,6 +11,8 @@ var methodOverride = require('method-override');
 const log = require('./log.js');
 global.log = log;
 
+log.setLogLevel("WARN");
+
 const utils = require('./utils.js');
 const serverApi = require('./serverApi.js');
 const serverDyn = require('./serverDyn.js');
@@ -162,7 +164,7 @@ const sleep = (milliseconds) => {
 try {
   log.i("Script pre-load start");
   utils.scriptReload(conf.blocks.path).then(() => {
-    console.log("Recarga de scripts finalizada");
+    log.i("Script pre-load ended");
   }).catch((e) => {
     log.e("scriptReload");
     log.e(e.message);

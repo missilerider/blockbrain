@@ -19,7 +19,7 @@ var jsonBlock = {
     async (context) => {
       //console.dir(context.getProgram());
 
-      var data = await context.getValue(context, "DATA");
+      var data = await context.getValue("DATA");
 
       if(data === null) return null;
 
@@ -56,7 +56,7 @@ var jsonStringifyBlock = {
   },
   "run":
     async (context) => {
-      var json = await context.getValue(context, "JSON");
+      var json = await context.getValue("JSON");
       return JSON.stringify(json);
   }
 }
@@ -88,13 +88,14 @@ var jsonSetBlock = {
     "helpUrl": ""
   },
   "run": async (context) => {
-    var variable = context.getField(context, "VARIABLE");
-    var prop = context.getField(context, "PROP");
-    var data = await context.getValue(context, "DATA");
-    var oldVar = context.getVar(context, variable);
+    var variable = context.getField("VARIABLE");
+    var prop = context.getField("PROP");
+    var data = await context.getValue("DATA");
+    var oldVar = context.getVar(variable);
     if(oldVar === undefined) oldVar = {};
     oldVar[prop] = data;
-    context.setVar(context, variable, oldVar);
+    log.d(variable + "." + prop + " = " + data + "(" + context.getVar("msg").id + ")");
+    context.setVar(variable, oldVar);
   }
 }
 
@@ -120,9 +121,9 @@ var jsonGetBlock = {
     "helpUrl": ""
   },
   "run": async (context) => {
-    var variable = context.getField(context, "VARIABLE");
-    var prop = context.getField(context, "PROP");
-    var oldVar = context.getVar(context, variable);
+    var variable = context.getField("VARIABLE");
+    var prop = context.getField("PROP");
+    var oldVar = context.getVar(variable);
     if(oldVar === undefined) return undefined;
     return oldVar[prop];
   }

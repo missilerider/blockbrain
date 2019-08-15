@@ -1,7 +1,7 @@
 const log = global.log;
 
 async function text(context) {
-  return context.getField(context, "TEXT");
+  return context.getField("TEXT");
 }
 
 async function text_join(context) {
@@ -9,22 +9,22 @@ async function text_join(context) {
   var ret = "";
   for(let n = 0; n < mut; n++) {
     //ret += await context.execValue(context.program.value[n].block);
-    ret += await context.getValue(context, "ADD" + n);
+    ret += await context.getValue("ADD" + n);
   }
   return ret;
 }
 
 async function text_charAt(context) {
-  var where = context.getField(context, "WHERE");
-  var value  = await context.getValue(context, "VALUE");
+  var where = context.getField("WHERE");
+  var value  = await context.getValue("VALUE");
 
   switch(where) {
     case 'FROM_START':
-      var at = await context.getValue(context, "AT");
+      var at = await context.getValue("AT");
       return value.charAt(at);
 
     case 'FROM_END':
-      var at = await context.getValue(context, "AT");
+      var at = await context.getValue("AT");
       return value.charAt(value.length - at - 1);
 
     case 'FIRST':
@@ -44,8 +44,8 @@ async function text_charAt(context) {
 }
 
 async function text_changeCase(context) {
-  var optionCase = context.getField(context, "CASE");
-  var value  = await context.getValue(context, "TEXT");
+  var optionCase = context.getField("CASE");
+  var value  = await context.getValue("TEXT");
 
   switch(optionCase) {
     case "UPPERCASE":
@@ -68,8 +68,8 @@ async function text_changeCase(context) {
 }
 
 async function text_trim(context) {
-  var mode = context.getField(context, "MODE");
-  var value  = await context.getValue(context, "TEXT");
+  var mode = context.getField("MODE");
+  var value  = await context.getValue("TEXT");
 
   switch(mode) {
     case "BOTH":
@@ -88,7 +88,7 @@ async function text_trim(context) {
 }
 
 async function text_print(context) {
-  var value  = await context.getValue(context, "TEXT");
+  var value  = await context.getValue("TEXT");
   var logLevel = log.getLogLevel();
   log.setLogLevel("INFO");
   log.i(value);

@@ -2,7 +2,7 @@ async function controls_repeat_ext(context) {
   var initProgram = context.getProgram();
   var initBlock = context.getBlock();
 
-  var opTimes = parseInt(await context.getValue(context, "TIMES"));
+  var opTimes = parseInt(await context.getValue("TIMES"));
 
   for(let n = 0; n < opTimes; n++) {
     context.push();
@@ -11,7 +11,7 @@ async function controls_repeat_ext(context) {
       block: initBlock
     })
     console.log("Inicia DO");
-    var execValue = await context.continue(context, 'DO');
+    var execValue = await context.continue('DO');
     console.log("Termina DO");
     context.pop();
     switch(context.getRunFlow().flowState) {
@@ -27,7 +27,7 @@ async function controls_repeat_ext(context) {
 }
 
 async function controls_flow_statements(context) {
-  var opFlow = await context.getField(context, "FLOW");
+  var opFlow = await context.getField("FLOW");
 
   switch(opFlow) {
     case "BREAK": context.getRunFlow().flowState = 1;
@@ -37,13 +37,51 @@ async function controls_flow_statements(context) {
   }
 }
 
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
+sleepBlock = {
+  block: {
+    "type": "sleep",
+    "message0": "sleep %1 ms",
+    "args0": [
+      {
+        "type": "field_input",
+        "name": "MS",
+        "text": "1000"
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 60,
+    "tooltip": "Suspends the execution for the specified milliseconds",
+    "helpUrl": ""
+  },
+  run: async function(context) {
+    let ms = context.getField("MS");
+    await sleep(ms);
+  }
+}
+
 function getBlocks() {
   return {
     "controls_repeat_ext": { run: controls_repeat_ext },
-    "controls_flow_statements": { run: controls_flow_statements }
+    "controls_flow_statements": { run: controls_flow_statements },
+    "sleep": sleepBlock
+  }
+}
+
+function getToolbox() {
+  return {
+    "default": {
+      "Functions": ' \
+        <block type="sleep"></block>'
+    }
   }
 }
 
 module.exports = {
-  getBlocks: getBlocks
+  getBlocks: getBlocks,
+  getToolbox: getToolbox
 }
