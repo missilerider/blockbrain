@@ -20,9 +20,10 @@ const serverDyn = require('./serverDyn.js');
 var plugins = require('./plugins.js');
 var services = require('./services.js');
 
-log.d("Server start");
-
 var conf = utils.loadConfig();
+
+log.setLogLevel(conf.system.log.level);
+
 var globalSetup = {
   config: conf,
   plugins: plugins,
@@ -47,6 +48,8 @@ var runtime = {
     }
   }
 };
+
+log.d("Server start");
 
 // Constants
 const PORT = conf.endpoint.port;
@@ -79,7 +82,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride());
 
-function checkAuth(req, res, next, done) {
+function checkAuth(req, res, next, done, errRedirect = true) {
   if(req.session)
     if(req.session.user)
       return done(req, res, next);
@@ -90,9 +93,14 @@ function checkAuth(req, res, next, done) {
         return done(req, res, next);
       }
 
-  res.redirect(302, '/login.html?last=' + encodeURIComponent(req.url));
-  res.end();
-  return false;
+  if(errRedirect) {
+    res.redirect(302, '/login.html?last=' + encodeURIComponent(req.url));
+    res.end();
+    return false;
+  } else {
+    res.status(401).send({message: 'Authorization needed. Please refer to the user manual'});
+    return false;
+  }
 }
 
 app.get('/logoff.run', (req, res, next) => {
@@ -130,10 +138,17 @@ app.get('/', (req, res, next) => { res.redirect(301, '/index.html'); });
 
 // API calls
 app.use('/api/v1/*', (req, res, next) =>  {
-  checkAuth(req, res, next, serverApi.dispatcher);
+  checkAuth(req, res, next, serverApi.dispatcher, false);
 });
 
-app.post('/' + conf.endpoint.path, utils.endpoint);
+//app.post('/' + conf.endpoint.path, utils.endpoint);
+app.post('/' + conf.endpoint.path, (req, res, next) =>  {
+  checkAuth(req, res, next, utils.endpoint, false);
+});
+
+app.get('/' + conf.endpoint.path, (req, res, next) =>  {
+  res.send("Endpoint ready for requests. Please refer to the manual.");
+});
 
 app.use('/assets/dyn/*', serverDyn.dispatcher);
 
@@ -186,4 +201,4 @@ plugins.reload().then(() => {
 });
 
 app.listen(PORT, HOST);
-console.log(`Running on http://${HOST}:${PORT}`);
+log.i(`Running on http://${HOST}:${PORT}`);

@@ -1,1 +1,4 @@
-{"importantService":false,"testService":false,"keyValue":true}
+{
+  "testService": false,
+  "keyValue": true
+}

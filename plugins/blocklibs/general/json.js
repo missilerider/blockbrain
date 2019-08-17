@@ -61,6 +61,33 @@ var jsonStringifyBlock = {
   }
 }
 
+var jsonParseBlock = {
+  "block": {
+    "type": "json_parse",
+    "message0": "parse json %1",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "DATA"
+      }
+    ],
+    "output": "json",
+    "colour": 315,
+    "tooltip": "Parse string to json",
+    "helpUrl": ""
+  },
+  "run":
+    async (context) => {
+      //console.dir(context.getProgram());
+
+      var data = await context.getValue("DATA");
+
+      if(data === null) return null;
+
+      return JSON.parse(data);
+  }
+}
+
 var jsonSetBlock = {
   "block": {
     "type": "json_set",
@@ -141,6 +168,7 @@ function getBlocks() {
   return {
     "json": jsonBlock,
     "json_stringify": jsonStringifyBlock,
+    "json_parse": jsonParseBlock,
     "json_set": jsonSetBlock,
     "json_get": jsonGetBlock
   };
@@ -156,6 +184,7 @@ function getToolbox() {
       "Functions": ' \
         <block type="json.json"></block> \
         <block type="json.json_stringify"></block> \
+        <block type="json.json_parse"></block> \
         <block type="json.json_set"></block> \
         <block type="json.json_get"></block>'
     }

@@ -6,6 +6,8 @@ const log = global.log;
 
 var plugins = null;
 
+var ctxt = [];
+
 function config(options) {
   plugins = options.plugins;
 }
@@ -25,6 +27,7 @@ async function executeProgramJson(json, options) {
 
   let ret = []; // Return promises
 
+  let context;
   for(let b = 0; b < blocks.length; b++) {
     let block = blocks[b];
 
@@ -33,18 +36,18 @@ async function executeProgramJson(json, options) {
       // Get block from plugin library
       log.d("Get block " + block.type);
       let codeBlock = plugins.getBlockSync(block.type);//, async (err, codeBlock) => {
-      var context = new contextFactory.Context();
-      context.prepare({
+      context = null;
+      context = contextFactory.createContext({
         plugins: plugins,
         program: block,
         block: codeBlock,
         msg: options.msg
       });
 
-      context.vars.msg.id = b;
-      console.dir(context.vars.msg);
+      ctxt.push(context.vars);
 
       context.step();
+
       // Run and keep promise
       let runprom = codeBlock.run(context);
       ret.push(runprom);

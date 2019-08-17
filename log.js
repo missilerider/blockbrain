@@ -1,6 +1,6 @@
 'use strict';
 
-var logLevel = 5;
+var logLevel = 53;
 
 function doLog(t, context) {
   if(typeof t !== 'object') {
@@ -13,16 +13,29 @@ function doLog(t, context) {
 
 function setLogLevel(newLevel) {
   switch(newLevel) {
+    case "0":
+    case 0:
+    case "":
     case "NONE": logLevel = 0; break;
+    case "1":
+    case 1:
     case "F":
     case "FATAL": logLevel = 1; break;
+    case "2":
+    case 2:
     case "E":
     case "ERROR": logLevel = 2; break;
+    case "3":
+    case 3:
     case "W":
     case "WARN":
     case "WARNING": logLevel = 3; break;
+    case "4":
+    case 4:
     case "I":
     case "INFO": logLevel = 4; break;
+    case "5":
+    case 5:
     case "D":
     case "DEBUG": logLevel = 5; break;
     default: doLog("Incorrect log level: " + newLevel, "WARN");

@@ -26,6 +26,9 @@
     }
   },
   "system": {
-    "disableCache": false
+    "disableCache": false,
+    "log": {
+      "level": "DEBUG"
+    }
   }
 }

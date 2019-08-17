@@ -44,14 +44,16 @@ function loadConfig() {
     },
     "system": {
       "helpUrl": "/help",
-      "disableCache": false
+      "disableCache": false,
+      "log": {
+        "level": "WARNING"
+      }
     }
   };
 
   var defaultStartupServices = {
-    "importantService": false
+    "keyValue": true
   }
-
 
   var userConf = JSON.parse(fs.readFileSync('config/blockbrain.json'));
 
@@ -112,11 +114,19 @@ function stringify(o, depth = 1) {
 }
 
 async function endpoint(req, res, next) {
+  log.d("Endpoint request");
+  log.dump("body", req.body);
+
   let ret = await executeEvent('http_endpoint', req.body);
 
-  console.log("endpoint ret:");
-  console.dir(ret);
-  res.json({"result":"OK"});
+  ret = ret.filter(r => r != null);
+
+  if(ret.length > 1)
+    res.json(ret);
+  else if(ret.length == 1)
+    res.json(ret[0]);
+  else
+    res.json({});
 }
 
 async function executeEvent(eventName, vars) {
@@ -227,9 +237,6 @@ async function scriptReload(dirname) {
       scriptReload(fromPath);
     }
   }
-
-  console.dir(eventIndex);
-  console.dir(Object.keys(scriptCache));
 }
 
 module.exports = {
