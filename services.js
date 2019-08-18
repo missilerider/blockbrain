@@ -19,6 +19,8 @@ const statusName = {
   }
 }
 
+var commonTools = {};
+
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
@@ -27,6 +29,14 @@ function config(params) {
   plugins = params.plugins;
   conf = params.config;
   utils = params.utils;
+
+  commonTools = {
+    executeEvent: async (block, data) => {
+      let ret = await utils.executeEvent(block, data);
+
+      return ret.filter(r => r != null);
+    }
+  }
 
   plugins.onReload(onPluginsReload);
 }
@@ -77,10 +87,10 @@ async function start(srvName, callbackFinish) {
   serviceData[srvName].desiredStatus = 1;
 
   if('start' in services[srvName]) {
-    services[srvName].start(serviceData[srvName]);
+    services[srvName].start(serviceData[srvName], commonTools);
   }
 
-  servicePromise[srvName] = services[srvName].run(serviceData[srvName]).then(() => {
+  servicePromise[srvName] = services[srvName].run(serviceData[srvName], commonTools).then(() => {
     delete servicePromise[srvName];
     serviceData[srvName].stop = true;
     serviceData[srvName].status = 0;
@@ -105,7 +115,7 @@ async function stop(srvName, callbackFinish) {
   serviceData[srvName].desiredStatus = 0;
 
   if('stop' in services[srvName]) {
-    services[srvName].stop(serviceData[srvName]);
+    services[srvName].stop(serviceData[srvName], commonTools);
   }
 
   if(callbackFinish) {

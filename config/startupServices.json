@@ -1,4 +1,1 @@
-{
-  "testService": false,
-  "keyValue": true
-}
+{"keyValue":true,"testService":false,"telegram":true}

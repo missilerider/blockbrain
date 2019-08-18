@@ -1,8 +1,14 @@
 const fs = require('fs');
+const telegram = require('./telegramWrapper.lib.js');
+const log = global.log;
+
+const blocks = require('./telegramBlocks.lib.js');
 
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
+
+var bot = undefined;
 
 function getInfo(env) {
   return {
@@ -11,59 +17,6 @@ function getInfo(env) {
     "author": "Alfonso Vila"
   }
 }
-
-var readKeyBlock = {
-  "block": {
-    "type": "readkey",
-    "message0": "key %1",
-    "args0": [
-      {
-        "type": "field_input",
-        "name": "KEY",
-        "text": "keyName"
-      }
-    ],
-    "output": null,
-    "colour": 120,
-    "tooltip": "",
-    "helpUrl": ""
-  },
-  "toolbox": {
-    "toolbox": "default",
-    "type": "function",
-    "category": "keyvalue",
-    "definition": "def1"
-  },
-  "properties": {
-    "form": [
-      {
-        "name": "test",
-        "desc": "Test",
-        "type": "text",
-        "width": 12
-      },
-      {
-        "type": "textarea",
-        "name": "multiline",
-        "desc": "Super texto",
-        "width": 12,
-        "rows": 4,
-      }
-    ],
-    "default": {
-      "test": "Texto de test por defecto"
-    }
-  },
-  "run": async (context) => {
-    let key = context.getField('KEY');
-    console.dir(data);
-//    let value = await context.getValue('VALUE');
-    if(key in data) return data[key];
-    else {
-      return null;
-    }
-  }
-};
 
 var telegramService = {
   getInfo: () => { return {
@@ -78,84 +31,154 @@ var telegramService = {
 
     // Preloads keys and values if necesary
     if(serviceConfig.persistence) {
-      log.d("Loads saved keys");
-      loadKeys(serviceConfig);
+//      log.d("Loads saved keys");
+//      loadKeys(serviceConfig);
     }
 
     return true;
   },
   stop: (srv) => {
     serviceConfig = srv.config;
-    if(!runPromise || !runPromiseResolve) return false;
-    runPromiseResolve();
-    runPromise = null;
-    runPromiseResolve = null;
   },
-  run: async (srv) => {
+  run: async (srv, tools) => {
     serviceConfig = srv.config;
-    srv.status = 1;
-    if(runPromise || runPromiseResolve) return false; // Must stop before
-    runPromise = new Promise(resolve => {
-      runPromiseResolve = resolve;
+
+    bot = new telegram.Bot({
+      token: serviceConfig.token,
+      pollingTimeout: serviceConfig.pollingTimeout
     });
 
-    while(!srv.stop) {
-      console.log("Servicio vivo!");
-      await sleep(1000);
-    }
+    srv.status = 1;
 
-    await runPromise;
+    while(!srv.stop) {
+      let msg = await bot.getUpdates();
+      for(let n = 0; n < msg.length; n++) {
+        if('text' in msg[n]) {
+          log.d("Telegram text: " + msg[n].text);
+          await tools.executeEvent('telegram.telegram_text', {
+            text: msg[n].text,
+            message: msg[n]
+          });
+        }
+
+        if('commands' in msg[n]) {
+          for(let c = 0; c < msg[n].commands.length; c++) {
+            log.d("Telegram command: " + msg[n].commands[n].command);
+            await tools.executeEvent('telegram.telegram_cmd', {
+              command: msg[n].commands[c].command,
+              params: msg[n].commands[c].params,
+              message: msg[n]
+            });
+          }
+        }
+
+        if('document' in msg[n]) {
+          log.d("Telegram document: " + msg[n].document.file_name);
+          await tools.executeEvent('telegram.telegram_document', {
+            file_name: msg[n].document.file_name,
+            message: msg[n]
+          });
+        }
+      }
+    }
 
     srv.status = 0;
   }
 }
 
+var telegramTextBlock = {
+  "block": blocks.telegramTextBlock,
+  "run": async (context) => {
+    var rgx = context.getField('RGX');
+    try {
+      if(context.getVar('msg').text.match(rgx))
+        return await context.continue("CMD");
+    } catch(e) {
+      log.e("Regular expression error: " + e.message);
+    }
+  }
+};
+
+var telegramCmdBlock = {
+  "block": blocks.telegramCmdBlock,
+  "run": async (context) => {
+    var rgx = context.getField('RGX');
+    try {
+      if(context.getVar('msg').command.match(rgx))
+        return await context.continue("CMD");
+    } catch(e) {
+      log.e("Regular expression error: " + e.message);
+    }
+  }
+};
+
+var telegramDocumentBlock = {
+  "block": blocks.telegramDocumentBlock,
+  "run": async (context) => {
+    var rgx = context.getField('RGX');
+    try {
+      if(context.getVar('msg').file_name.match(rgx))
+        return await context.continue("CMD");
+    } catch(e) {
+      log.e("Regular expression error: " + e.message);
+    }
+  }
+};
+
+var telegramSendTextBlock = {
+  "block": blocks.telegramSendTextBlock,
+  "run": async (context) => {
+    let chat = context.getField("CHAT");
+    let text = await context.getValue("TEXT");
+
+    switch(chat) {
+      case "CURRENT":
+        await bot.sendMessage({
+          chat_id: context.getVar('msg').message.chat.id,
+          text: text
+        });
+        break;
+
+        case "ADMINS":
+          await bot.sendMessage({
+            chat_id: context.getVar('msg').message.chat.id,
+            text: "ADMIN: " + text
+          });
+          break;
+    }
+/*    var rgx = context.getField('RGX');
+    try {
+      if(context.getVar('msg').file_name.match(rgx))
+        return await context.continue("CMD");
+    } catch(e) {
+      log.e("Regular expression error: " + e.message);
+    }*/
+  }
+};
+
 function getBlocks() {
   return {
-    "writeKey": writeKeyBlock,
-    "readKey": readKeyBlock
+    "telegram_text": telegramTextBlock,
+    "telegram_cmd": telegramCmdBlock,
+    "telegram_document": telegramDocumentBlock,
+    "telegram_send_text": telegramSendTextBlock
   };
 }
 
 function getServices() {
-  return { "keyValue": keyValueService };
+  return { "telegram": telegramService };
 }
 
 function getToolbox() {
   return {
-    "default": {
-      "Functions": '<block type="kv.writeKey"></block> \
-                    <block type="kv.readKey"></block>'
-//      "Functions": '<block type="test.consoleLog"></block>'
+    "telegram": {
+      "Events": '<block type="telegram.telegram_text"></block> \
+                <block type="telegram.telegram_cmd"></block> \
+                <block type="telegram.telegram_document"></block>',
+      "Functions":
+        '<block type="telegram.telegram_send_text"></block>'
     }
   }
-}
-
-function loadKeys(config) {
-  fs.readFile(config.vaultFile, (err, newData) => {
-    if(err) {
-      log.w("Could not read key-value vault file. Starting from scratch!");
-    } else {
-      try {
-        data = JSON.parse(newData);
-      } catch {
-        log.e("Loaded data from key-value vault not readable. Disabling persistence!");
-        config.persistence = false;
-        log.i("If you want to make persistence work again, please delete the vault file or fix the JSON structure in it manually");
-      }
-    }
-  });
-}
-
-function saveKeys() {
-  log.d("Persists key-value data to file " + serviceConfig.vaultFile);
-  try {
-    fs.writeFileSync(serviceConfig.vaultFile, JSON.stringify(data), 'utf8');
-  } catch {
-    log.e("Could not save key-value data to file. Disabling persistence");
-    serviceConfig.persistence = false;
-  }
-  waitingSave = false;
 }
 
 module.exports = {

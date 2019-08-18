@@ -75,7 +75,8 @@ async function reloadPlugins(dirname) {
 
     var stat = fs.statSync(fromPath);
 
-    if(stat.isFile() && fromPath.match(/.*\.js/)) {
+    // *.js but not *.lib.*.js nor *.lib.js
+    if(stat.isFile() && fromPath.match(/^((?!\.lib\.).)*\.js$/)) {
       try {
         log.i("Reads file " + fromPath);
         var lib = require('./' + fromPath);
@@ -83,7 +84,7 @@ async function reloadPlugins(dirname) {
         var methods = Object.keys(lib);
 
         if(!('getInfo' in lib)) {
-          log.e("Module " + fromPath + ". Incorrect methods");
+          log.w("File '" + fromPath + "' is not a plugin file. Incorrect methods");
         } else {
           var info = lib.getInfo();
           if(info.id != null) {

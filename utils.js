@@ -132,7 +132,7 @@ async function endpoint(req, res, next) {
 async function executeEvent(eventName, vars) {
   let proms = [];
   if(eventName in eventIndex) {
-    log.d("Ejecucion de " + eventName + " en ficheros ");
+    log.d("Execution of " + eventName + " in files:");
     log.dump("eventIndex", eventIndex[eventName]);
     for(let n = 0; n < eventIndex[eventName].length; n++) {
       let script = eventIndex[eventName][n];
