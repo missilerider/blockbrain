@@ -176,16 +176,30 @@ class Context {
     return this.findName(this.getProgram().field, name)['$t'];
   }
 
-  async getValue(name) {
+  async getValue(name, defaultValue = undefined) {
     //log.d("getValue(" + name + ")");
 
+    if(!this.getProgram().value) {
+      if(defaultValue !== undefined) return defaultValue;
+      throw new Error("Value not found!");
+    }
+
     var valueBlock = this.findName(this.getProgram().value, name);
+    if(!valueBlock) {
+      if(defaultValue !== undefined) return defaultValue;
+      throw new Error("Value not found!");
+    }
+
     if('block' in valueBlock)
       return await this.execValue(valueBlock.block);
     else if('shadow' in valueBlock)
       return await this.execValue(valueBlock.shadow);
 
-      log.e("Value not found: " + name);
+    if(defaultValue !== undefined)
+      return defaultValue ;
+
+      // If default value is not defined, must contain a block!
+    log.e("Value not found: " + name);
     throw new Error("Value not found!");
   }
 

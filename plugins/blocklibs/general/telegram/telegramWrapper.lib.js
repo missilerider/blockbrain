@@ -59,11 +59,17 @@ class Bot {
       }*/
 
       for(let n = 0; n < ret.result.length; n++) {
-        let msg = new Message(ret.result[n]);
+        let msg;
+
+        if('message' in ret.result[n])
+          msg = new Message(ret.result[n].message);
+        else if('callback_query' in ret.result[n])
+          msg = new CallbackQuery(ret.result[n].callback_query);
+
         ret2.push(msg);
 
-        if(msg.update_id >= this.nextUpdate_id)
-          this.nextUpdate_id = msg.update_id + 1;
+        if(ret.result[n].update_id >= this.nextUpdate_id)
+          this.nextUpdate_id = ret.result[n].update_id + 1;
       }
     }
 
@@ -78,44 +84,49 @@ class Bot {
     if(!params.chat_id || !params.text)
       throw new Error("chat_id and text are mandatory");
 
-    this.doPostSync("sendMessage", {
-      chat_id: params.chat_id,
-      text: params.text,
-      parse_mode: 'Markdown'
-    })
+    if(!('parse_mode' in params))
+      params.parse_mode = 'Markdown';
+
+    this.doPostSync("sendMessage", params);
+  }
+
+  async editMessageReplyMarkup(params) {
+    console.log(JSON.stringify(params));
+    this.doPostSync("editMessageReplyMarkup", params);
   }
 }
 
 class Message {
-  constructor(params) {
-    this.update_id = params.update_id || undefined;
-    this.message_id = params.message.message_id || undefined;
+  constructor(data) {
+//    this.raw = data;
 
-    if('from' in params.message)
-      this.from = new User(params.message.from);
+    this.message_id = data.message_id || undefined;
+
+    if('from' in data)
+      this.from = new User(data.from);
       else {
         console.log("mensaje sin from!");
-        console.dur(params.message);
+        console.dur(data);
       }
 
-    if('chat' in params.message)
-      this.chat = new Chat(params.message.chat);
+    if('chat' in data)
+      this.chat = new Chat(data.chat);
     else {
       console.log("mensaje sin chat!");
-      console.dir(params.message);
+      console.dir(data);
     }
 
-    this.setDate(params.message.date);
+    this.setDate(data.date);
 
-    if('text' in params.message) {
-      this.text = params.message.text;
+    if('text' in data) {
+      this.text = data.text;
 
       let cmds = [];
       let prevCmd = null;
       let lastEnd = -1;
-      if('entities' in params.message) {
-        for(let n = 0; n < params.message.entities.length; n++) {
-          let ent = params.message.entities[n];
+      if('entities' in data) {
+        for(let n = 0; n < data.entities.length; n++) {
+          let ent = data.entities[n];
           if(ent.type == "bot_command") {
             if(prevCmd) {
               let pTxt = this.text.substring(lastEnd + 1, ent.offset - 1);
@@ -141,8 +152,8 @@ class Message {
       }
     }
 
-    if('document' in params.message)
-      this.document = new Document(params.message.document);
+    if('document' in data)
+      this.document = new Document(data.document);
 
   }
 
@@ -151,40 +162,63 @@ class Message {
     this.date.setUTCSeconds(utc);
   }
 
-  isText() {
+  getType() { return "Message"; }
+}
 
+class CallbackQuery {
+  constructor(data) {
+//    this.raw = data;
+
+    this.id = data.id;
+
+    if('from' in data)
+      this.from = new User(data.from);
+
+    if('message' in data) {
+      this.message = new Message(data.message);
+      this.chat = this.message.chat;
+    }
+
+    this.inline_message_id = data.inline_message_id || undefined;
+    this.chat_instance = data.chat_instance || undefined;
+    this.data = data.data || undefined;
+    this.game_short_name = data.game_short_name || undefined;
   }
+
+  getType() { return "CallbackQuery"; }
 }
 
 class User {
-  constructor(params) {
-    this.id = params.id || undefined;
-    this.is_bot = params.is_bot || undefined;
-    this.first_name = params.first_name || undefined;
-    this.last_name = params.last_name || undefined;
-    this.username = params.username || undefined;
-    this.language_code = params.language_code || undefined;
+  constructor(data) {
+    this.id = data.id || undefined;
+    this.is_bot = data.is_bot || undefined;
+    this.first_name = data.first_name || undefined;
+    this.last_name = data.last_name || undefined;
+    this.username = data.username || undefined;
+    this.language_code = data.language_code || undefined;
   }
 }
 
 class Chat {
-  constructor(params) {
-    this.id = params.id || undefined;
-    this.first_name = params.first_name || undefined;
-    this.last_name = params.last_name || undefined;
-    this.username = params.username || undefined;
-    this.type = params.type || undefined;
+  constructor(data) {
+    this.id = data.id || undefined;
+    this.first_name = data.first_name || undefined;
+    this.last_name = data.last_name || undefined;
+    this.username = data.username || undefined;
+    this.type = data.type || undefined;
   }
 }
 
 class Document {
-  constructor(params) {
-    this.file_name = params.file_name || undefined;
-    this.file_id = params.file_id || undefined;
-    this.file_size = params.file_size || undefined;
+  constructor(data) {
+    this.file_name = data.file_name || undefined;
+    this.file_id = data.file_id || undefined;
+    this.file_size = data.file_size || undefined;
   }
 }
 
 module.exports = {
-  Bot: Bot
+  Bot: Bot,
+  Message: Message,
+  CallbackQuery: CallbackQuery
 }
