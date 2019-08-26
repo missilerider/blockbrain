@@ -77,7 +77,7 @@ var telegramService = {
           if('document' in msg[n]) {
             log.d("Telegram document: " + msg[n].document.file_name);
             await tools.executeEvent('telegram.telegram_document', {
-              file_name: msg[n].document.file_name,
+              fileName: msg[n].document.file_name,
               message: msg[n]
             });
           }
@@ -150,10 +150,11 @@ var telegramCallbackQueryBlock = {
 var telegramDocumentBlock = {
   "block": blocks.telegramDocumentBlock,
   "run": async (context) => {
+    console.log(JSON.stringify(context.getVar('msg')));
     var rgx = context.getField('RGX');
     let matches = false;
     try {
-      matches = context.getVar('msg').text.match(rgx);
+      matches = context.getVar('msg').fileName.match(rgx);
     } catch(e) {
       log.e("Regular expression error: " + e.message);
     }
