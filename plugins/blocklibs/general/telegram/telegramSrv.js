@@ -150,7 +150,6 @@ var telegramCallbackQueryBlock = {
 var telegramDocumentBlock = {
   "block": blocks.telegramDocumentBlock,
   "run": async (context) => {
-    console.log(JSON.stringify(context.getVar('msg')));
     var rgx = context.getField('RGX');
     let matches = false;
     try {

@@ -1,0 +1,18 @@
+{
+  "broker": {
+    "host": "172.16.0.4",
+    "port": 0,
+    "protocol": "mqtt",
+    "version": 4,
+    "username": null,
+    "password": null,
+    "keepalive": 0,
+    "reconnectPeriod": 1000,
+    "validateCertificate": true
+  },
+  "topics": {
+    "test/echo": { "format": "text" },
+    "test/+/echo": { "format": "json" },
+    "#": {  }
+  }
+}
