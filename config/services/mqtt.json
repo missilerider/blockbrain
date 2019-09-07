@@ -10,9 +10,12 @@
     "reconnectPeriod": 1000,
     "validateCertificate": true
   },
+  "messaging": {
+    "deduplicate": true
+  },
   "topics": {
-    "test/echo": { "format": "text" },
-    "test/+/echo": { "format": "json" },
-    "#": {  }
+    "test/echo": { "format": "text", "filter": false },
+    "test/+/echo": { "format": "json", "filter": true },
+    "#": { "format": "json"  }
   }
 }

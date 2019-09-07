@@ -4,9 +4,11 @@ const mqtt = require('mqtt')
 const lib = require('./mqtt.lib.js');
 const log = global.log;
 
+var tools = null;
 var client = null;
 var config = null;
-var topics = [];
+var topics = {};
+var topicRgx = [];
 
 var messageBlock = {
   "block": lib.message,
@@ -15,7 +17,7 @@ var messageBlock = {
       var rgx = context.getField('RGX');
       let matches = false;
       try {
-        matches = context.getVar('msg').fileName.match(rgx);
+        matches = context.getVar('msg').topic.match(rgx);
       } catch(e) {
         log.e("Regular expression error: " + e.message);
       }
@@ -47,18 +49,80 @@ function getToolbox() {
   }
 }
 
+function refreshSubscriptions() {
+  let keys = Object.keys(topics);
+  for(let n = 0; n < keys.length; n++) {
+
+  }
+
+  keys = Object.keys(config.topics);
+
+  keys.forEach((t) => {
+    client.subscribe(t, function() {
+      log.d("MQTT subscribed to " + t);
+    });
+  });
+}
+
 function setConfig(newConfig) {
   config = Object.assign(lib.baseConfig, newConfig);
+
   let keys = Object.keys(config.topics);
-  for(let n = 0; n < keys; n++) {
-    
+  for(let n = 0; n < keys.length; n++) {
+    let rgx = keys[n].replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    rgx = rgx.replace("\\+", "[^/]+");
+    rgx = rgx.replace("#", ".+");
+    log.i(rgx);
+    topicRgx[n] = rgx;
+    topics[rgx] = config.topics[keys[n]];
   }
 }
 
 function onMessage(topic, message, packet) {
+  let sent = false;
   log.i("Received '" + message + "' on '" + topic + "'");
-  for(let n = 0; n < topics.length; n++) {
+  for(let n = 0; n < topicRgx.length; n++) {
+    if(topic.match(topicRgx[n])) {
+      if(!sent || !config.messaging.deduplicate) {
+        log.d("Match! " + topic + " = " + topicRgx[n] + " => " + message);
+        sent = true;
 
+        let data = message;
+        let exact = false;
+        if("format" in topics[topicRgx[n]]) {
+          switch(topics[topicRgx[n]].format) {
+            case "text": data = message.toString(); exact = true; break;
+            case "json":
+              try {
+                data = JSON.parse(message.toString());
+                exact = true;
+              } catch(e) {
+                exact = false;
+                data = message.toString();
+              }
+              break;
+            case "number":
+            try {
+              data = Number.parseFloat(message);
+              exact = true;
+            } catch(e) {
+              exact = false;
+              data = message.toString();
+            }
+            break;
+          }
+        }
+
+        if(topics[topicRgx[n]].filter && !exact) {
+          log.d("MQTT message format & filter not met: " + topics[topicRgx[n]].format);
+        } else {
+          tools.executeEvent('mqtt.message', {
+            topic: topic,
+            message: data
+          });
+        }
+      }
+    }
   }
 }
 
@@ -82,7 +146,8 @@ var mqttService = {
       client = null;
     }
   },
-  run: async (srv, tools) => {
+  run: async (srv, srvTools) => {
+    tools = srvTools;
     setConfig(srv.config);
 
     let host = "";
@@ -115,20 +180,14 @@ var mqttService = {
       ops.rejectUnauthorized = config.broker.validateCertificate == true;
 
     log.d("Starting MQTT connection to " + host);
-    var client  = mqtt.connect(host, ops);
+    client  = mqtt.connect(host, ops);
 
     client.on('connect', function() {
       log.i("MQTT broker connection OK");
 
       client.on('message', onMessage);
 
-      topics = Object.keys(config.topics);
-
-      topics.forEach((t) => {
-        client.subscribe(t, function() {
-          log.d("MQTT subscribed to " + t);
-        });
-      });
+      refreshSubscriptions();
     });
 
     srv.status = 1;
