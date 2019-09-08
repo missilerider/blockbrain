@@ -6,7 +6,7 @@
     "version": 4,
     "username": null,
     "password": null,
-    "keepalive": 0,
+    "keepalive": 60,
     "reconnectPeriod": 1000,
     "validateCertificate": true
   },

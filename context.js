@@ -187,7 +187,8 @@ class Context {
     var valueBlock = this.findName(this.getProgram().value, name);
     if(!valueBlock) {
       if(defaultValue !== undefined) return defaultValue;
-      throw new Error("Value not found!");
+      log.dump("Values", this.getProgram().value);
+      throw new Error("Value " + name + " not found!");
     }
 
     if('block' in valueBlock)

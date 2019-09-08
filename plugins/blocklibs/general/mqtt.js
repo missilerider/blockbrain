@@ -4,6 +4,9 @@ const mqtt = require('mqtt')
 const lib = require('./mqtt.lib.js');
 const log = global.log;
 
+var runPromise = null;
+var runPromiseResolve = null;
+
 var tools = null;
 var client = null;
 var config = null;
@@ -26,6 +29,67 @@ var messageBlock = {
   }
 }
 
+var publishMessageBlock = {
+  "block": lib.publishMessage,
+  "run":
+    async (context) => {
+      var topic = context.getField('TOPIC');
+      log.d("MQTT publish on " + topic);
+      if(!runPromise) {
+        log.e("MQTT service stopped. Cannot send to '" + topic + "'");
+        return;
+      }
+
+      var message = await context.getValue('MSG');
+      switch(typeof message) {
+        default:
+        case "number": message = message.toString(); break;
+        case "string": break;
+        case "object": message = JSON.stringify(message); break;
+        case "undefined":
+        case "null": message = ""; break;
+      }
+      client.publish(topic, message);
+  }
+}
+
+var publishMessageExBlock = {
+  "block": lib.publishMessageEx,
+  "run":
+    async (context) => {
+      var topic = context.getField('TOPIC');
+      log.d("MQTT publish on " + topic);
+      if(!runPromise) {
+        log.e("MQTT service stopped. Cannot send to '" + topic + "'");
+        return;
+      }
+
+      var message = await context.getValue('MSG');
+      switch(typeof message) {
+        default:
+        case "number": message = message.toString(); break;
+        case "string": break;
+        case "object": message = JSON.stringify(message); break;
+        case "undefined":
+        case "null": message = ""; break;
+      }
+
+      var qos = context.getField('QOS');
+      var retain = context.getField('RETAIN');
+      var expiry = context.getField('EXPIRY');
+
+      log.d("Envia " + message);
+
+      client.publish(topic, message, {
+        qos: qos,
+        retain: retain,
+        properties: {
+          messageExpiryInterval: expiry
+        }
+      });
+  }
+}
+
 function getInfo(env) {
   return {
     "id": "mqtt",
@@ -36,7 +100,9 @@ function getInfo(env) {
 
 function getBlocks() {
   return {
-    "message": messageBlock
+    "message": messageBlock,
+    "publish": publishMessageBlock,
+    "publishEx": publishMessageExBlock
   };
 }
 
@@ -44,22 +110,20 @@ function getToolbox() {
   return {
     "mqtt": {
       "Events": ' \
-        <block type="mqtt.message"></block>'
+        <block type="mqtt.message"></block>',
+      "Functions": ' \
+        <block type="mqtt.publish"></block> \
+        <block type="mqtt.publishEx"></block>'
     }
   }
 }
 
 function refreshSubscriptions() {
-  let keys = Object.keys(topics);
-  for(let n = 0; n < keys.length; n++) {
-
-  }
-
-  keys = Object.keys(config.topics);
+  let keys = Object.keys(config.topics);
 
   keys.forEach((t) => {
     client.subscribe(t, function() {
-      log.d("MQTT subscribed to " + t);
+      log.i("MQTT subscribed to " + t);
     });
   });
 }
@@ -128,7 +192,7 @@ function onMessage(topic, message, packet) {
 
 var mqttService = {
   getInfo: () => { return {
-    methods: ["start", "stop", "status"],
+    methods: ["start", "stop"],
     name: "MQTT Service",
     description: "Subscribes to a MQTT broker topics and publishes messages"
   }},
@@ -145,10 +209,19 @@ var mqttService = {
       log.d("MQTT closed");
       client = null;
     }
+    if(!runPromise || !runPromiseResolve) return false;
+    runPromiseResolve();
+    runPromise = null;
+    runPromiseResolve = null;
   },
   run: async (srv, srvTools) => {
     tools = srvTools;
     setConfig(srv.config);
+
+    if(runPromise || runPromiseResolve) return false; // Must stop before
+    runPromise = new Promise(resolve => {
+      runPromiseResolve = resolve;
+    });
 
     let host = "";
     let defaultPort = 1883;
@@ -182,66 +255,24 @@ var mqttService = {
     log.d("Starting MQTT connection to " + host);
     client  = mqtt.connect(host, ops);
 
+    let srv2 = srv;
     client.on('connect', function() {
+      srv2.status = 1;
       log.i("MQTT broker connection OK");
 
       client.on('message', onMessage);
 
+      client.on('reconnect', () => { log.i("MQTT reconnecting...") });
+      client.on('close', () => { log.i("MQTT disconnected") });
+      client.on('disconnect', () => { log.i("MQTT received diconnect from broker") });
+      client.on('offline', () => { log.i("MQTT offline") });
+
       refreshSubscriptions();
     });
 
-    srv.status = 1;
-/*
-    while(!srv.stop) {
-      let msg = await bot.getUpdates();
-      for(let n = 0; n < msg.length; n++) {
-        if(msg[n] instanceof telegram.Message) {
-          // Commands also contain 'text' and should not be executed in 'text'
-          if('text' in msg[n] && !('commands' in msg[n])) {
-            log.d("Telegram text: " + msg[n].text);
-            await tools.executeEvent('telegram.telegram_text', {
-              text: msg[n].text,
-              message: msg[n]
-            });
-          }
+    await runPromise;
 
-          if('commands' in msg[n]) {
-            for(let c = 0; c < msg[n].commands.length; c++) {
-              log.d("Telegram command: " + msg[n].commands[c].command);
-              await tools.executeEvent('telegram.telegram_cmd', {
-                text: msg[n].text,
-                command: msg[n].commands[c].command,
-                params: msg[n].commands[c].params,
-                message: msg[n]
-              });
-            }
-          }
-
-          if('document' in msg[n]) {
-            log.d("Telegram document: " + msg[n].document.file_name);
-            await tools.executeEvent('telegram.telegram_document', {
-              fileName: msg[n].document.file_name,
-              message: msg[n]
-            });
-          }
-        } else if(msg[n] instanceof telegram.CallbackQuery) {
-          log.d("Telegram callbackquery: " + msg[n].data);
-          let params = {
-            data: msg[n].data,
-            callbackQuery: msg[n]
-          };
-
-          if('message' in msg[n]) {
-            params.text = msg[n].message.text;
-            params.chat = msg[n].message.chat;
-          }
-
-          await tools.executeEvent('telegram.telegram_callback_query', params);
-        }
-      }
-    }
-
-    srv.status = 0;*/
+    srv2.status = 0;
   }
 }
 
