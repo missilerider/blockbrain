@@ -257,69 +257,6 @@ function createContext(options) {
   return new Context(options);
 }
 
-/*function Context2() {
-  this.program = undefined;
-  this.block = undefined;
-  this.vars = {};
-  this.runFlow = {
-    step: 0,
-    flowState: 0
-  };
-  this.msg = {};
-  this.plugins = {};
-  this.stack = [];
-}* /
-
-function Context(options) {
-  if(!options.program || !options.block) {
-    throw new Error("Parameters program and block are mandatory");
-  }
-  this.plugins = options.plugins;
-  this.program = options.program;
-  this.block = options.block;
-  this.vars = {
-    "msg": options.msg
-  };
-
-  this.runFlow = {
-    step: 0,
-    flowState: 0
-  };
-  this.msg = {};
-  this.stack = [];
-}
-
-
-Context.prototype.execValue = contextExecValue;
-Context.prototype.findName = contextFindName;
-
-  // Public funcs
-Context.prototype.cleanVarName = cleanVarName;
-Context.prototype.continue = contextContinue;
-Context.prototype.exit = contextExit;
-Context.prototype.getParam = contextGetParam;
-Context.prototype.getField = contextGetField;
-Context.prototype.getValue = contextGetValue;
-Context.prototype.getMutation = contextGetMutation;
-Context.prototype.findStatement = findStatement;
-Context.prototype.getVar = contextGetVar;
-Context.prototype.setVar = contextSetVar;
-Context.prototype.getMsg = function() { return this.vars.msg; };
-Context.prototype.getVars = function() { return this.vars; };
-Context.prototype.getRunFlow = function() { return this.runFlow; };
-Context.prototype.update = contextUpdate;
-Context.prototype.step = function() { this.runFlow.step++; };
-Context.prototype.clone2 = clone2;
-Context.prototype.prepare = prepare;
-Context.prototype.getPlugins = function() { return this.plugins; };
-Context.prototype.getProgram = function() { return this.program; };
-Context.prototype.getBlock = function() { return this.block; };
-Context.prototype.jump = function(options) { this.program = options.program; this.block = options.block; };
-Context.prototype.push = push;
-Context.prototype.pop = pop;
-Context.prototype.sleep = function(ms) { return new Promise(resolve => { setTimeout(resolve,ms); }) };
-*/
-
 module.exports = {
   Context: Context,
   createContext: createContext

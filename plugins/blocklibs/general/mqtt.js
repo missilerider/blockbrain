@@ -57,7 +57,7 @@ var publishMessageExBlock = {
   "block": lib.publishMessageEx,
   "run":
     async (context) => {
-      var topic = context.getField('TOPIC');
+      var topic = await context.getValue('TOPIC');
       log.d("MQTT publish on " + topic);
       if(!runPromise) {
         log.e("MQTT service stopped. Cannot send to '" + topic + "'");
@@ -80,13 +80,19 @@ var publishMessageExBlock = {
 
       log.d("Envia " + message);
 
-      client.publish(topic, message, {
-        qos: qos,
-        retain: retain,
+      let ops = {
+        qos: parseInt(qos),
+        retain: retain == "TRUE",
         properties: {
-          messageExpiryInterval: expiry
+          messageExpiryInterval: parseInt(expiry)
         }
-      });
+      };
+
+      log.dump("topic", topic);
+      log.dump("message", message);
+      log.dump("ops", ops);
+
+      client.publish(topic, message, ops);
   }
 }
 

@@ -70,18 +70,14 @@ publishMessage = {
 publishMessageEx = {
   "type": "mqtt_send_message_ex",
   "lastDummyAlign0": "RIGHT",
-  "message0": "publish mqtt message %1 topic %2 %3 message %4 QoS %5 %6 retain %7 %8 expiry %9 seconds",
+  "message0": "publish mqtt message %1 topic %2 message %3 QoS %4 Once %5 retain %6 %7 expiry %8 seconds",
   "args0": [
     {
       "type": "input_dummy"
     },
     {
-      "type": "field_input",
+      "type": "input_value",
       "name": "TOPIC",
-      "text": "test/echo"
-    },
-    {
-      "type": "input_dummy",
       "align": "RIGHT"
     },
     {
@@ -94,15 +90,15 @@ publishMessageEx = {
       "name": "QOS",
       "options": [
         [
-          "0: Only Once",
+          "0: Only",
           "0"
         ],
         [
-          "1: At Least Once",
+          "1: At Least",
           "1"
         ],
         [
-          "2: Exactly Once",
+          "2: Exactly",
           "2"
         ]
       ]
@@ -121,11 +117,9 @@ publishMessageEx = {
       "align": "RIGHT"
     },
     {
-      "type": "field_number",
+      "type": "field_input",
       "name": "EXPIRY",
-      "value": 0,
-      "min": 0,
-      "precision": 1
+      "text": "0"
     }
   ],
   "previousStatement": null,

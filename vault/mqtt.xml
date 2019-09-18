@@ -1,1 +1,1 @@
-<xml xmlns="http://www.w3.org/1999/xhtml"><block type="mqtt.message" id="Xll`#7RR:53uyl^9l8-Z" x="83" y="27"><field name="RGX">test</field><statement name="CMD"><block type="mqtt.publishEx" id="NRab:7t0o2I?n6^9m|*+"><field name="TOPIC">dev/echo</field><field name="QOS">0</field><field name="RETAIN">FALSE</field><field name="EXPIRY">15</field><value name="MSG"><block type="text" id="9aswIRv(cGYrbYRU.GM9"><field name="TEXT"></field></block></value></block></statement></block></xml>
+<xml xmlns="http://www.w3.org/1999/xhtml"></xml>
