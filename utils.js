@@ -2,7 +2,7 @@
 
 const crypto = require('crypto');
 const fs = require('fs');
-const xml2json = require('xml2json');
+const xml_js = require('xml-js');
 const executor = require('./executor.js');
 
 const log = global.log;
@@ -76,7 +76,7 @@ function loadConfig() {
 function loadServiceConfig(srvName) {
   try {
     return JSON.parse(fs.readFileSync('config/services/' + srvName + '.json'));
-  } catch {}
+  } catch (Exception) {}
   return {};
 }
 
@@ -208,7 +208,7 @@ function getScript(file) {
   }
 
   let xml = loadScript(file);
-  let json = JSON.parse(xml2json.toJson(xml, { reversible: false, trim: false }));
+  let json = JSON.parse(xml_js.xml2json(xml, { compact: true, spaces: 4 }));
 
   if(!currentConfig.system.disableCache) {
     scriptCache[file] = json;

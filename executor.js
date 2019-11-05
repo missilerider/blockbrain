@@ -1,6 +1,6 @@
 'use strict';
 
-const xml2json = require('xml2json');
+const xml_js = require('xml-js');
 const contextFactory = require('./context.js');
 const log = global.log;
 
@@ -13,7 +13,7 @@ function config(options) {
 }
 
 async function executeProgram(xmlProgram, options) {
-  let json = JSON.parse(xml2json.toJson(xmlProgram, { reversible: false, trim: false }));
+  let json = JSON.parse(xml_js.xml2json(xmlProgram, { compact: true, spaces: 4 }));
   return executeProgramJson(json, options);
 }
 

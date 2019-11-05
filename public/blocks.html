@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
   <!-- Material Kit CSS -->
   <link href="assets/css/material-dashboard.css?v=2.1.1" rel="stylesheet" />
+  <link href="assets/css/blockbrain.css" rel="stylesheet" />
   <script type="text/javascript" src="assets/js/jquery.min.js"></script>
   <script src="/blockly/blockly_compressed.js"></script>
   <script src="/blockly/blocks_compressed.js"></script>
@@ -21,8 +22,9 @@
   <script type="application/javascript" src="assets/js/libApi.js"></script>
   <link rel="stylesheet" href="/assets/js/jsTree/dist/themes/default/style.min.css" />
   <script src="/assets/js/jsTree/dist/jstree.min.js"></script>
-  <script type="application/javascript" src="assets/js/indexLogic.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script type="application/javascript" src="assets/js/blocksLogic.js"></script>
+  <script src="assets/js/vue.js"></script>
+  <script src="assets/js/axios.min.js"></script>
   <!-- item template -->
   <script type="text/x-template" id="item-template">
     <li>
@@ -131,14 +133,16 @@ ul {
                   <h3 class="card-title">Block browser</h3>
                 </div>
                 <div class="card-body">
-                  <!--<div id="jstree"></div>-->
-                  <ul id="demo">
-                    <tree-item
-                      class="item"
-                      :item="treeData"
-                      @make-folder="makeFolder"
-                      @add-item="addItem"
-                    ></tree-item>
+                  <ul id="browser" class="file-browser">
+                    <li v-if="currentFiles.parent" v-on:click="browseParent()">
+                      <i class="material-icons">keyboard_return</i>
+                    </li>
+                    <li v-for="f in currentFiles" v-on:click="browseItem(f)">
+                      <i class="material-icons">
+                          {{f.icon}}
+                      </i>
+                      {{f.text}}
+                    </li>
                   </ul>
                 </div>
                 <div class="card-footer">

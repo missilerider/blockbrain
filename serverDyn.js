@@ -85,8 +85,9 @@ async function getFolderContents(path) {
           if(!files[i].startsWith('.')) {
             result.push({
               text: files[i],
-              path: filePath,
+              path: filePath, 
               type: "dir",
+              icon: "folder", 
               children: await getFolderContents(filePath).then().catch((e) => {})
             });
           }
@@ -95,8 +96,9 @@ async function getFolderContents(path) {
             result.push({
               text: files[i],
               path: filePath,
+              editorPath: Buffer.from(filePath.substring(conf.blocks.path.length + 1).slice(0, -4)).toString("base64"),
               type: "file",
-              icon: "glyphicon glyphicon-leaf"
+              icon: "extension"
             });
           }
         }
@@ -121,12 +123,15 @@ async function buildBlockTree() {
 async function blockTree(req, res) {
   prepareJson(res);
 
-  if(!fs.existsSync(conf.blocks.path + cacheDir + "/" + cacheTree)) {
-    await buildBlockTree().then().catch((e)=>{});
+  if(!fs.existsSync(conf.blocks.path + cacheDir + "/" + cacheTree) || conf.system.disableCache) {
+    await buildBlockTree().then().catch((e)=>{
+      throw e;
+    });
   }
 
   if(fs.existsSync(conf.blocks.path + cacheDir + "/" + cacheTree)) {
     var data = fs.readFileSync(conf.blocks.path + cacheDir + "/" + cacheTree);
+    console.log(conf.blocks.path + cacheDir + "/" + cacheTree);
     res.json(JSON.parse(data));
   }
 }

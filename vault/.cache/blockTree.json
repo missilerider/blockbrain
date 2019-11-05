@@ -1,11 +1,1 @@
-[{
-  "text": "1234.xml",
-  "path": "./vault/1234.xml",
-  "type": "file",
-  "icon": "material-icons extension"
-}, {
-  "text": "1235.xml",
-  "path": "./vault/1235.xml",
-  "type": "file",
-  "icon": "material-icons extension"
-}]
+[{"text":"1234.xml","path":"./vault/1234.xml","editorPath":"MTIzNA==","type":"file","icon":"extension"},{"text":"1235.xml","path":"./vault/1235.xml","editorPath":"MTIzNQ==","type":"file","icon":"extension"},{"text":"mqtt.xml","path":"./vault/mqtt.xml","editorPath":"bXF0dA==","type":"file","icon":"extension"},{"text":"telegram.config.menu.xml","path":"./vault/telegram.config.menu.xml","editorPath":"dGVsZWdyYW0uY29uZmlnLm1lbnU=","type":"file","icon":"extension"},{"text":"telegram.torrent.xml","path":"./vault/telegram.torrent.xml","editorPath":"dGVsZWdyYW0udG9ycmVudA==","type":"file","icon":"extension"},{"text":"telegram.xml","path":"./vault/telegram.xml","editorPath":"dGVsZWdyYW0=","type":"file","icon":"extension"},{"text":"test","path":"./vault/test","type":"dir","icon":"folder","children":[{"text":"1234.xml","path":"./vault/test/1234.xml","editorPath":"dGVzdC8xMjM0","type":"file","icon":"extension"}]}]

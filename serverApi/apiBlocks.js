@@ -30,7 +30,8 @@ function dispatcher(data) {
 
 // Retrieve block
 function GETblock(data) {
-  var filename = data.config.blocks.path + "/" + data.blockId + ".xml";
+  // TODO: bloquear si directorio padre!!!
+  var filename = data.config.blocks.path + "/" + Buffer.from(data.blockId, 'base64').toString('utf8') + ".xml";
   if(fs.existsSync(filename)) {
     var block = fs.readFileSync(filename, "utf8");
     data.preparexml();
@@ -48,7 +49,7 @@ function POSTblock(data) {
     return true;
   }
 
-	var filename = data.config.blocks.path + "/" + data.blockId;
+	var filename = data.config.blocks.path + "/" + Buffer.from(data.blockId, 'base64').toString('utf8');
 	try {
 		fs.writeFileSync(filename + ".xml", data.req.body.xml);
     data.utils.buildScriptRefs(filename + ".xml");

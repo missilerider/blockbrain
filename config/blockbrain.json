@@ -1,34 +1,34 @@
 {
-  "endpoint": {
-    "port": 80,
-    "bind": "0.0.0.0",
-    "path": "msg"
-  },
-  "blocks": {
-    "path": "./vault"
-  },
-  "security": {
-    "cookie": {
-      "secret": "veryZZzecret0rl",
-      "name": "sessionId"
+    "endpoint": {
+      "port": 80,
+      "bind": "0.0.0.0",
+      "path": "msg"
     },
-    "users": [
-      { "name": "test", "password": "test" },
-      { "name": "test2", "sha256": "60303ae22b998861bce3b28f33eec1be758a213c86c93c076dbe9f558c11c752" }
-    ],
-    "apiKeys": {
-      "abc": {
-        "enabled": true,
-        "permissions": {
-          "dev": true
+    "blocks": {
+      "path": "./vault"
+    },
+    "security": {
+      "cookie": {
+        "secret": "veryZZzecret0rl",
+        "name": "sessionId"
+      },
+      "users": [
+        { "name": "test", "password": "test" },
+        { "name": "test2", "sha256": "60303ae22b998861bce3b28f33eec1be758a213c86c93c076dbe9f558c11c752" }
+      ],
+      "apiKeys": {
+        "abc": {
+          "enabled": true,
+          "permissions": {
+            "dev": true
+          }
         }
       }
-    }
-  },
-  "system": {
-    "disableCache": false,
-    "log": {
-      "level": "DEBUG"
+    },
+    "system": {
+      "disableCache": true,
+      "log": {
+        "level": "DEBUG"
+      }
     }
   }
-}
