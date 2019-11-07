@@ -110,30 +110,35 @@ async function getFolderContents(path) {
 }
 
 async function buildBlockTree() {
-  const cacheFile = conf.blocks.path + cacheDir + "/" + cacheTree;
+  /*const cacheFile = conf.blocks.path + cacheDir + "/" + cacheTree;
   if(!fs.existsSync(conf.blocks.path + cacheDir)) {
     fs.mkdirSync(conf.blocks.path + cacheDir);
-  }
+  }*/
   var data = await getFolderContents(conf.blocks.path).then().catch((e)=>{});
 
-  fs.writeFileSync(conf.blocks.path + cacheDir + "/" + cacheTree,
-    JSON.stringify(data), 'utf-8');
+  //fs.writeFileSync(conf.blocks.path + cacheDir + "/" + cacheTree,
+    //JSON.stringify(data), 'utf-8');
+
+  return data;
 }
 
 async function blockTree(req, res) {
   prepareJson(res);
 
-  if(!fs.existsSync(conf.blocks.path + cacheDir + "/" + cacheTree) || conf.system.disableCache) {
-    await buildBlockTree().then().catch((e)=>{
+  let data;
+
+  //if(!fs.existsSync(conf.blocks.path + cacheDir + "/" + cacheTree) || conf.system.disableCache) {
+    data = await buildBlockTree().then().catch((e)=>{
       throw e;
     });
-  }
-
+    res.json(data);
+  //}
+/*
   if(fs.existsSync(conf.blocks.path + cacheDir + "/" + cacheTree)) {
     var data = fs.readFileSync(conf.blocks.path + cacheDir + "/" + cacheTree);
     console.log(conf.blocks.path + cacheDir + "/" + cacheTree);
     res.json(JSON.parse(data));
-  }
+  }*/
 }
 
 async function blocks(req, res) {

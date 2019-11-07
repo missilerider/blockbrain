@@ -30,7 +30,9 @@ var app = new Vue({
       ]
     }, 
     files: {}, 
-    currentFiles: {}
+    currentFiles: {}, 
+    searchText: "", 
+    searchTimer: null
   },
   mounted() {
     let that = this;
@@ -61,14 +63,30 @@ var app = new Vue({
     browseParent: function() {
       this.currentFiles = this.currentFiles.parent;
     }, 
-    makeFolder: function (item) {
-    	Vue.set(item, 'children', [])
-      this.addItem(item)
-    },
-    addItem: function (item) {
-    	item.children.push({
-        name: 'new stuff'
-      })
+    onSearch: function() {
+      let that = this;
+      if(this.searchTimer) clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(function() {
+        if(that.searchText == "") {
+          that.currentFiles = that.files;
+        } else {
+          let data = [];
+          that.findScript(that.searchText, that.files, data);
+          console.log(data);
+          that.currentFiles = data;
+        }
+      }, 200);
+    }, 
+    findScript(t, f, data) {
+      for(let n = 0; n < f.length; n++) {
+        if(f[n].text.match(t)) {
+          console.log(f[n].text);
+          data.push(f[n]);
+        }
+        if(f[n].type == "dir") {
+          this.findScript(t, f[n].children, data);
+        }
+      }
     }
   }
 })

@@ -81,6 +81,7 @@ class Bot {
   }
 
   async sendMessage(params) {
+    console.dir(params);
     if(!params.chat_id || !params.text)
       throw new Error("chat_id and text are mandatory");
 

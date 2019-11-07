@@ -32,10 +32,10 @@ async function executeProgramJson(json, options) {
     let block = blocks[b];
 
     // Filtered type?
-    if(!options.nodeTypeFilter || options.nodeTypeFilter.indexOf(block.type) > -1) {
+    if(!options.nodeTypeFilter || options.nodeTypeFilter.indexOf(block._attributes.type) > -1) {
       // Get block from plugin library
-      log.d("Get block " + block.type);
-      let codeBlock = plugins.getBlockSync(block.type);//, async (err, codeBlock) => {
+      log.d("Get block " + block._attributes.type);
+      let codeBlock = plugins.getBlockSync(block._attributes.type);//, async (err, codeBlock) => {
       context = null;
       context = contextFactory.createContext({
         plugins: plugins,

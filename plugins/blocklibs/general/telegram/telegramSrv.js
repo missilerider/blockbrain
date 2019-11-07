@@ -55,7 +55,7 @@ var telegramService = {
         if(msg[n] instanceof telegram.Message) {
           // Commands also contain 'text' and should not be executed in 'text'
           if('text' in msg[n] && !('commands' in msg[n])) {
-            log.d("Telegram text: " + msg[n].text);
+            log.d("Telegram text: " + msg[n].text + ' from chat ' + msg[n].chat.id);
             await tools.executeEvent('telegram.telegram_text', {
               text: msg[n].text,
               message: msg[n]
@@ -64,7 +64,8 @@ var telegramService = {
 
           if('commands' in msg[n]) {
             for(let c = 0; c < msg[n].commands.length; c++) {
-              log.d("Telegram command: " + msg[n].commands[c].command);
+              console.log(JSON.stringify(msg[n], null, 2));
+              log.d("Telegram command: " + msg[n].commands[c].command + ' from chat ' + msg[n].chat.id);
               await tools.executeEvent('telegram.telegram_cmd', {
                 text: msg[n].text,
                 command: msg[n].commands[c].command,
@@ -75,14 +76,14 @@ var telegramService = {
           }
 
           if('document' in msg[n]) {
-            log.d("Telegram document: " + msg[n].document.file_name);
+            log.d("Telegram document: " + msg[n].document.file_name + ' from chat ' + msg[n].chat.id);
             await tools.executeEvent('telegram.telegram_document', {
               fileName: msg[n].document.file_name,
               message: msg[n]
             });
           }
         } else if(msg[n] instanceof telegram.CallbackQuery) {
-          log.d("Telegram callbackquery: " + msg[n].data);
+          log.d("Telegram callbackquery: " + msg[n].data + ' from chat ' + msg[n].chat.id);
           let params = {
             data: msg[n].data,
             callbackQuery: msg[n]
@@ -182,12 +183,12 @@ var telegramSendTextBlock = {
         });
         break;
 
-        case "ADMINS":
-          await bot.sendMessage({
-            chat_id: context.getVar('msg').message.chat.id,
-            text: "ADMIN: " + text
-          });
-          break;
+      case "ADMINS":
+        await bot.sendMessage({
+          chat_id: context.getVar('msg').message.chat.id,
+          text: "ADMIN: " + text
+        });
+        break;
     }
   }
 };
@@ -203,20 +204,40 @@ var telegramSendMessageExBlock = {
     let replyId = await context.getValue("REPLY", -1);
     let markup = await context.getValue("MARKUP", null);
 
-    let params = {
-      chat_id: chat != -1 ? chat : context.getVar('msg').message.chat.id,
-      text: text,
-      parse_mode: parse,  // "Markdown" | "HTML"
-      disable_web_page_preview: !linkPrev,
-      disable_notification: !notification
+    console.dir(chat);
+
+    if(!Array.isArray(chat)) {
+      let params = {
+        chat_id: chat != -1 ? chat : context.getVar('msg').message.chat.id,
+        text: text,
+        parse_mode: parse,  // "Markdown" | "HTML"
+        disable_web_page_preview: !linkPrev,
+        disable_notification: !notification
+      }
+  
+      if(replyId != -1) params.reply_to_message_id = replyId;
+      if(markup !== null) params.reply_markup = JSON.stringify({
+        inline_keyboard: markup
+      });
+  
+      await bot.sendMessage(params);
+    } else {
+      for(let n = 0; n < chat.length; n++) {
+        let params = {
+          chat_id: chat[n], 
+          text: text,
+          parse_mode: parse,  // "Markdown" | "HTML"
+          disable_web_page_preview: !linkPrev,
+          disable_notification: !notification
+        }
+    
+        if(markup !== null) params.reply_markup = JSON.stringify({
+          inline_keyboard: markup
+        });
+    
+        await bot.sendMessage(params);
+      }
     }
-
-    if(replyId != -1) params.reply_to_message_id = replyId;
-    if(markup !== null) params.reply_markup = JSON.stringify({
-      inline_keyboard: markup
-    });
-
-    await bot.sendMessage(params);
   }
 };
 

@@ -124,9 +124,10 @@ var readKeyBlock = {
   },
   "run": async (context) => {
     let key = context.getField('KEY');
-    console.dir(data);
-//    let value = await context.getValue('VALUE');
-    if(key in data) return data[key];
+    if(key in data) {
+      log.d("KV read: " + key + " => " + data[key]);
+      return data[key];
+    }
     else {
       return null;
     }

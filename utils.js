@@ -186,13 +186,13 @@ function buildScriptRefs(file) {
     if(!Array.isArray(json.xml.block))
       json.xml.block = [json.xml.block];
     json.xml.block.forEach((b) => {
-      if(!(b.type in inserted)) {
-        inserted[b.type] = true; // Don't insert twice
+      if(!(b._attributes.type in inserted)) {
+        inserted[b._attributes.type] = true; // Don't insert twice
 
-        if(!(b.type in eventIndex)) // If event does not exist
-          eventIndex[b.type] = [];
+        if(!(b._attributes.type in eventIndex)) // If event does not exist
+          eventIndex[b._attributes.type] = [];
 
-        eventIndex[b.type].push(file);
+        eventIndex[b._attributes.type].push(file);
       }
     });
   }
@@ -210,7 +210,7 @@ function getScript(file) {
   let xml = loadScript(file);
   let json = JSON.parse(xml_js.xml2json(xml, { compact: true, spaces: 4 }));
 
-  if(!currentConfig.system.disableCache) {
+    if(!currentConfig.system.disableCache) {
     scriptCache[file] = json;
     //buildScriptRefs(file);
   }

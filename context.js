@@ -29,13 +29,13 @@ class Context {
         sts = blockCode.statement;
       }
       for(let n = 0; n < sts.length; n++) {
-        if(sts[n].name == statementName)
+        if(sts[n]._attributes.name == statementName)
           return sts[n];
       }
-      log.e("Statement " + statementName + " not found but requested by node " + blockCode.name);
+      log.e("Statement " + statementName + " not found but requested by node " + blockCode._attributes.name);
       return null; // Statement not found!
     } else {
-      log.w("Block " + blockCode.name + " does not have statements. Requested " + statementName + ".");
+      log.w("Block " + blockCode._attributes.name + " does not have statements. Requested " + statementName + ".");
       log.dump("blockCode", blockCode);
       return null; // No statements to look for
     }
@@ -55,11 +55,11 @@ class Context {
       let codeBlock;
 
       try {
-        codeBlock = this.getPlugins().getBlockSync(newBlock.block.type);
+        codeBlock = this.getPlugins().getBlockSync(newBlock.block._attributes.type);
       } catch {
         log.e("Block type not found:");
         log.e(newBlock.block);
-        throw new Error("Block not found: " + newBlock.block.type)
+        throw new Error("Block not found: " + newBlock.block._attributes.type)
       }
 
       this.push();
@@ -69,7 +69,7 @@ class Context {
       });
 
       this.runFlow.step++;
-      log.d("RUN: " + newBlock.block.type);
+      log.d("RUN: " + newBlock.block._attributes.type);
       await codeBlock.run(this);
       this.pop();
       if('next' in newBlock.block && !this.getRunFlow().flowState) {
@@ -96,7 +96,7 @@ class Context {
     }
 
     for(let n = 0; n < values.length; n++) {
-      if(values[n].name == name) {
+      if(values[n]._attributes.name == name) {
         var ret = await this.execValue(values[n].block);
         return ret;
       }
@@ -136,11 +136,11 @@ class Context {
     //log.d("execValue(" + val.type + ")");
     var codeBlock;
     try {
-      codeBlock = this.plugins.getBlockSync(val.type);
+      codeBlock = this.plugins.getBlockSync(val._attributes.type);
     } catch {
       log.e("Block type not found:");
-      log.e(val.type);
-      throw new Error("Block not found: " + val.type)
+      log.e(val._attributes.type);
+      throw new Error("Block not found: " + val._attributes.type)
     }
     //var context = thisContext;//createContext({ program: val, block: codeBlock });
 
@@ -150,7 +150,7 @@ class Context {
     this.block = codeBlock;
 
     this.step();
-    log.d("EXECval: " + val.type);
+    log.d("EXECval: " + val._attributes.type);
     let ret = await codeBlock.run(this);
     this.pop();
     return ret;
@@ -166,18 +166,18 @@ class Context {
     }
 
     for(let n = 0; n < data.length; n++) {
-      if(data[n].name == name) return data[n];
+      if(data[n]._attributes.name == name) return data[n];
     }
     return null;
   }
 
   getField(name) {
     //log.d("getField(" + name + ")")
-    return this.findName(this.getProgram().field, name)['$t'];
+    return this.findName(this.getProgram().field, name)._text;
   }
 
   async getValue(name, defaultValue = undefined) {
-    //log.d("getValue(" + name + ")");
+    log.d("getValue(" + name + ")");
 
     if(!this.getProgram().value) {
       if(defaultValue !== undefined) return defaultValue;
@@ -197,7 +197,7 @@ class Context {
       return await this.execValue(valueBlock.shadow);
 
     if(defaultValue !== undefined)
-      return defaultValue ;
+      return defaultValue;
 
       // If default value is not defined, must contain a block!
     log.e("Value not found: " + name);

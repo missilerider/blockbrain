@@ -85,6 +85,60 @@ ul {
       <div class="content">
         <div class="container-fluid">
           <div class="row">
+            <div class="col-lg-9 col-md-6 col-sm-6">
+              <div class="card">
+                <div class="card-header card-header-primary">
+                  <h3 class="card-title">Block browser</h3>
+                </div>
+                <div class="card-body">
+                  <ul id="browser" class="file-browser">
+                    <li v-if="currentFiles.parent" v-on:click="browseParent()">
+                      <i class="material-icons">keyboard_return</i>
+                    </li>
+                    <li v-for="f in currentFiles" v-on:click="browseItem(f)">
+                      <i class="material-icons">
+                          {{f.icon}}
+                      </i>
+                      {{f.text}}
+                    </li>
+                  </ul>
+                </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <i class="material-icons">date_range</i> Last 24 Hours
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card">
+                <div class="card-header card-header-primary card-header-icon">
+                  <h4 class="card-title">Tools</h4>
+                </div>
+                <div class="card-body">
+                  <div>
+                    <button type="button" rel="tooltip" title="" class="btn btn-primary btn-link btn-sm material-icon" data-original-title="New Folder">
+                      <i class="material-icons">folder</i>
+                    </button>
+                    <button type="button" rel="tooltip" title="" class="btn btn-primary btn-link btn-sm material-icon" data-original-title="Rename">
+                        <i class="material-icons">text_format</i>
+                    </button>
+                    <button type="button" rel="tooltip" title="" class="btn btn-primary btn-link btn-sm material-icon" data-original-title="Delete">
+                        <i class="material-icons">delete</i>
+                    </button>
+                  </div>
+                  <label class="bmd-label-floating">Search script</label>
+                  <input type="text" name="search" class="form-control" v-model="searchText" v-on:input="onSearch()">
+                </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <i class="material-icons">date_range</i> Last 24 Hours
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
             <div class="col-lg-6 col-md-6 col-sm-6">
               <div class="card">
                 <div class="card-header card-header-primary">
@@ -121,33 +175,6 @@ ul {
                   <div class="stats">
                     <i class="material-icons text-success">done</i>
                     Name ok
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-lg-12 col-md-6 col-sm-6">
-              <div class="card">
-                <div class="card-header card-header-primary card-header-icon">
-                  <h3 class="card-title">Block browser</h3>
-                </div>
-                <div class="card-body">
-                  <ul id="browser" class="file-browser">
-                    <li v-if="currentFiles.parent" v-on:click="browseParent()">
-                      <i class="material-icons">keyboard_return</i>
-                    </li>
-                    <li v-for="f in currentFiles" v-on:click="browseItem(f)">
-                      <i class="material-icons">
-                          {{f.icon}}
-                      </i>
-                      {{f.text}}
-                    </li>
-                  </ul>
-                </div>
-                <div class="card-footer">
-                  <div class="stats">
-                    <i class="material-icons">date_range</i> Last 24 Hours
                   </div>
                 </div>
               </div>
