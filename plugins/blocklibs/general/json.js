@@ -1,5 +1,8 @@
 'use strict';
 
+const log = global.log;
+const slog = global.slog;
+
 var jsonBlock = {
   "block": {
     "type": "json",
@@ -17,7 +20,7 @@ var jsonBlock = {
   },
   "run":
     async (context) => {
-      //console.dir(context.getProgram());
+      context.blockIn();
 
       var data = await context.getValue("DATA");
 
@@ -56,6 +59,7 @@ var jsonStringifyBlock = {
   },
   "run":
     async (context) => {
+      context.blockIn();
       var json = await context.getValue("JSON");
       return JSON.stringify(json);
   }
@@ -78,7 +82,7 @@ var jsonParseBlock = {
   },
   "run":
     async (context) => {
-      //console.dir(context.getProgram());
+      context.blockIn();
 
       var data = await context.getValue("DATA");
 
@@ -115,6 +119,7 @@ var jsonSetBlock = {
     "helpUrl": ""
   },
   "run": async (context) => {
+    context.blockIn();
     var variable = context.getField("VARIABLE");
     var prop = context.getField("PROP");
     var data = await context.getValue("DATA");
@@ -148,6 +153,7 @@ var jsonGetBlock = {
     "helpUrl": ""
   },
   "run": async (context) => {
+    context.blockIn();
     var variable = context.getField("VARIABLE");
     var prop = context.getField("PROP");
     var oldVar = context.getVar(variable);

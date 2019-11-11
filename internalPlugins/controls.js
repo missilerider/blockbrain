@@ -1,4 +1,5 @@
 async function controls_repeat_ext(context) {
+  context.blockIn();
   var initProgram = context.getProgram();
   var initBlock = context.getBlock();
 
@@ -27,6 +28,7 @@ async function controls_repeat_ext(context) {
 }
 
 async function controls_flow_statements(context) {
+  context.blockIn();
   var opFlow = await context.getField("FLOW");
 
   switch(opFlow) {
@@ -59,6 +61,7 @@ sleepBlock = {
     "helpUrl": ""
   },
   run: async function(context) {
+    context.blockIn();
     let ms = context.getField("MS");
     await sleep(ms);
   }

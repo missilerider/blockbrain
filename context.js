@@ -1,7 +1,14 @@
 'use strict';
 
+const log = global.log;
+const slog = global.slog;
+
+var executionNumber = 0;
+
 class Context {
   constructor(options) {
+    this.executionId = options.executionId;
+
     if(!options.program || !options.block) {
       throw new Error("Parameters program and block are mandatory");
     }
@@ -18,6 +25,36 @@ class Context {
     };
     this.msg = {};
     this.stack = [];
+  }
+
+  blockIn() {
+    slog.i(this.executionId + ": BLOCK " + this.program._attributes.type + " (ID: " + this.program._attributes.id + ")");
+    if(slog.getLogLevel() == "DEBUG") {
+      if('mutation' in this.program)
+        slog.d(this.executionId + ":\tmutation = " + JSON.stringify(this.program.mutation._attributes));
+
+      if('field' in this.program && this.program.field.length > 0) {
+        let fields = {};
+        if(Array.isArray(this.program.field)) {
+        for(let n = 0; n < this.program.field.length; n++)
+          fields[this.program.field[n]._attributes.name] = this.program.field[n]._text;
+        } else {
+          fields[this.program.field._attributes.name] = this.program.field._text
+        }
+        slog.d(this.executionId + ":\tfield = " + JSON.stringify(fields));
+      }
+
+      let values = [];
+      if('value' in this.program) {
+        if(Array.isArray(this.program.value)) {
+          for(let n = 0; n < this.program.value.length; n++)
+           values.push(this.program.value[n]._attributes.name);
+        } else {
+          values = [ this.program.value._attributes.name ];
+        }
+        slog.d(this.executionId + ":\tvalue = " + JSON.stringify(values));
+      }
+    }
   }
 
   findStatement(blockCode, statementName) {
@@ -105,12 +142,12 @@ class Context {
     throw new Error("Node does not contain value named " + name);
   }
 
-  getMutation(name, defaultValue) {
+  getMutation(name, defaultValue = undefined) {
     log.d("getMutation(" + name + ")");
 
     if('mutation' in this.getProgram()) {
-      if(name in this.getProgram().mutation) {
-        return this.getProgram().mutation[name];
+      if(name in this.getProgram().mutation._attributes) {
+        return this.getProgram().mutation._attributes[name];
       }
     }
     return defaultValue;
@@ -140,7 +177,8 @@ class Context {
     } catch {
       log.e("Block type not found:");
       log.e(val._attributes.type);
-      throw new Error("Block not found: " + val._attributes.type)
+      log.dump("block", val);
+      throw new Error("Block not found: " + val._attributes.type);
     }
     //var context = thisContext;//createContext({ program: val, block: codeBlock });
 
@@ -173,7 +211,11 @@ class Context {
 
   getField(name) {
     //log.d("getField(" + name + ")")
-    return this.findName(this.getProgram().field, name)._text;
+    try {
+      return this.findName(this.getProgram().field, name)._text;
+    } catch {
+      log.e("Field does not exists: " + name + " for block " + this.getProgram()._attributes.type + " [" + this.getProgram()._attributes.id +"]");
+    }
   }
 
   async getValue(name, defaultValue = undefined) {
@@ -187,8 +229,8 @@ class Context {
     var valueBlock = this.findName(this.getProgram().value, name);
     if(!valueBlock) {
       if(defaultValue !== undefined) return defaultValue;
-      log.dump("Values", this.getProgram().value);
-      throw new Error("Value " + name + " not found!");
+      log.e("Value does not exists: " + name + " for block " + this.getProgram()._attributes.type + " [" + this.getProgram()._attributes.id +"]");
+      return null;
     }
 
     if('block' in valueBlock)
@@ -199,9 +241,9 @@ class Context {
     if(defaultValue !== undefined)
       return defaultValue;
 
-      // If default value is not defined, must contain a block!
-    log.e("Value not found: " + name);
-    throw new Error("Value not found!");
+    // If default value is not defined, must contain a block!
+    log.e("Value does not exists: " + name + " for block " + this.getProgram()._attributes.type + " [" + this.getProgram()._attributes.id +"]");
+//    throw new Error("Value not found!");
   }
 
   prepare(options) {
@@ -254,7 +296,14 @@ class Context {
 }
 
 function createContext(options) {
+  options.executionId = newExecutionId(5);
   return new Context(options);
+}
+
+function newExecutionId(size) {
+  var s = String(executionNumber++);
+  while (s.length < (size || 1)) { s = "0" + s; }
+  return s;
 }
 
 module.exports = {

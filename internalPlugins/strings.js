@@ -1,11 +1,13 @@
-const log = global.log;
+const slog = global.slog;
 
 async function text(context) {
+  context.blockIn();
   return context.getField("TEXT");
 }
 
 async function text_join(context) {
-  var mut = parseInt(context.getProgram().mutation.items);
+  context.blockIn();
+  var mut = parseInt(context.getMutation("items"));
   var ret = "";
   for(let n = 0; n < mut; n++) {
     //ret += await context.execValue(context.program.value[n].block);
@@ -15,6 +17,7 @@ async function text_join(context) {
 }
 
 async function text_charAt(context) {
+  context.blockIn();
   var where = context.getField("WHERE");
   var value  = await context.getValue("VALUE");
 
@@ -38,12 +41,13 @@ async function text_charAt(context) {
       return value.charAt(at);
 
     default:
-      log.e("text_charAt malformed. Cannot understand WHERE = " + where);
+      slog.e("text_charAt malformed. Cannot understand WHERE = " + where);
       throw new Error("text_charAt malformed");
   }
 }
 
 async function text_changeCase(context) {
+  context.blockIn();
   var optionCase = context.getField("CASE");
   var value  = await context.getValue("TEXT");
 
@@ -62,12 +66,13 @@ async function text_changeCase(context) {
       return ret.join(' ');
 
     default:
-      log.e("text_changeCase malformed. Cannot understand CASE = " + optionCase);
+      slog.e("text_changeCase malformed. Cannot understand CASE = " + optionCase);
       throw new Error("text_changeCase malformed");
   }
 }
 
 async function text_trim(context) {
+  context.blockIn();
   var mode = context.getField("MODE");
   var value  = await context.getValue("TEXT");
 
@@ -82,17 +87,15 @@ async function text_trim(context) {
     return value.trimRight();
 
     default:
-      log.e("text_trim malformed. Cannot understand MODE = " + mode);
+      slog.e("text_trim malformed. Cannot understand MODE = " + mode);
       throw new Error("text_trim malformed");
   }
 }
 
 async function text_print(context) {
-  var value  = await context.getValue("TEXT");
-  var logLevel = log.getLogLevel();
-  log.setLogLevel("INFO");
-  log.i(value);
-  log.setLogLevel(logLevel);
+  context.blockIn();
+  let value  = await context.getValue("TEXT");
+  slog.p(value);
 }
 
 function getBlocks() {

@@ -19,6 +19,7 @@ var httpEndpointBlock = {
   },
   "run":
     async (context) => {
+      context.blockIn();
       return await context.continue("CODE");
   }
 }

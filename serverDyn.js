@@ -104,8 +104,6 @@ async function getFolderContents(path) {
         }
     }
 
-    console.dir(result);
-
     return result;
 }
 

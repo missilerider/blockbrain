@@ -1,66 +1,85 @@
 'use strict';
 
-var logLevel = 53;
-
-function doLog(t, context) {
-  if(typeof t !== 'object') {
-    console.log("[" + context + "]\t" + t);
-  } else {
-    console.log("[" + context + "]:");
-    console.log(JSON.stringify(t) + "\n");
-  }
+function newLogger(prefix) {
+  return new Log(prefix);
 }
 
-function setLogLevel(newLevel) {
+function Log(prefix = "") {
+  this.logLevel = 2;
+  this.output = true;
+  this.prefix = prefix;
+}
+
+Log.prototype.doLog = function(t, context) {
+  if(typeof t !== 'object') {
+    if(this.output) console.log(this.prefix + "[" + context + "]\t" + t);
+  } else {
+    if(this.output) {
+      console.log(this.prefix + "[" + context + "]:");
+      console.log(this.prefix + JSON.stringify(t) + "\n");
+    }
+  }
+};
+
+Log.prototype.setLogLevel = function(newLevel) {
   switch(newLevel) {
     case "0":
     case 0:
     case "":
-    case "NONE": logLevel = 0; break;
+    case "NONE": this.logLevel = 0; break;
     case "1":
     case 1:
     case "F":
-    case "FATAL": logLevel = 1; break;
+    case "FATAL": this.logLevel = 1; break;
     case "2":
     case 2:
     case "E":
-    case "ERROR": logLevel = 2; break;
+    case "ERROR": this.logLevel = 2; break;
     case "3":
     case 3:
     case "W":
     case "WARN":
-    case "WARNING": logLevel = 3; break;
+    case "WARNING": this.logLevel = 3; break;
     case "4":
     case 4:
     case "I":
-    case "INFO": logLevel = 4; break;
+    case "INFO": this.logLevel = 4; break;
     case "5":
     case 5:
     case "D":
-    case "DEBUG": logLevel = 5; break;
-    default: doLog("Incorrect log level: " + newLevel, "WARN");
+    case "DEBUG": this.logLevel = 5; break;
+    default: this.doLog("Incorrect log level: " + this.newLevel, "WARN");
   }
+};
+
+Log.prototype.setLogOutput = function(newOutput) {
+  this.output = newOutput;
 }
 
-function getLogLevel(newLevel) {
+Log.prototype.getLogLevel = function() {
   const levels = [ "NONE", "FATAL", "ERROR", "WARNING", "INFO", "DEBUG" ];
-  return levels[logLevel];
-}
+  return levels[this.logLevel];
+};
 
-function dump(v, d) { if(logLevel >= 5) doLog(v + " = " + JSON.stringify(d, null, 2), "DUMP"); }
-function d(t) { if(logLevel >= 5) doLog(t, "DEBUG"); }
-function i(t) { if(logLevel >= 4) doLog(t, "INFO"); }
-function w(t) { if(logLevel >= 3) doLog(t, "WARN"); }
-function e(t) { if(logLevel >= 2) doLog(t, "ERROR"); }
-function f(t) { if(logLevel >= 1) doLog(t, "FATAL"); }
+Log.prototype.dump = function(v, d) { if(this.logLevel >= 5) this.doLog(v + " = " + JSON.stringify(d, null, 2), "DUMP"); }
+Log.prototype.d = function(t) { if(this.logLevel >= 5) this.doLog(t, "DEBUG"); }
+Log.prototype.i = function(t) { if(this.logLevel >= 4) this.doLog(t, "INFO"); }
+Log.prototype.w = function(t) { if(this.logLevel >= 3) this.doLog(t, "WARN"); }
+Log.prototype.e = function(t) { if(this.logLevel >= 2) this.doLog(t, "ERROR"); }
+Log.prototype.f = function(t) { if(this.logLevel >= 1) this.doLog(t, "FATAL"); }
+
+Log.prototype.p = function(t) { this.doLog(t, "OUT"); }
 
 module.exports = {
-  setLogLevel: setLogLevel,
+  newLogger: newLogger
+/*  setLogLevel: setLogLevel,
   getLogLevel: getLogLevel,
+  setScriptLogLevel: setScriptLogLevel, 
+  getScriptLogLevel: getScriptLogLevel, 
   dump: dump,
   d: d,
   i: i,
   w: w,
   e: e,
-  f: f
+  f: f, */
 }

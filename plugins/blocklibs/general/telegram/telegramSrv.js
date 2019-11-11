@@ -106,6 +106,7 @@ var telegramService = {
 var telegramTextBlock = {
   "block": blocks.telegramTextBlock,
   "run": async (context) => {
+    context.blockIn();
     var rgx = context.getField('RGX');
     let matches = false;
     try {
@@ -121,6 +122,7 @@ var telegramTextBlock = {
 var telegramCmdBlock = {
   "block": blocks.telegramCmdBlock,
   "run": async (context) => {
+    context.blockIn();
     var rgx = context.getField('RGX');
     let matches = false;
     try {
@@ -136,6 +138,7 @@ var telegramCmdBlock = {
 var telegramCallbackQueryBlock = {
   "block": blocks.telegramCallbackQueryBlock,
   "run": async (context) => {
+    context.blockIn();
     var rgx = context.getField('RGX');
     let matches = false;
     try {
@@ -151,6 +154,7 @@ var telegramCallbackQueryBlock = {
 var telegramDocumentBlock = {
   "block": blocks.telegramDocumentBlock,
   "run": async (context) => {
+    context.blockIn();
     var rgx = context.getField('RGX');
     let matches = false;
     try {
@@ -166,6 +170,7 @@ var telegramDocumentBlock = {
 var telegramSendTextBlock = {
   "block": blocks.telegramSendTextBlock,
   "run": async (context) => {
+    context.blockIn();
     let chat = context.getField("CHAT");
     let text = await context.getValue("TEXT");
 
@@ -196,6 +201,7 @@ var telegramSendTextBlock = {
 var telegramSendMessageExBlock = {
   "block": blocks.telegramSendMessageExBlock,
   "run": async (context) => {
+    context.blockIn();
     let chat = await context.getValue("CHAT", -1);
     let parse = context.getField("PARSE");
     let text = await context.getValue("TEXT");
@@ -244,6 +250,7 @@ var telegramSendMessageExBlock = {
 var telegramIkmBlock = {
   "block": blocks.telegramIkmBlock,
   "run": async (context) => {
+    context.blockIn();
     context.telegram = { rows: [] };
 
     await context.continue("ROWS");
@@ -258,6 +265,7 @@ var telegramIkmBlock = {
 var telegramIkmRowBlock = {
   "block": blocks.telegramIkmRowBlock,
   "run": async (context) => {
+    context.blockIn();
     context.telegram.row = [];
     await context.continue("BUTTONS");
     context.telegram.rows.push(context.telegram.row);
@@ -268,6 +276,7 @@ var telegramIkmRowBlock = {
 var telegramIkmButtonBlock = {
   "block": blocks.telegramIkmButtonBlock,
   "run": async (context) => {
+    context.blockIn();
     let text = context.getField("TEXT");
     let url = await context.getValue("URL", null);
     let callback = await context.getValue("CALLBACK", null);
@@ -286,6 +295,7 @@ var telegramIkmButtonBlock = {
 var telegramUpdateIkmBlock = {
   "block": blocks.telegramUpdateIkmBlock,
   "run": async (context) => {
+    context.blockIn();
     let msg = context.getVar('msg');
     if(('callbackQuery' in msg) && ('message' in msg.callbackQuery)) {
       let markup = await context.getValue("MARKUP");

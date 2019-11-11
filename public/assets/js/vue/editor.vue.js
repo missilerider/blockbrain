@@ -133,7 +133,7 @@ var app = new Vue({
       axios.post("/api/v1/blocks/" + this.blockId, {
         xml: xmltxt
       }).then(function(res) {
-        that.showNotification('Block <b>' + that.blockId + '</b> saved', 'info', 'save', 200);
+        that.showNotification('Block <b>' + atob(that.blockId) + '</b> saved', 'info', 'save', 200);
       });
     },
     blocklyEvent: function(event) {

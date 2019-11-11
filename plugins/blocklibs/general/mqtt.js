@@ -2,6 +2,7 @@
 
 const mqtt = require('mqtt')
 const lib = require('./mqtt.lib.js');
+const ha = require('./mqtt.ha.lib.js');
 const log = global.log;
 
 var runPromise = null;
@@ -17,6 +18,7 @@ var messageBlock = {
   "block": lib.message,
   "run":
     async (context) => {
+      context.blockIn();
       var rgx = context.getField('RGX');
       let matches = false;
       try {
@@ -33,6 +35,7 @@ var publishMessageBlock = {
   "block": lib.publishMessage,
   "run":
     async (context) => {
+      context.blockIn();
       var topic = context.getField('TOPIC');
       log.d("MQTT publish on " + topic);
       if(!runPromise) {
@@ -57,6 +60,7 @@ var publishMessageExBlock = {
   "block": lib.publishMessageEx,
   "run":
     async (context) => {
+      context.blockIn();
       var topic = await context.getValue('TOPIC');
       log.d("MQTT publish on " + topic);
       if(!runPromise) {
@@ -210,9 +214,14 @@ var mqttService = {
   stop: (srv) => {
     setConfig(srv.config);
     if(client) {
-      log.d("Closes MQTT client");
+      if(config.homeAssistant.enabled) {
+        log.i("Stopping HomeAssistant middleware");
+        ha.stop();
+      }
+
+      log.i("Closing MQTT client");
       client.end();
-      log.d("MQTT closed");
+      log.i("MQTT closed");
       client = null;
     }
     if(!runPromise || !runPromiseResolve) return false;
@@ -262,6 +271,7 @@ var mqttService = {
     client  = mqtt.connect(host, ops);
 
     let srv2 = srv;
+    log.i("Starting MQTT broker connection");
     client.on('connect', function() {
       srv2.status = 1;
       log.i("MQTT broker connection OK");
@@ -274,11 +284,22 @@ var mqttService = {
       client.on('offline', () => { log.i("MQTT offline") });
 
       refreshSubscriptions();
+
+      if(config.homeAssistant.enabled) {
+        log.i("Starting HomeAssistant middleware");
+        ha.start({
+          mqttLib: client, 
+          config: config
+        });
+      }
     });
+
+    log.i("MQTT initialization complete");
 
     await runPromise;
 
     srv2.status = 0;
+    log.i("MQTT service stopped");
   }
 }
 

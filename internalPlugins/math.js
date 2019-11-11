@@ -1,8 +1,10 @@
 async function math_number(context) {
+  context.blockIn();
   return parseFloat(context.getField('NUM'));
 }
 
 async function math_arithmetic(context) {
+  context.blockIn();
   var op = context.getField("OP");
   var a = await context.getValue("A");
   var b = await context.getValue("B");
@@ -18,6 +20,7 @@ async function math_arithmetic(context) {
 }
 
 async function math_change(context) {
+  context.blockIn();
   var varName = context.getField("VAR");
   var delta = await context.getValue("DELTA");
 
@@ -27,6 +30,7 @@ async function math_change(context) {
 }
 
 async function math_modulo(context) {
+  context.blockIn();
   var dividend = parseFloat(await context.getValue("DIVIDEND"));
   var divisor = parseFloat(await context.getValue("DIVISOR"));
 
@@ -34,6 +38,7 @@ async function math_modulo(context) {
 }
 
 async function math_single(context) {
+  context.blockIn();
   var op = parseFloat(context.getField("OP"));
   var num = parseFloat(await context.getValue("NUM"));
   log.dump("op", op);

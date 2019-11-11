@@ -22,7 +22,7 @@ function getInfo(env) {
 var writeKeyBlock = {
   "block": {
     "type": "writekey",
-    "message0": "set key %1 to %2",
+    "message0": "store key %1 to %2",
     "args0": [
       {
         "type": "field_input",
@@ -37,7 +37,7 @@ var writeKeyBlock = {
     "previousStatement": null,
     "nextStatement": null,
     "colour": 120,
-    "tooltip": "Sets a key value",
+    "tooltip": "Sets a key value for permanent storage",
     "helpUrl": ""
   },
   "toolbox": {
@@ -67,6 +67,7 @@ var writeKeyBlock = {
     }
   },
   "run": async (context) => {
+    context.blockIn();
     let key = context.getField('KEY');
     let value = await context.getValue('VALUE');
     data[key] = value;
@@ -123,6 +124,7 @@ var readKeyBlock = {
     }
   },
   "run": async (context) => {
+    context.blockIn();
     let key = context.getField('KEY');
     if(key in data) {
       log.d("KV read: " + key + " => " + data[key]);

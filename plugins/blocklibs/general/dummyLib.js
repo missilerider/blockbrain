@@ -1,3 +1,7 @@
+'use strict';
+
+const slog = global.slog;
+
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
@@ -54,8 +58,8 @@ var pushStartBlock = {
     }
   },
   "run": async (context) => {
-    console.log("Ejecucion de pushStart");
-    console.dir(context.getMsg());
+    context.blockIn();
+    slog.d(context.getMsg());
     return await context.continue("CMD");
   }
 };
@@ -89,6 +93,7 @@ var consoleLogBlock = {
     "definition": "def2"
   },
   "run": async (context) => {
+    context.blockIn();
     console.log("consoleLog: " + await context.getParam('TXT'));
   }
 };

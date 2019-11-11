@@ -1,6 +1,7 @@
 const log = global.log;
 
 async function controls_if(context) {
+  context.blockIn();
   var cond;
   var mutElseIf = context.getMutation('elseif', 0);
   var mutElse = context.getMutation('else', false);
@@ -20,6 +21,7 @@ async function controls_if(context) {
 }
 
 async function logic_operation(context) {
+  context.blockIn();
   var op = context.getField("OP");
   var a = await context.getValue("A");
   var b = await context.getValue("B");
@@ -32,18 +34,22 @@ async function logic_operation(context) {
 }
 
 async function logic_boolean(context) {
+  context.blockIn();
   return context.getField("BOOL") == "TRUE";
 }
 
 async function logic_null(context) {
+  context.blockIn();
   return null;
 }
 
 async function logic_negate(context) {
+  context.blockIn();
   return !(await context.getValue("BOOL"));
 }
 
 async function logic_compare(context) {
+  context.blockIn();
   var op = context.getField("OP");
   var a = await context.getValue("A");
   var b = await context.getValue("B");
@@ -61,6 +67,7 @@ async function logic_compare(context) {
 }
 
 async function logic_ternary(context) {
+  context.blockIn();
   var opIf = await context.getValue("IF");
   var opThen = await context.getValue("THEN");
   var opElse = await context.getValue("ELSE");

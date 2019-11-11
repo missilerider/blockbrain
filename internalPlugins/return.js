@@ -11,6 +11,7 @@ var abortBlock = {
   },
   "run":
     async (context) => {
+      context.blockIn();
       context.setVar("msg", null);
       context.getRunFlow().flowState = -1;
       return null;

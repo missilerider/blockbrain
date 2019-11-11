@@ -16,6 +16,30 @@
   "topics": {
     "test/echo": { "format": "text", "filter": false },
     "test/+/echo": { "format": "json", "filter": true },
-    "#": { "format": "json"  }
+    "dummy/+": { "format": "json"  }
+  }, 
+  "homeAssistant": {
+    "enabled": true, 
+    "prefix": "blockbrain/ha", 
+    "idPrefix": "blockbrain_", 
+    "discovery": {
+      "enabled": true, 
+      "prefix": "homeassistant", 
+      "renewalMins": 1
+    }, 
+    "items": {
+      "binary_sensor": {
+        "test_sensor": {
+          "device": "test_device", 
+          "device_class": "window"
+        }
+      }, 
+      "switch": {
+        "test_switch": {
+          "device": "test_device", 
+          "icon": "mdi:spider"
+        }
+      }
+    }
   }
 }

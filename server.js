@@ -8,8 +8,12 @@ var expressSession = require('express-session');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 
-const log = require('./log.js');
+const Log = require('./log.js');
+
+const log = Log.newLogger();
+const slog = Log.newLogger("S =>\t");
 global.log = log;
+global.slog = slog;
 
 log.setLogLevel("WARN");
 
@@ -23,6 +27,9 @@ var services = require('./services.js');
 var conf = utils.loadConfig();
 
 log.setLogLevel(conf.system.log.level);
+log.setLogOutput(conf.system.log.stdout);
+slog.setLogLevel(conf.system.scriptLog.level);
+slog.setLogOutput(conf.system.log.stdout);
 
 var globalSetup = {
   config: conf,

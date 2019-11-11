@@ -1,5 +1,7 @@
 'use strict';
 
+const swVersion = 0.1;
+
 const crypto = require('crypto');
 const fs = require('fs');
 const xml_js = require('xml-js');
@@ -43,10 +45,35 @@ function loadConfig() {
       ]
     },
     "system": {
+      "version": swVersion, 
       "helpUrl": "/help",
       "disableCache": false,
       "log": {
-        "level": "WARNING"
+        "level": "ERROR", 
+        "stdout": true
+      }, 
+      "log": {
+        "level": "ERROR", 
+        "stdout": true
+      }
+    }, 
+    "homeAssistant": {
+      "enabled": false, 
+      "discovery": {
+        "enabled": true, 
+        "renewalMins": 60
+      }, 
+      "items": {
+/*        "binary_sensor": {
+          "sample_sensor": {
+            "class": "window"
+          }
+        }, 
+        "switch":{
+          "test_switch": {
+            "icon": "mdi-spider" // https://cdn.materialdesignicons.com/4.5.95/
+          }
+        }*/
       }
     }
   };
@@ -69,6 +96,8 @@ function loadConfig() {
       });
 
   currentConfig = conf;
+
+  global.blockbrainVersion = conf.system.swVersion;
 
   return conf;
 }

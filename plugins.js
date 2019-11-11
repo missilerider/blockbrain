@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const log = global.log;
+const slog = global.slog;
 
 var blockLibs = {};
 var defaultLib = {};
@@ -94,8 +95,8 @@ async function reloadPlugins(dirname) {
         }
       } catch(e) {
         log.e("Error while loading plugin from " + fromPath);
-        log.d(e.toString() + "(" + e.code + ")");
-        log.d("Stack " + fromPath + ": \n" + e.stack);
+        log.e(e.toString() + "(" + e.code + ")");
+        log.e("Stack " + fromPath + ": \n" + e.stack);
       }
 
     } else if(stat.isDirectory()) {
@@ -163,7 +164,7 @@ async function getBlock(blockName, callback) {
   } else {
     // No dot in name: default operator
     if(blockName in defaultLib) {
-      console.log("Default block: " + blockName);
+      slog.w("Default block: " + blockName);
       console.dir(defaultLib[blockName]);
       callback(false, defaultLib[blockName]);
     } else {
