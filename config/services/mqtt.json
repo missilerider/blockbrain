@@ -20,24 +20,25 @@
   }, 
   "homeAssistant": {
     "enabled": true, 
-    "prefix": "blockbrain/ha", 
+    "prefix": "blockbrainHA", 
     "idPrefix": "blockbrain_", 
     "discovery": {
       "enabled": true, 
       "prefix": "homeassistant", 
       "renewalMins": 1
     }, 
-    "items": {
-      "binary_sensor": {
-        "test_sensor": {
-          "device": "test_device", 
-          "device_class": "window"
-        }
-      }, 
-      "switch": {
-        "test_switch": {
-          "device": "test_device", 
-          "icon": "mdi:spider"
+    "devices": {
+      "test_device_ok": {
+        "items": {
+          "sensor1": {
+            "type": "sensor", 
+            "icon": "wifi", 
+            "initialState": 999
+          }, 
+          "sensor2": {
+            "type": "switch", 
+            "icon": "toggle-switch"
+          }
         }
       }
     }

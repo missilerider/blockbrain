@@ -25,13 +25,15 @@ class Context {
     };
     this.msg = {};
     this.stack = [];
+
+    this.services = options.services;
   }
 
   blockIn() {
-    slog.i(this.executionId + ": BLOCK " + this.program._attributes.type + " (ID: " + this.program._attributes.id + ")");
+    slog.i(this.executionId.grey + ": BLOCK " + this.program._attributes.type + " (ID: " + this.program._attributes.id + ")");
     if(slog.getLogLevel() == "DEBUG") {
       if('mutation' in this.program)
-        slog.d(this.executionId + ":\tmutation = " + JSON.stringify(this.program.mutation._attributes));
+        slog.d(this.executionId.grey + ":\tmutation = " + JSON.stringify(this.program.mutation._attributes));
 
       if('field' in this.program && this.program.field.length > 0) {
         let fields = {};
@@ -41,7 +43,7 @@ class Context {
         } else {
           fields[this.program.field._attributes.name] = this.program.field._text
         }
-        slog.d(this.executionId + ":\tfield = " + JSON.stringify(fields));
+        slog.d(this.executionId.grey + ":\tfield = " + JSON.stringify(fields));
       }
 
       let values = [];
@@ -52,7 +54,7 @@ class Context {
         } else {
           values = [ this.program.value._attributes.name ];
         }
-        slog.d(this.executionId + ":\tvalue = " + JSON.stringify(values));
+        slog.d(this.executionId.grey + ":\tvalue = " + JSON.stringify(values));
       }
     }
   }
@@ -69,23 +71,23 @@ class Context {
         if(sts[n]._attributes.name == statementName)
           return sts[n];
       }
-      log.e("Statement " + statementName + " not found but requested by node " + blockCode._attributes.name);
+      slog.e("Statement " + statementName + " not found but requested by node " + blockCode._attributes.name);
       return null; // Statement not found!
     } else {
-      log.w("Block " + blockCode._attributes.name + " does not have statements. Requested " + statementName + ".");
-      log.dump("blockCode", blockCode);
+      slog.w("Block " + blockCode._attributes.name + " does not have statements. Requested " + statementName + ".");
+      //log.dump("blockCode", blockCode);
       return null; // No statements to look for
     }
   }
 
-  async continue(nextStatement) {
+  async continue(nextStatement, mandatory = true) {
     var newBlock  = null;
     var lastRet = undefined;
     try {
       newBlock = this.findStatement(this.getProgram(), nextStatement);
     } catch(e) {
-      log.i("Execution stops due to error");
-      log.d(e.stack);
+      slog.i("Execution stops due to error");
+      slog.d(e.stack);
       return;
     }
     while(newBlock != null) {
@@ -94,8 +96,8 @@ class Context {
       try {
         codeBlock = this.getPlugins().getBlockSync(newBlock.block._attributes.type);
       } catch {
-        log.e("Block type not found:");
-        log.e(newBlock.block);
+        slog.e("Block type not found:");
+        slog.e(newBlock.block);
         throw new Error("Block not found: " + newBlock.block._attributes.type)
       }
 
@@ -106,7 +108,7 @@ class Context {
       });
 
       this.runFlow.step++;
-      log.d("RUN: " + newBlock.block._attributes.type);
+      slog.d("RUN: " + newBlock.block._attributes.type);
       await codeBlock.run(this);
       this.pop();
       if('next' in newBlock.block && !this.getRunFlow().flowState) {
@@ -121,7 +123,7 @@ class Context {
   }
 
   exit(code = 0, message = "") {
-    console.log("Termina manualmente la ejecucion: " + code + ", " + message);
+    slog.i("Exists execution: " + code + ", " + message);
   }
 
   async getParam(name) {
@@ -138,12 +140,12 @@ class Context {
         return ret;
       }
     }
-    log.e("Node does not contain value named " + name);
+    slog.e("Node does not contain value named " + name);
     throw new Error("Node does not contain value named " + name);
   }
 
   getMutation(name, defaultValue = undefined) {
-    log.d("getMutation(" + name + ")");
+    slog.d("getMutation(" + name + ")");
 
     if('mutation' in this.getProgram()) {
       if(name in this.getProgram().mutation._attributes) {
@@ -175,9 +177,9 @@ class Context {
     try {
       codeBlock = this.plugins.getBlockSync(val._attributes.type);
     } catch {
-      log.e("Block type not found:");
-      log.e(val._attributes.type);
-      log.dump("block", val);
+      slog.e("Block type not found:");
+      slog.e(val._attributes.type);
+      slog.dump("block", val);
       throw new Error("Block not found: " + val._attributes.type);
     }
     //var context = thisContext;//createContext({ program: val, block: codeBlock });
@@ -188,7 +190,7 @@ class Context {
     this.block = codeBlock;
 
     this.step();
-    log.d("EXECval: " + val._attributes.type);
+    slog.d("EXECval: " + val._attributes.type);
     let ret = await codeBlock.run(this);
     this.pop();
     return ret;
@@ -214,12 +216,12 @@ class Context {
     try {
       return this.findName(this.getProgram().field, name)._text;
     } catch {
-      log.e("Field does not exists: " + name + " for block " + this.getProgram()._attributes.type + " [" + this.getProgram()._attributes.id +"]");
+      slog.e("Field does not exists: " + name + " for block " + this.getProgram()._attributes.type + " [" + this.getProgram()._attributes.id +"]");
     }
   }
 
   async getValue(name, defaultValue = undefined) {
-    log.d("getValue(" + name + ")");
+    slog.d("getValue(" + name + ")");
 
     if(!this.getProgram().value) {
       if(defaultValue !== undefined) return defaultValue;
@@ -229,7 +231,7 @@ class Context {
     var valueBlock = this.findName(this.getProgram().value, name);
     if(!valueBlock) {
       if(defaultValue !== undefined) return defaultValue;
-      log.e("Value does not exists: " + name + " for block " + this.getProgram()._attributes.type + " [" + this.getProgram()._attributes.id +"]");
+      slog.e("Value does not exists: " + name + " for block " + this.getProgram()._attributes.type + " [" + this.getProgram()._attributes.id +"]");
       return null;
     }
 
@@ -242,7 +244,7 @@ class Context {
       return defaultValue;
 
     // If default value is not defined, must contain a block!
-    log.e("Value does not exists: " + name + " for block " + this.getProgram()._attributes.type + " [" + this.getProgram()._attributes.id +"]");
+    slog.e("Value does not exists: " + name + " for block " + this.getProgram()._attributes.type + " [" + this.getProgram()._attributes.id +"]");
 //    throw new Error("Value not found!");
   }
 
@@ -282,6 +284,23 @@ class Context {
     let restore = this.stack.pop();
     this.program = restore.program;
     this.block = restore.block;
+  }
+
+  getService(srvName) {
+    if(!this.services || !this.services.getServices()) {
+      slog.e("Services not available on this execution's context layer");
+      return null;
+    }
+
+    let srvs = this.services.getServices();
+
+    if(srvName in srvs) {
+      return srvs[srvName];
+    }
+
+    slog.w("Service could not be found!");
+    slog.d("Service name: " + srvName);
+    return null;
   }
 
   getMsg() { return this.vars.msg; };

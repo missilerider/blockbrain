@@ -110,6 +110,7 @@ async function stop(srvName, callbackFinish) {
 
   if(!(srvName in serviceData && srvName in servicePromise)) {
     log.e("Service stop " + srvName + " not started");
+    return;
   }
 
   serviceData[srvName].stop = true;

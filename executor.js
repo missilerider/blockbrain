@@ -5,11 +5,13 @@ const contextFactory = require('./context.js');
 const log = global.log;
 
 var plugins = null;
+var services = null;
 
 var ctxt = [];
 
 function config(options) {
   plugins = options.plugins;
+  services = options.services;
 }
 
 async function executeProgram(xmlProgram, options) {
@@ -41,7 +43,8 @@ async function executeProgramJson(json, options) {
         plugins: plugins,
         program: block,
         block: codeBlock,
-        msg: options.msg
+        msg: options.msg, 
+        services: services
       });
 
       ctxt.push(context.vars);

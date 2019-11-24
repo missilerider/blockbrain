@@ -1,9 +1,13 @@
 'use strict';
 
-const mqtt = require('mqtt')
+const mqtt = require('mqtt');
 const lib = require('./mqtt.lib.js');
 const ha = require('./mqtt.ha.lib.js');
 const log = global.log;
+
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
 
 var runPromise = null;
 var runPromiseResolve = null;
@@ -13,6 +17,8 @@ var client = null;
 var config = null;
 var topics = {};
 var topicRgx = [];
+
+var thingSubs = {};
 
 var messageBlock = {
   "block": lib.message,
@@ -82,8 +88,6 @@ var publishMessageExBlock = {
       var retain = context.getField('RETAIN');
       var expiry = context.getField('EXPIRY');
 
-      log.d("Envia " + message);
-
       let ops = {
         qos: parseInt(qos),
         retain: retain == "TRUE",
@@ -109,21 +113,33 @@ function getInfo(env) {
 }
 
 function getBlocks() {
-  return {
+  var blocks = {
     "message": messageBlock,
     "publish": publishMessageBlock,
     "publishEx": publishMessageExBlock
   };
+
+  blocks = Object.assign(blocks, ha.getBlocks());
+  return blocks;
 }
 
 function getToolbox() {
   return {
     "mqtt": {
       "Events": ' \
-        <block type="mqtt.message"></block>',
+      <block type="mqtt.message"></block>',
       "Functions": ' \
         <block type="mqtt.publish"></block> \
         <block type="mqtt.publishEx"></block>'
+    }, 
+    "home assistant": {
+      "Sensor": ' \
+        <block type="mqtt.haSetSensor"></block>', 
+      "Switch": ' \
+        <block type="mqtt.haSwitchEvent"></block> \
+        <block type="mqtt.haSetSwitch"></block>', 
+      "General": ' \
+        <block type="mqtt.haThingEnable"></block>'
     }
   }
 }
@@ -198,6 +214,18 @@ function onMessage(topic, message, packet) {
       }
     }
   }
+
+  Object.keys(thingSubs).forEach((tTopic) => {
+    if(tTopic == topic) {
+      log.d("Topic matches thing " + thingSubs[tTopic].id);
+      let block = thingSubs[tTopic].onMessage(topic, message);
+      if(block) {
+        tools.executeEvent('mqtt.' + block, {
+          thing: thingSubs[tTopic]
+        });
+      }
+    }
+  });
 }
 
 var mqttService = {
@@ -211,12 +239,14 @@ var mqttService = {
     setConfig(srv.config);
     return true;
   },
-  stop: (srv) => {
+  stop: async (srv) => {
     setConfig(srv.config);
     if(client) {
       if(config.homeAssistant.enabled) {
         log.i("Stopping HomeAssistant middleware");
-        ha.stop();
+        await ha.stop();
+        await sleep(1000);
+        log.d("HA stopped");
       }
 
       log.i("Closing MQTT client");
@@ -279,9 +309,9 @@ var mqttService = {
       client.on('message', onMessage);
 
       client.on('reconnect', () => { log.i("MQTT reconnecting...") });
-      client.on('close', () => { log.i("MQTT disconnected") });
+      client.on('close', () => { log.e("MQTT disconnected") });
       client.on('disconnect', () => { log.i("MQTT received diconnect from broker") });
-      client.on('offline', () => { log.i("MQTT offline") });
+      client.on('offline', () => { log.f("MQTT offline") });
 
       refreshSubscriptions();
 
@@ -289,7 +319,8 @@ var mqttService = {
         log.i("Starting HomeAssistant middleware");
         ha.start({
           mqttLib: client, 
-          config: config
+          config: config, 
+          service: mqttService
         });
       }
     });
@@ -300,6 +331,13 @@ var mqttService = {
 
     srv2.status = 0;
     log.i("MQTT service stopped");
+  }, 
+  getThing(thingName) {
+    return ha.getThing(thingName);
+  }, 
+  getThings(p) { return ha.getThings(p); }, 
+  addThingSubscription: function(topic, thing) {
+    thingSubs[topic] = thing;
   }
 }
 

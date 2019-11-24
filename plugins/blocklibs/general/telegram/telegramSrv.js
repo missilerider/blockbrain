@@ -315,6 +315,7 @@ var telegramUpdateIkmBlock = {
 };
 
 function getBlocks() {
+  log.d("telegram getBlocks");
   return {
     "telegram_text": telegramTextBlock,
     "telegram_cmd": telegramCmdBlock,

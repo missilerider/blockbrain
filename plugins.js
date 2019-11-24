@@ -15,7 +15,7 @@ var onReloadEvents = [];
 
 async function reload() {
   blockLibs = {};
-  log.d("Inicia carga de plugins");
+  log.i("Plugin load start...");
   await defaultPlugins('./internalPlugins');
   await reloadPlugins('./plugins');
 
@@ -25,6 +25,7 @@ async function reload() {
 }
 
 async function defaultPlugins(dirname) {
+  log.d("Reads default plugins directory " + dirname);
   var files = fs.readdirSync(dirname);
   var fk = Object.keys(files);
   for(var fn = 0; fn < fk.length; fn++) {
@@ -63,7 +64,7 @@ async function defaultPlugins(dirname) {
 }
 
 async function reloadPlugins(dirname) {
-  log.i("Reads directory " + dirname);
+  log.i("Reads plugins directory " + dirname);
 
   var files = fs.readdirSync(dirname);
 
@@ -106,6 +107,7 @@ async function reloadPlugins(dirname) {
 }
 
 async function getDefaultBlocks(conf) {
+  log.d("plugins getDefaultBlocks");
   var libIds = Object.keys(defaultLib);
   var ret = {};
   for(var n=0; n<libIds.length; n++) {
@@ -117,7 +119,8 @@ async function getDefaultBlocks(conf) {
   return ret;
 }
 
-async function getBlocks(conf) {
+async function getBlocks(conf, services) {
+  log.d("plugins getBlocks");
   var libIds = Object.keys(blockLibs);
   var ret = {};
   for(var n=0; n<libIds.length; n++) {
@@ -132,7 +135,13 @@ async function getBlocks(conf) {
       if(!('block' in data[blockIds[n2]])) {
           log.w("No block definition in library " + blockName);
       } else {
-        var blockData = data[blockIds[n2]].block;
+        var blockData;
+        if(typeof data[blockIds[n2]].block !== "function")
+          blockData = data[blockIds[n2]].block;
+        else {
+          blockData = data[blockIds[n2]].block(services.getServices());
+        }
+
         if(typeof(blockData) == "function") {
           blockData = await blockData();
         }

@@ -6,6 +6,7 @@ const jsStringEscape = require('js-string-escape');
 
 var conf;
 var plugins = null;
+var services = null;
 
 const cacheDir = "/.cache";
 const cacheTree = "blockTree.json";
@@ -28,6 +29,7 @@ function dispatcher(req, res, next) {
 function config(data) {
   conf = data.config;
   plugins = data.plugins;
+  services = data.services;
 }
 
 function prepare(res) {
@@ -157,10 +159,11 @@ async function blocksJs(req, res) {
     ret += JSON.stringify(blocks[ids[n]]);
   }
 
-	blocks = await plugins.getBlocks(conf);
+	blocks = await plugins.getBlocks(conf, services);
   ids = Object.keys(blocks);
 
   for(let n = 0; n < ids.length; n++) {
+    log.d(ids[n]);
     ret += ",\n";
     ret += JSON.stringify(blocks[ids[n]]);
   }

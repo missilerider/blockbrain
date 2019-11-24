@@ -1,5 +1,7 @@
 'use strict';
 
+var colors = require('colors');
+
 function newLogger(prefix) {
   return new Log(prefix);
 }
@@ -61,14 +63,15 @@ Log.prototype.getLogLevel = function() {
   return levels[this.logLevel];
 };
 
-Log.prototype.dump = function(v, d) { if(this.logLevel >= 5) this.doLog(v + " = " + JSON.stringify(d, null, 2), "DUMP"); }
-Log.prototype.d = function(t) { if(this.logLevel >= 5) this.doLog(t, "DEBUG"); }
-Log.prototype.i = function(t) { if(this.logLevel >= 4) this.doLog(t, "INFO"); }
-Log.prototype.w = function(t) { if(this.logLevel >= 3) this.doLog(t, "WARN"); }
-Log.prototype.e = function(t) { if(this.logLevel >= 2) this.doLog(t, "ERROR"); }
-Log.prototype.f = function(t) { if(this.logLevel >= 1) this.doLog(t, "FATAL"); }
+Log.prototype.obj = function(v, d) { if(this.logLevel >= 5) this.doLog(v.green + " = " + JSON.stringify(Object.getOwnPropertyNames(d), null, 2).brightGreen, "OBJ".black.bgGreen); }
+Log.prototype.dump = function(v, d) { if(this.logLevel >= 5) this.doLog(v.green + " = " + JSON.stringify(d, null, 2).brightGreen, "DUMP".black.bgGreen); }
+Log.prototype.d = function(t) { if(this.logLevel >= 5) this.doLog(t.cyan, "DEBUG".bgCyan.black); }
+Log.prototype.i = function(t) { if(this.logLevel >= 4) this.doLog(t.brightWhite, "INFO".bgBrightWhite.black); }
+Log.prototype.w = function(t) { if(this.logLevel >= 3) this.doLog(t.brightYellow, "WARN".bgBrightYellow.black); }
+Log.prototype.e = function(t) { if(this.logLevel >= 2) this.doLog(t.brightRed, "ERROR".bgBrightRed.black); }
+Log.prototype.f = function(t) { if(this.logLevel >= 1) this.doLog(t.bgBrightRed.black.bold, "FATAL".brightRed.bold); }
 
-Log.prototype.p = function(t) { this.doLog(t, "OUT"); }
+Log.prototype.p = function(t) { this.doLog(t.bold, "OUT".bold); }
 
 module.exports = {
   newLogger: newLogger

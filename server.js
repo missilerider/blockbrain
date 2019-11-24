@@ -10,6 +10,10 @@ var methodOverride = require('method-override');
 
 const Log = require('./log.js');
 
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
 const log = Log.newLogger();
 const slog = Log.newLogger("S =>\t");
 global.log = log;
@@ -179,10 +183,6 @@ app.use('/', function(req, res, next) {
   })
 });
 
-const sleep = (milliseconds) => {
-  return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
-
 try {
   log.i("Script pre-load start");
   utils.scriptReload(conf.blocks.path).then(() => {
@@ -207,5 +207,29 @@ plugins.reload().then(() => {
   });
 });
 
-app.listen(PORT, HOST);
+var server = app.listen(PORT, HOST);
 log.i(`Running on http://${HOST}:${PORT}`);
+
+// Graceful exit
+process.on('SIGINT', async function() {
+  console.log("SIGINT received");
+  log.f("Blockbrain is closing!");
+  log.i("Stopping HTTP server...");
+  await server.close();
+
+  for(let s = 0; s < Object.keys(services.getServices()).length; s++) {
+    let id = Object.keys(services.getServices())[s];
+    if(
+      services.status(id).status == "running") {
+      log.i("Stopping service " + id + "...");
+      await services.stop(id);
+    }
+  }
+
+  await sleep(1000);
+
+  log.d("Important tasks stopped. Closing");
+
+  // The rest is dead crap
+  process.exit();
+});
