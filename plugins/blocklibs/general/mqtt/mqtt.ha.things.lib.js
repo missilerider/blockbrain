@@ -186,6 +186,8 @@ class haThing_switch extends haThing {
         disco.command_topic = this.commandTopic;
         disco.state_on = this.stateOn;
         disco.state_off = this.stateOff;
+        disco.payload_on = this.stateOn;
+        disco.payload_off = this.stateOff;
         return disco;
     }
 
