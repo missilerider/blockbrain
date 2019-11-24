@@ -95,7 +95,7 @@ class Context {
 
       try {
         codeBlock = this.getPlugins().getBlockSync(newBlock.block._attributes.type);
-      } catch {
+      } catch(e) {
         slog.e("Block type not found:");
         slog.e(newBlock.block);
         throw new Error("Block not found: " + newBlock.block._attributes.type)
@@ -176,7 +176,7 @@ class Context {
     var codeBlock;
     try {
       codeBlock = this.plugins.getBlockSync(val._attributes.type);
-    } catch {
+    } catch(e) {
       slog.e("Block type not found:");
       slog.e(val._attributes.type);
       slog.dump("block", val);
@@ -215,7 +215,7 @@ class Context {
     //log.d("getField(" + name + ")")
     try {
       return this.findName(this.getProgram().field, name)._text;
-    } catch {
+    } catch(e) {
       slog.e("Field does not exists: " + name + " for block " + this.getProgram()._attributes.type + " [" + this.getProgram()._attributes.id +"]");
     }
   }

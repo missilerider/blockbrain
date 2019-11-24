@@ -204,7 +204,7 @@ function loadKeys(config) {
     } else {
       try {
         data = JSON.parse(newData);
-      } catch {
+      } catch(e) {
         log.e("Loaded data from key-value vault not readable. Disabling persistence!");
         config.persistence = false;
         log.i("If you want to make persistence work again, please delete the vault file or fix the JSON structure in it manually");
@@ -217,7 +217,7 @@ function saveKeys() {
   log.d("Persists key-value data to file " + serviceConfig.vaultFile);
   try {
     fs.writeFileSync(serviceConfig.vaultFile, JSON.stringify(data), 'utf8');
-  } catch {
+  } catch(e) {
     log.e("Could not save key-value data to file. Disabling persistence");
     serviceConfig.persistence = false;
   }

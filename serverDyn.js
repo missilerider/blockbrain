@@ -255,7 +255,7 @@ async function blockPropsJs(req, res, next) {
 	ret += "customDomToMutation = function(xmlElement) {\n";
 	ret += "\ttry {\n";
 	ret += "\t\tthis.customProperties = JSON.parse(xmlElement.getAttribute('customproperties'));\n";
-	ret += "\t} catch {};\n";
+	ret += "\t} catch(e) {};\n";
 	ret += "};\n\n";
 
   ret += "function createCustomBlocklyProps() {\n";
