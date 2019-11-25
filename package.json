@@ -1,17 +1,16 @@
 {
   "name": "blockbrain",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Blockly based decision taker engine",
   "author": "Alfonso Vila <alfonso.vila.lopez@gmail.com>",
   "main": "server.js",
   "homepage": "https://github.com/missilerider/blockbrain",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "postinstall": "./postinstall.sh"
   },
   "files": [
     "assets/",
-    "blockly/",
-    "closure-library/README.md",
     "config/*.json",
     "config/services/keyValue.json",
     "config/services/mqtt.json",
@@ -23,7 +22,8 @@
     "vault/",
     "*.png",
     "*.js",
-    "LICENSE"
+    "LICENSE",
+    "postinstall.sh"
   ],
   "dependencies": {
     "axios": "^0.19.0",
