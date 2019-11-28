@@ -65,6 +65,30 @@ var jsonStringifyBlock = {
   }
 }
 
+var jsonStringifyBeautifyBlock = {
+  "block": {
+    "type": "json_stringify",
+    "message0": "stringify and beautify %1",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "JSON",
+        "check": "json"
+      }
+    ],
+    "output": "String",
+    "colour": 315,
+    "tooltip": "Convert to json string definition into a easily readable format",
+    "helpUrl": ""
+  },
+  "run":
+    async (context) => {
+      context.blockIn();
+      var json = await context.getValue("JSON");
+      return JSON.stringify(json, null, 2);
+  }
+}
+
 var jsonParseBlock = {
   "block": {
     "type": "json_parse",
@@ -174,6 +198,7 @@ function getBlocks() {
   return {
     "json": jsonBlock,
     "json_stringify": jsonStringifyBlock,
+    "json_stringify_beautify": jsonStringifyBeautifyBlock, 
     "json_parse": jsonParseBlock,
     "json_set": jsonSetBlock,
     "json_get": jsonGetBlock
@@ -190,6 +215,7 @@ function getToolbox() {
       "Functions": ' \
         <block type="json.json"></block> \
         <block type="json.json_stringify"></block> \
+        <block type="json.json_stringify_beautify"></block> \
         <block type="json.json_parse"></block> \
         <block type="json.json_set"></block> \
         <block type="json.json_get"></block>'

@@ -46,24 +46,60 @@ const sleep = (milliseconds) => {
 sleepBlock = {
   block: {
     "type": "sleep",
-    "message0": "sleep %1 ms",
+    "message0": "sleep  %1 %2",
     "args0": [
       {
-        "type": "field_input",
+        "type": "field_number",
         "name": "MS",
-        "text": "1000"
+        "value": 1000,
+        "min": 0,
+        "max": 99999
+      },
+      {
+        "type": "field_dropdown",
+        "name": "UNIT",
+        "options": [
+          [
+            "ms",
+            "ms"
+          ],
+          [
+            "sec",
+            "sec"
+          ],
+          [
+            "min",
+            "min"
+          ],
+          [
+            "hours",
+            "hours"
+          ],
+          [
+            "days",
+            "days"
+          ]
+        ]
       }
     ],
     "previousStatement": null,
     "nextStatement": null,
     "colour": 60,
-    "tooltip": "Suspends the execution for the specified milliseconds",
+    "tooltip": "Suspends the execution for the specified time interval",
     "helpUrl": ""
   },
   run: async function(context) {
     context.blockIn();
     let ms = context.getField("MS");
-    await sleep(ms);
+    let unit = context.getField("UNIT");
+    switch(unit) {
+      case "ms": await sleep(ms); break;
+      case "sec": await sleep(ms * 1000); break;
+      case "min": for(let n = 0; n < ms; n++) await sleep(60*1000); break;
+      case "hours": for(let n = 0; n < ms * 60; n++) await sleep(60*1000); break;
+      case "days": for(let n = 0; n < ms * 60 * 24; n++) await sleep(60*1000); break;
+    }
+    
   }
 }
 
