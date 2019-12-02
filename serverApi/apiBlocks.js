@@ -54,7 +54,6 @@ function POSTblock(data) {
 		fs.writeFileSync(filename + ".xml", data.req.body.xml);
     data.utils.buildScriptRefs(filename + ".xml");
 	} catch(e) {
-//		console.dir(e.message);
 		data.res.json({ code: 501, body: { ok: false, error: 1 } });
     return true;
 	}

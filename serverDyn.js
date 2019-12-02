@@ -7,6 +7,7 @@ const jsStringEscape = require('js-string-escape');
 var conf;
 var plugins = null;
 var services = null;
+var utils = null;
 
 const cacheDir = "/.cache";
 const cacheTree = "blockTree.json";
@@ -30,6 +31,7 @@ function config(data) {
   conf = data.config;
   plugins = data.plugins;
   services = data.services;
+  utils = data.utils;
 }
 
 function prepare(res) {
@@ -127,18 +129,10 @@ async function blockTree(req, res) {
 
   let data;
 
-  //if(!fs.existsSync(conf.blocks.path + cacheDir + "/" + cacheTree) || conf.system.disableCache) {
-    data = await buildBlockTree().then().catch((e)=>{
-      throw e;
-    });
-    res.json(data);
-  //}
-/*
-  if(fs.existsSync(conf.blocks.path + cacheDir + "/" + cacheTree)) {
-    var data = fs.readFileSync(conf.blocks.path + cacheDir + "/" + cacheTree);
-    console.log(conf.blocks.path + cacheDir + "/" + cacheTree);
-    res.json(JSON.parse(data));
-  }*/
+  data = await buildBlockTree().then().catch((e)=>{
+    throw e;
+  });
+  res.json(data);
 }
 
 async function blocks(req, res) {
@@ -155,11 +149,12 @@ async function blocksJs(req, res) {
   let ids = Object.keys(blocks);
 
 	for(let n = 0; n < ids.length; n++) {
+    log.d(ids[n]);
     if(n>0) ret += ",\n";
     ret += JSON.stringify(blocks[ids[n]]);
   }
 
-	blocks = await plugins.getBlocks(conf, services);
+	blocks = await plugins.getBlocks(conf, services, utils);
   ids = Object.keys(blocks);
 
   for(let n = 0; n < ids.length; n++) {
@@ -260,7 +255,7 @@ async function blockPropsJs(req, res, next) {
 
   ret += "function createCustomBlocklyProps() {\n";
 
-	let props = plugins.getBlockCustomPropertiesSync();
+	let props = await plugins.getBlockCustomPropertiesSync(services, utils);
 
   let ids = Object.keys(props);
 

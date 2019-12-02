@@ -194,7 +194,7 @@ function getInfo(env) {
   }
 }
 
-function getBlocks() {
+async function getBlocks() {
   return {
     "json": jsonBlock,
     "json_stringify": jsonStringifyBlock,

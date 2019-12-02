@@ -24,7 +24,7 @@ var httpEndpointBlock = {
   }
 }
 
-function getBlocks() {
+async function getBlocks() {
   return {
     "http_endpoint": httpEndpointBlock
   };

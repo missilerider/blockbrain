@@ -27,39 +27,61 @@ class Context {
     this.stack = [];
 
     this.services = options.services;
+    this.utils = options.utils;
+  }
+
+  getFields() {
+    let fields = {};
+    if('field' in this.program) {
+      if(Array.isArray(this.program.field)) {
+      for(let n = 0; n < this.program.field.length; n++)
+        fields[this.program.field[n]._attributes.name] = this.program.field[n]._text;
+      } else {
+        fields[this.program.field._attributes.name] = this.program.field._text
+      }
+      return fields;
+    }
+    return null;
+  }
+
+  getValues() {
+    let values = [];
+    if('value' in this.program) {
+      if(Array.isArray(this.program.value)) {
+        for(let n = 0; n < this.program.value.length; n++)
+         values.push(this.program.value[n]._attributes.name);
+      } else {
+        values = [ this.program.value._attributes.name ];
+      }
+      return values;
+    }
+    return null;
+  }
+
+  getMutations() {
+    if('mutation' in this.program)
+      return this.program.mutation._attributes;
+    return null;
   }
 
   blockIn() {
     slog.i(this.executionId.grey + ": BLOCK " + this.program._attributes.type + " (ID: " + this.program._attributes.id + ")");
     if(slog.getLogLevel() == "DEBUG") {
-      if('mutation' in this.program)
-        slog.d(this.executionId.grey + ":\tmutation = " + JSON.stringify(this.program.mutation._attributes));
+      let mut = this.getMutations();
+      if(mut != null)
+        slog.d(this.executionId.grey + ":\tmutation = " + JSON.stringify(mut));
 
-      if('field' in this.program && this.program.field.length > 0) {
-        let fields = {};
-        if(Array.isArray(this.program.field)) {
-        for(let n = 0; n < this.program.field.length; n++)
-          fields[this.program.field[n]._attributes.name] = this.program.field[n]._text;
-        } else {
-          fields[this.program.field._attributes.name] = this.program.field._text
-        }
+      let fields = this.getFields();
+      if(fields != null)
         slog.d(this.executionId.grey + ":\tfield = " + JSON.stringify(fields));
-      }
 
-      let values = [];
-      if('value' in this.program) {
-        if(Array.isArray(this.program.value)) {
-          for(let n = 0; n < this.program.value.length; n++)
-           values.push(this.program.value[n]._attributes.name);
-        } else {
-          values = [ this.program.value._attributes.name ];
-        }
+      let values = this.getValues();
+      if(values != null)
         slog.d(this.executionId.grey + ":\tvalue = " + JSON.stringify(values));
-      }
     }
   }
 
-  findStatement(blockCode, statementName) {
+  findStatement(blockCode, statementName, mandatory = true) {
     if('statement' in blockCode) {
       var sts;
       if(!Array.isArray(blockCode.statement)) {
@@ -71,20 +93,27 @@ class Context {
         if(sts[n]._attributes.name == statementName)
           return sts[n];
       }
-      slog.e("Statement " + statementName + " not found but requested by node " + blockCode._attributes.name);
+      if(mandatory)
+        slog.e("Statement " + statementName + " not found but requested by node " + blockCode._attributes.name);
+      else
+        slog.d("Statement " + statementName + " not found but requested by node " + blockCode._attributes.name);
       return null; // Statement not found!
     } else {
-      slog.w("Block " + blockCode._attributes.name + " does not have statements. Requested " + statementName + ".");
+      if(mandatory)
+        slog.w("Block " + blockCode._attributes.name + " does not have statements. Requested " + statementName + ".");
+      else
+        slog.d("Block " + blockCode._attributes.name + " does not have statements. Requested " + statementName + ".");
       //log.dump("blockCode", blockCode);
       return null; // No statements to look for
     }
   }
 
   async continue(nextStatement, mandatory = true) {
+    slog.d("Execution " + this.executionId + " continues on " + nextStatement);
     var newBlock  = null;
     var lastRet = undefined;
     try {
-      newBlock = this.findStatement(this.getProgram(), nextStatement);
+      newBlock = this.findStatement(this.getProgram(), nextStatement, mandatory);
     } catch(e) {
       slog.i("Execution stops due to error");
       slog.d(e.stack);
@@ -94,8 +123,10 @@ class Context {
       let codeBlock;
 
       try {
-        codeBlock = this.getPlugins().getBlockSync(newBlock.block._attributes.type);
+        codeBlock = await this.getPlugins().getBlockSync(newBlock.block._attributes.type, this.services, this.utils);
       } catch(e) {
+        slog.dump("message", e.message);
+        slog.dump("stack", e.stack);
         slog.e("Block type not found:");
         slog.e(newBlock.block);
         throw new Error("Block not found: " + newBlock.block._attributes.type)
@@ -175,7 +206,7 @@ class Context {
     //log.d("execValue(" + val.type + ")");
     var codeBlock;
     try {
-      codeBlock = this.plugins.getBlockSync(val._attributes.type);
+      codeBlock = await this.plugins.getBlockSync(val._attributes.type), this.services, this.utils;
     } catch(e) {
       slog.e("Block type not found:");
       slog.e(val._attributes.type);

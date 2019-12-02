@@ -2,8 +2,7 @@
 
 const log = global.log;
 const slog = global.slog;
-
-let blocks = [];
+var runtimeUtils = null;
 
 function getInfo(env) {
   return {
@@ -13,8 +12,52 @@ function getInfo(env) {
   }
 }
 
-function runBlock(context) {
-  log.d("RUN BLOCK!!");
+async function runBlock(context) {
+  context.blockIn();
+
+  let vars = {};
+  let rets = [];
+
+  let fields = context.getFields();
+  if(fields != null) {
+    let fieldIds = Object.keys(fields);
+    for(let n = 0; n < fieldIds.length; n++) {
+      let parts = fieldIds[n].match(/^CONST_(.*)$/);
+      if(parts) {
+        vars[parts[1]] = context.getField(parts[0]);
+        continue;
+      }
+
+      parts = fieldIds[n].match(/^RET_(.*)$/);
+      if(parts) {
+        rets.push(parts[1]);
+        continue;
+      }
+    }
+  }
+
+  let values = context.getValues();
+  if(values != null) {
+    for(let n = 0; n < values.length; n++) {
+      let parts = values[n].match(/^VAR_(.*)$/);
+      if(parts) {
+        vars[parts[1]] = await context.getValue(parts[0]);
+        continue;
+      }
+    }
+  }
+
+  let ret = await runtimeUtils.executeEvent('fn_fn', context.vars, vars);
+
+  if(ret.length > 0) {
+    ret = ret[0]; // Single execution only supported!!
+
+    for(let n = 0; n < rets.length; n++) {
+      let localVar = context.getField("RET_" + rets[n]);
+      context.setVar(localVar, ret[rets[n]]);
+      log.d("Variable output " + localVar + " = " + (ret[rets[n]] || "nullable"));
+    }
+  }
 }
 
 function createBlock(data) {
@@ -104,47 +147,32 @@ function createBlock(data) {
   return b;
 }
 
-function getBlocks() {
-  fetchBlocks();
-  
+async function getBlocks(services, utils) {
+  runtimeUtils = utils;
+  let blocks = await fetchBlocks(services, utils);
+
   let ret = {};
-  
+
   for(let n = 0; n < blocks.length; n++) {
     let block = createBlock(blocks[n]);
     ret[block.block.type] = block;
   }
 
-  log.dump("blocks", ret);
-
   return ret;
 }
 
-function fetchBlocks() {
-  blocks = [
-    {
-      name: "Func Name",
-      section: "User functions", 
-      params: { "param1": { var: true }, param2: { var: false } },
-      returns: [ "ret" ], 
-      tooltip: "adfvsdfbe", 
-      color: 330
-    },
-    {
-      name: "Func Name2",
-      section: "User functions", 
-      params: { "param1": { var: false }, param2: { var: true }, para3: { var: false } },
-      returns: [ "ret", "ret2", "return que te pasas" ],
-      tooltip: "Tooltip 2", 
-      color: "aaaaaa"
-    }
-  ];
+async function fetchBlocks(services, utils) {
+  let blocks = await utils.executeEvent('fn_fn', { "___Custom Function Definition": true });
+
+  return blocks;
 }
 
 function getServices() {
   return {};
 }
 
-function getToolbox() {
+async function getToolbox(services, utils) {
+  let blocks = await fetchBlocks(services, utils);
   let palette = {};
 
   for(let n = 0; n < blocks.length; n++) {

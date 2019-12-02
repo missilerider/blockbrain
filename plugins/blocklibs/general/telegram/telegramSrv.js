@@ -64,7 +64,6 @@ var telegramService = {
 
           if('commands' in msg[n]) {
             for(let c = 0; c < msg[n].commands.length; c++) {
-              console.log(JSON.stringify(msg[n], null, 2));
               log.d("Telegram command: " + msg[n].commands[c].command + ' from chat ' + msg[n].chat.id);
               await tools.executeEvent('telegram.telegram_cmd', {
                 text: msg[n].text,
@@ -210,8 +209,6 @@ var telegramSendMessageExBlock = {
     let replyId = await context.getValue("REPLY", -1);
     let markup = await context.getValue("MARKUP", null);
 
-    console.dir(chat);
-
     if(!Array.isArray(chat)) {
       let params = {
         chat_id: chat != -1 ? chat : context.getVar('msg').message.chat.id,
@@ -314,7 +311,7 @@ var telegramUpdateIkmBlock = {
   }
 };
 
-function getBlocks() {
+async function getBlocks() {
   log.d("telegram getBlocks");
   return {
     "telegram_text": telegramTextBlock,

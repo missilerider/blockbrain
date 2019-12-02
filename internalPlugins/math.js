@@ -57,7 +57,7 @@ async function math_single(context) {
   return num;
 }
 
-function getBlocks() {
+async function getBlocks() {
   return {
     math_number: { run: math_number },
     math_arithmetic: { run: math_arithmetic },

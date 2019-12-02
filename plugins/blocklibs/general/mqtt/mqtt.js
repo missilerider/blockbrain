@@ -112,7 +112,7 @@ function getInfo(env) {
   }
 }
 
-function getBlocks() {
+async function getBlocks() {
   var blocks = {
     "message": messageBlock,
     "publish": publishMessageBlock,

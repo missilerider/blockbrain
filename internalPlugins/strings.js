@@ -95,10 +95,13 @@ async function text_trim(context) {
 async function text_print(context) {
   context.blockIn();
   let value  = await context.getValue("TEXT");
-  slog.p(value);
+  if(!value)
+    slog.p("nullable");
+  else
+    slog.p(value);
 }
 
-function getBlocks() {
+async function getBlocks() {
   return {
     "text": { run: text },
     "text_join": { run: text_join },

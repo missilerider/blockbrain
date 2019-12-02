@@ -81,7 +81,6 @@ class Bot {
   }
 
   async sendMessage(params) {
-    console.dir(params);
     if(!params.chat_id || !params.text)
       throw new Error("chat_id and text are mandatory");
 
@@ -92,7 +91,6 @@ class Bot {
   }
 
   async editMessageReplyMarkup(params) {
-    console.log(JSON.stringify(params));
     this.doPostSync("editMessageReplyMarkup", params);
   }
 }
@@ -106,16 +104,16 @@ class Message {
     if('from' in data)
       this.from = new User(data.from);
       else {
-        console.log("mensaje sin from!");
-        console.dur(data);
+        log.e("Telegram message without FROM field!");
+        log.dump("message", data);
       }
 
     if('chat' in data)
       this.chat = new Chat(data.chat);
     else {
-      console.log("mensaje sin chat!");
-      console.dir(data);
-    }
+      log.e("Telegram message without CHAT field!");
+      log.dump("message", data);
+  }
 
     this.setDate(data.date);
 

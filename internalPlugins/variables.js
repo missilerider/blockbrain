@@ -11,7 +11,7 @@ async function variables_get(context) {
   return context.getVar(varName);
 }
 
-function getBlocks() {
+async function getBlocks() {
   return {
     "variables_set": { run: variables_set },
     "variables_get": { run: variables_get }

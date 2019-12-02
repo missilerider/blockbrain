@@ -144,7 +144,6 @@ function stringify(o, depth = 1) {
 
 async function endpoint(req, res, next) {
   log.d("Endpoint request");
-  log.dump("body", req.body);
 
   let ret = await executeEvent('http_endpoint', req.body);
 
@@ -158,11 +157,9 @@ async function endpoint(req, res, next) {
     res.json({});
 }
 
-async function executeEvent(eventName, vars) {
+async function executeEvent(eventName, vars, params = undefined) {
   let proms = [];
   if(eventName in eventIndex) {
-    log.d("Execution of " + eventName + " in files:");
-    log.dump("eventIndex", eventIndex[eventName]);
     for(let n = 0; n < eventIndex[eventName].length; n++) {
       let script = eventIndex[eventName][n];
       let json = getScript(script);
@@ -170,7 +167,7 @@ async function executeEvent(eventName, vars) {
       proms = proms.concat(await executor.executeProgramJson(json, {
         nodeTypeFilter: eventName,
         msg: vars
-      }));
+      }, params));
     }
 
     let ret = await Promise.all(proms).then(ret => {
@@ -181,6 +178,34 @@ async function executeEvent(eventName, vars) {
   } else {
     return null;
   }
+}
+
+async function executeEventLike(eventRegex, vars) {
+  let proms = [];
+  let indexes = Object.keys(eventIndex);
+  for(let n = 0; n < indexes.length; n++) {
+    if(indexes[n].toString().match(eventRegex)) {
+      let eventName = eventIndex[indexes[n]];
+      log.d("Execution of " + eventName + " in files:");
+      for(let n = 0; n < eventIndex[eventName].length; n++) {
+        let script = eventIndex[eventName][n];
+        let json = getScript(script);
+        log.d("Execute " + eventName + " from " + script);
+        proms = proms.concat(await executor.executeProgramJson(json, {
+          nodeTypeFilter: eventName,
+          msg: vars
+        }));
+      }
+    }
+  }
+
+  if(proms.length == 0) return null;
+
+  let ret = await Promise.all(proms).then(ret => {
+    return ret;
+  });
+
+  return ret;
 }
 
 function clearEventRef(file) {
@@ -278,6 +303,7 @@ module.exports = {
   stringify: stringify,
   endpoint: endpoint,
   executeEvent: executeEvent,
+  executeEventLike: executeEventLike, 
   buildScriptRefs: buildScriptRefs,
   getScript: getScript,
   scriptReload: scriptReload

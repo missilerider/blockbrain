@@ -4,7 +4,6 @@ $(function() {
     url: "/assets/dyn/blockTree.json",
     type: "GET",
     success: function (data) {
-      console.dir(data);
       $('#jstree').jstree({
         'core': {
           'data': data
@@ -14,7 +13,6 @@ $(function() {
             "items": function(node) {
               if(!node) return null;
               if(node.original.type == "dir")
-                console.log("DIR: " + node.text);
                 var tree = $("#jstree").jstree(true);
                 return {
                     "Create": {

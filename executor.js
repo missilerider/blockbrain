@@ -6,12 +6,14 @@ const log = global.log;
 
 var plugins = null;
 var services = null;
+var utils = null;
 
 var ctxt = [];
 
 function config(options) {
   plugins = options.plugins;
   services = options.services;
+  utils = options.utils;
 }
 
 async function executeProgram(xmlProgram, options) {
@@ -19,7 +21,7 @@ async function executeProgram(xmlProgram, options) {
   return executeProgramJson(json, options);
 }
 
-async function executeProgramJson(json, options) {
+async function executeProgramJson(json, options, params = undefined) {
   let blocks;
   if(Array.isArray(json.xml.block)) {
     blocks = json.xml.block;
@@ -37,15 +39,18 @@ async function executeProgramJson(json, options) {
     if(!options.nodeTypeFilter || options.nodeTypeFilter.indexOf(block._attributes.type) > -1) {
       // Get block from plugin library
       log.d("Get block " + block._attributes.type);
-      let codeBlock = plugins.getBlockSync(block._attributes.type);//, async (err, codeBlock) => {
+      let codeBlock = await plugins.getBlockSync(block._attributes.type);
       context = null;
       context = contextFactory.createContext({
         plugins: plugins,
         program: block,
         block: codeBlock,
         msg: options.msg, 
-        services: services
+        services: services, 
+        utils: utils
       });
+
+      context.params = params;
 
       ctxt.push(context.vars);
 

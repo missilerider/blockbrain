@@ -71,7 +71,7 @@ var writeKeyBlock = {
     let key = context.getField('KEY');
     let value = await context.getValue('VALUE');
     data[key] = value;
-    console.log("Key set: " + key + " = " + value);
+    log.d("Key set: " + key + " = " + value);
     if(serviceConfig.persistence) {
       log.d("Starts delayed key persistence...");
       waitingSave = true;
@@ -128,7 +128,11 @@ var readKeyBlock = {
     let key = context.getField('KEY');
     if(key in data) {
       log.d("KV read: " + key + " => " + data[key]);
-      return data[key];
+      if(Array.isArray(data[key]))
+        return data[key].splice();
+      else if(Object.isObject(data[key]))
+        return Object.assign({}, data[key]);
+      else return data[key];
     }
     else {
       return null;
@@ -176,7 +180,7 @@ var keyValueService = {
   }
 }
 
-function getBlocks() {
+async function getBlocks() {
   return {
     "writeKey": writeKeyBlock,
     "readKey": readKeyBlock

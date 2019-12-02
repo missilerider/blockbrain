@@ -302,7 +302,7 @@ async function lists_sort(context) {
   return list.sort();
 }
 
-function getBlocks() {
+async function getBlocks() {
   return {
     "lists_repeat": { run: list_repeat }, 
     "lists_create_with": { run: lists_create_with }, 

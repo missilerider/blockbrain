@@ -59,20 +59,9 @@ function GETservices(data) {
     let srv = srvs[srvName];
 
     ret[srvIds[n]] = describeService(data, srvIds[n], srv);
-    /*
-    let info = srv.getInfo();
-
-    let status = data.services.status(srvName, true);
-
-    ret[srvIds[n]] = {
-      name: info.name,
-      description: info.description,
-      methods: info.methods.filter(value => ["start", "stop", "restart"].includes(value)),
-      status: status
-    }*/
   }
 
-  console.dir(data.config.startupServices);
+  log.dump("GET services", data.config.startupServices);
   data.res.json(ret);
   return true;
 }
@@ -99,7 +88,7 @@ function GETservicesId(data) {
 }
 
 function POSTservicesId(data) {
-  console.dir(data.req.body);
+  log.dump("POST body", data.req.body);
   Object.keys(data.req.body).forEach((id) => {
     log.d("Check " + id);
     switch(id) {

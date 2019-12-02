@@ -131,7 +131,6 @@ class haThing {
 
     subscribe(topic) {
         log.d("Subscribe " + topic);
-        log.obj("mqttSrv", mqttSrv);
         mqttSrv.addThingSubscription(topic, this);
     }
 

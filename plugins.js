@@ -9,22 +9,25 @@ var blockLibs = {};
 var defaultLib = {};
 var defaultToolboxes = [];
 var services = {};
+var utils = {}; 
 
 // External events
 var onReloadEvents = [];
 
-async function reload() {
+async function reload(globalUtils) {
   blockLibs = {};
   log.i("Plugin load start...");
-  await defaultPlugins('./internalPlugins');
+  await defaultPlugins('./internalPlugins', globalUtils);
   await reloadPlugins('./plugins');
 
   services = createServiceList();
+  utils = globalUtils;
 
   onReloadEvents.forEach((cb) => { cb(); });
 }
 
-async function defaultPlugins(dirname) {
+async function defaultPlugins(dirname, globalUtils) {
+  utils = globalUtils;
   log.d("Reads default plugins directory " + dirname);
   var files = fs.readdirSync(dirname);
   var fk = Object.keys(files);
@@ -42,10 +45,10 @@ async function defaultPlugins(dirname) {
 
         if("getBlocks" in lib) {
           if("getToolbox" in lib) {
-            defaultToolboxes.push(lib.getToolbox());
+            defaultToolboxes.push(await lib.getToolbox());
           }
 
-          let libBlocks = lib.getBlocks();
+          let libBlocks = await lib.getBlocks(services, globalUtils);
           var blocks = Object.keys(libBlocks);
 
           for(let n = 0; n < blocks.length; n++) {
@@ -58,7 +61,7 @@ async function defaultPlugins(dirname) {
         log.d("Stack " + fromPath + ": \n" + e.stack);
       }
     } else if(stat.isDirectory()) {
-      await defaultPlugins(fromPath);
+      await defaultPlugins(fromPath, globalUtils);
     }
   }
 }
@@ -111,6 +114,7 @@ async function getDefaultBlocks(conf) {
   var libIds = Object.keys(defaultLib);
   var ret = {};
   for(var n=0; n<libIds.length; n++) {
+    log.d("Default library " + libIds[n]);
     var lib = defaultLib[libIds[n]];
     if("block" in lib) {
       ret[libIds[n]] = lib.block;
@@ -119,13 +123,13 @@ async function getDefaultBlocks(conf) {
   return ret;
 }
 
-async function getBlocks(conf, services) {
+async function getBlocks(conf, services, utils) {
   log.d("plugins getBlocks");
   var libIds = Object.keys(blockLibs);
   var ret = {};
   for(var n=0; n<libIds.length; n++) {
     var lib = blockLibs[libIds[n]];
-    var data = lib.getBlocks();
+    var data = await lib.getBlocks(services, utils);
     var blockIds = Object.keys(data);
     for(var n2=0; n2 < blockIds.length; n2++) {
       var blockName = libIds[n] + "." + blockIds[n2];
@@ -161,7 +165,7 @@ async function getBlock(blockName, callback) {
     var libName = matches[1];
     var blockName = matches[2];
     if(libName in blockLibs) {
-      let blocks = blockLibs[libName].getBlocks();
+      let blocks = await blockLibs[libName].getBlocks();
       if(blockName in blocks) {
         callback(false, blocks[blockName]);
       } else {
@@ -174,7 +178,7 @@ async function getBlock(blockName, callback) {
     // No dot in name: default operator
     if(blockName in defaultLib) {
       slog.w("Default block: " + blockName);
-      console.dir(defaultLib[blockName]);
+      log.dump("Default block", defaultLib[blockName]);
       callback(false, defaultLib[blockName]);
     } else {
       callback(true, "Block " + blockName + " does no exist in default library");
@@ -182,13 +186,14 @@ async function getBlock(blockName, callback) {
   }
 }
 
-function getBlockSync(blockName) {
+async function getBlockSync(blockName, services, utils) {
+  log.d("getBlockSync: " + blockName);
   var matches;
   if(matches = blockName.match(/^([^\.]*)\.(.*)/)) {
     var libName = matches[1];
     var blockName = matches[2];
     if(libName in blockLibs) {
-      let blocks = blockLibs[libName].getBlocks();
+      let blocks = await blockLibs[libName].getBlocks(services, utils);
       if(blockName in blocks) {
         return blocks[blockName];
       } else {
@@ -208,7 +213,7 @@ function getBlockSync(blockName) {
   }
 }
 
-function getBlockCustomPropertiesSync() {
+async function getBlockCustomPropertiesSync(services, utils) {
   let ret = {};
   let libIds = Object.keys(defaultLib);
   for(let n=0; n<libIds.length; n++) {
@@ -222,7 +227,7 @@ function getBlockCustomPropertiesSync() {
   libIds = Object.keys(blockLibs);
   for(let n=0; n<libIds.length; n++) {
     let lib = blockLibs[libIds[n]];
-    let blocks = lib.getBlocks();
+    let blocks = await lib.getBlocks(services, utils);
     let bIds = Object.keys(blocks);
     for(let m=0; m<bIds.length; m++) {
       let block = blocks[bIds[m]];
@@ -260,7 +265,7 @@ async function getToolboxes(conf) {
   var libIds = Object.keys(blockLibs);
   for(var n=0; n<libIds.length; n++) {
     var lib = blockLibs[libIds[n]];
-    var data = lib.getToolbox();
+    var data = await lib.getToolbox(services, utils);
 
     var tbIds = Object.keys(data);
 
@@ -298,7 +303,7 @@ function getServices(conf) {
   return services;
 }
 
-function onReload(cb) { console.dir(onReloadEvents); onReloadEvents.push(cb); }
+function onReload(cb) { log.i("Reload events"); onReloadEvents.push(cb); }
 
 module.exports = {
   reload: reload,

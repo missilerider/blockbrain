@@ -28,11 +28,11 @@
     "system": {
       "disableCache": true,
       "log": {
-        "level": "DEBUG", 
+        "level": "WARNING", 
         "stdout": true
       }, 
       "scriptLog": {
-        "level": "DEBUG", 
+        "level": "INFO", 
         "stdout": true
       }
     }

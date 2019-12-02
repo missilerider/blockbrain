@@ -18,7 +18,7 @@ var abortBlock = {
   }
 }
 
-function getBlocks() {
+async function getBlocks() {
   return {
     "abort": abortBlock
   };

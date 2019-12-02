@@ -75,7 +75,7 @@ async function logic_ternary(context) {
   return opIf ? opThen : opElse;
 }
 
-function getBlocks() {
+async function getBlocks() {
   return {
     "controls_if": { run: controls_if },
     "logic_operation": { run: logic_operation },

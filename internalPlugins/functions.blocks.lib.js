@@ -47,49 +47,49 @@ module.exports = {
           "align": "RIGHT"
         }
       ],
-      "colour": 330,
+      "colour": "#222222",
       "tooltip": "User defined function",
       "helpUrl": ""
     }, 
     fn_param: {
-        "type": "fn_param",
-        "lastDummyAlign0": "RIGHT",
-        "message0": "parameter %1 %2 variable %3",
-        "args0": [
-          {
-            "type": "field_input",
-            "name": "NAME",
-            "text": "variableName"
-          },
-          {
-            "type": "input_dummy"
-          },
-          {
-            "type": "field_checkbox",
-            "name": "ISVAR",
-            "checked": true
-          }
-        ],
-        "previousStatement": "fn_param",
-        "nextStatement": "fn_param",
-        "colour": 300,
-        "tooltip": "User defined function",
-        "helpUrl": ""
+      "type": "fn_param",
+      "lastDummyAlign0": "RIGHT",
+      "message0": "parameter %1 %2 variable %3",
+      "args0": [
+        {
+          "type": "field_variable",
+          "name": "NAME",
+          "variable": "variableName"
+        },
+        {
+          "type": "input_dummy"
+        },
+        {
+          "type": "field_checkbox",
+          "name": "ISVAR",
+          "checked": true
+        }
+      ],
+      "previousStatement": "fn_param",
+      "nextStatement": "fn_param",
+      "colour": 300,
+      "tooltip": "Function parameter",
+      "helpUrl": ""
     }, 
     fn_return: {
-        "type": "fn_return",
-        "message0": "variable %1",
-        "args0": [
-          {
-            "type": "field_input",
-            "name": "NAME",
-            "text": "default"
-          }
-        ],
-        "previousStatement": "fn_return",
-        "nextStatement": "fn_return",
-        "colour": 285,
-        "tooltip": "Function return variables",
-        "helpUrl": ""
+      "type": "fn_return",
+      "message0": "variable %1",
+      "args0": [
+        {
+          "type": "field_variable",
+          "name": "NAME",
+          "variable": "default"
+        }
+      ],
+      "previousStatement": "fn_return",
+      "nextStatement": "fn_return",
+      "colour": 285,
+      "tooltip": "Function return variables",
+      "helpUrl": ""
     }
 }

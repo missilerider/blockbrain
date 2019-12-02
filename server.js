@@ -2,7 +2,6 @@
 
 const express = require('express');
 const helmet = require('helmet');
-var util = require('util');
 var cookieParser = require('cookie-parser');
 var expressSession = require('express-session');
 var bodyParser = require('body-parser');
@@ -126,12 +125,12 @@ app.post('/login.run', (req, res, next) => {
   var last = req.body.last;
   password = utils.sha256(password.valueOf());
 
-  console.log("User: " + username);
-  console.log("Pwd: " + password);
+  log.d("User: " + username);
+  log.d("Pwd: " + password);
 
   for(var n = 0; n < conf.security.users.length; n++) {
     var u = conf.security.users[n];
-    console.log("Check: " + u.name + " / " + u.sha256);
+    log.d("Check: " + u.name + " / " + u.sha256);
     if (username.valueOf() === u.name && password.valueOf() === u.sha256) {
       req.session.user = {
         user: u
@@ -197,8 +196,7 @@ try {
 }
 
 // General load
-plugins.reload().then(() => {
-  //plugins.getToolboxes(conf).then((s) => {console.dir(s);});
+plugins.reload(utils).then(() => {
   // Starts automatic services
   log.i("Starting services on startup");
   Object.keys(conf.startupServices).forEach(id => {

@@ -47,8 +47,6 @@ function createThings() {
         let deviceIdentifier = device.identifier || 
             Buffer.from(deviceName).toString('base64').replace(/=/g, '').toLowerCase();
 
-        log.d("deviceIdentifier = " + deviceIdentifier);
-
         log.d("Creates device " + deviceName);
 
         if("items" in device) {
@@ -115,7 +113,6 @@ function onMessage(topic, message, packet) {
 }
 
 function getThing(thingName) {
-    log.dump("things", Object.keys(things));
     if(things 
         && thingName in things)
         return things[thingName];
@@ -127,18 +124,15 @@ function getThings(thingClass = null) {
     if(thingClass === null) return things;
     let ret = [];
     let names = Object.keys(things);
-    log.dump("names", names);
     for(let n = 0; n < names.length; n++) {
-        log.dump("thing", things[names[n]].type);
         if(things[names[n]].type === thingClass) {
-            log.obj("match thing", things[names[n]]);
             ret.push(things[names[n]]);
         }
     }
     return ret;
 }
 
-function getBlocks() {
+async function getBlocks() {
     return require('./mqtt.ha.blocks.lib.js');
 }
 

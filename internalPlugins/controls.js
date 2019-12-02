@@ -11,9 +11,9 @@ async function controls_repeat_ext(context) {
       program: initProgram,
       block: initBlock
     })
-    console.log("Inicia DO");
+    log.d("Starts DO");
     var execValue = await context.continue('DO');
-    console.log("Termina DO");
+    log.d("Ends DO");
     context.pop();
     switch(context.getRunFlow().flowState) {
       case 1: // BREAK
@@ -103,7 +103,7 @@ sleepBlock = {
   }
 }
 
-function getBlocks() {
+async function getBlocks() {
   return {
     "controls_repeat_ext": { run: controls_repeat_ext },
     "controls_flow_statements": { run: controls_flow_statements },

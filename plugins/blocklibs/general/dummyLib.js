@@ -126,7 +126,7 @@ var testService = {
   }
 }
 
-function getBlocks() {
+async function getBlocks() {
   return {
     "pushStart": pushStartBlock,
     "consoleLog": consoleLogBlock

@@ -63,15 +63,15 @@ Log.prototype.getLogLevel = function() {
   return levels[this.logLevel];
 };
 
-Log.prototype.obj = function(v, d) { if(this.logLevel >= 5) this.doLog(v.green + " = " + JSON.stringify(Object.getOwnPropertyNames(d), null, 2).brightGreen, "OBJ".black.bgGreen); }
-Log.prototype.dump = function(v, d) { if(this.logLevel >= 5) this.doLog(v.green + " = " + JSON.stringify(d, null, 2).brightGreen, "DUMP".black.bgGreen); }
-Log.prototype.d = function(t) { if(this.logLevel >= 5) this.doLog(t.cyan, "DEBUG".bgCyan.black); }
-Log.prototype.i = function(t) { if(this.logLevel >= 4) this.doLog(t.brightWhite, "INFO".bgBrightWhite.black); }
-Log.prototype.w = function(t) { if(this.logLevel >= 3) this.doLog(t.brightYellow, "WARN".bgBrightYellow.black); }
-Log.prototype.e = function(t) { if(this.logLevel >= 2) this.doLog(t.brightRed, "ERROR".bgBrightRed.black); }
-Log.prototype.f = function(t) { if(this.logLevel >= 1) this.doLog(t.bgBrightRed.black.bold, "FATAL".brightRed.bold); }
+Log.prototype.obj = function(v, d) { if(this.logLevel >= 5) this.doLog(v.toString().green + " = " + JSON.stringify(Object.getOwnPropertyNames(d), null, 2).brightGreen, "OBJ".black.bgGreen); }
+Log.prototype.dump = function(v, d) { if(this.logLevel >= 5) this.doLog(v.toString().green + " = " + JSON.stringify(d, null, 2).brightGreen, "DUMP".black.bgGreen); }
+Log.prototype.d = function(t) { if(this.logLevel >= 5) this.doLog(t.toString().cyan, "DEBUG".bgCyan.black); }
+Log.prototype.i = function(t) { if(this.logLevel >= 4) this.doLog(t.toString().brightWhite, "INFO".bgBrightWhite.black); }
+Log.prototype.w = function(t) { if(this.logLevel >= 3) this.doLog(t.toString().brightYellow, "WARN".bgBrightYellow.black); }
+Log.prototype.e = function(t) { if(this.logLevel >= 2) this.doLog(t.toString().brightRed, "ERROR".bgBrightRed.black); }
+Log.prototype.f = function(t) { if(this.logLevel >= 1) this.doLog(t.toString().bgBrightRed.black.bold, "FATAL".brightRed.bold); }
 
-Log.prototype.p = function(t) { this.doLog(t.bold, "OUT".bold); }
+Log.prototype.p = function(t) { this.doLog(t.toString().bold.brightMagenta, "OUT".bold.brightMagenta); }
 
 module.exports = {
   newLogger: newLogger
