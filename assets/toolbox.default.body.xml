@@ -310,6 +310,8 @@
     <field name="TYPE">NUMERIC</field>
     <field name="DIRECTION">1</field>
   </block>
+  <block type="lists_append">
+  </block>
 </category>
 <category name="Colour" colour="#A6745C">
   <block type="colour_picker">

@@ -129,7 +129,7 @@ var readKeyBlock = {
     if(key in data) {
       log.d("KV read: " + key + " => " + data[key]);
       if(Array.isArray(data[key]))
-        return data[key].splice();
+        return data[key].splice(0);
       else if(Object.isObject(data[key]))
         return Object.assign({}, data[key]);
       else return data[key];

@@ -87,11 +87,14 @@ class Bot {
     if(!('parse_mode' in params))
       params.parse_mode = 'Markdown';
 
-    this.doPostSync("sendMessage", params);
+    log.dump("Telegram sendMessage", params);
+
+    this.doPostSync("sendMessage", params).catch(e => { console.error(e); });
   }
 
   async editMessageReplyMarkup(params) {
-    this.doPostSync("editMessageReplyMarkup", params);
+    log.dump("Telegram editMessageReplyMarkup", params);
+    this.doPostSync("editMessageReplyMarkup", params).catch(e => { console.error(e); });
   }
 }
 
@@ -117,7 +120,7 @@ class Message {
 
     this.setDate(data.date);
 
-    if('text' in data) {
+    if('text' in data && data.text) {
       this.text = data.text;
 
       let cmds = [];

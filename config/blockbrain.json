@@ -32,7 +32,7 @@
         "stdout": true
       }, 
       "scriptLog": {
-        "level": "INFO", 
+        "level": "DEBUG", 
         "stdout": true
       }
     }

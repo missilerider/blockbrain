@@ -242,11 +242,6 @@ async function lists_split(context) {
 
   let input = await context.getValue("INPUT");
 
-  if(!Array.isArray(list)) {
-    slog.e("INPUT must be a list");
-    return null;
-  }
-
   let delim = await context.getValue("DELIM");
 
   switch(context.getMutation("mode")) {
@@ -254,7 +249,7 @@ async function lists_split(context) {
       return input.toString().split(delim);
 
     case "JOIN":
-      return input.toString().join(delim);
+      return input.join(delim);
   }
 }
 
@@ -302,6 +297,57 @@ async function lists_sort(context) {
   return list.sort();
 }
 
+var lists_append = {
+  block: {
+    "type": "lists_append",
+    "message0": "append %1 to list %2 in position %3",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "ITEM"
+      },
+      {
+        "type": "field_variable",
+        "name": "LIST",
+        "variable": "list"
+      },
+      {
+        "type": "field_number",
+        "name": "POS",
+        "value": 0
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 270,
+    "tooltip": "Negative values counts from the end",
+    "helpUrl": ""
+  }, 
+  run: async (context) => {
+    context.blockIn();
+    let listName = context.getField('LIST');
+    let list = context.getVar(listName);
+    let pos = parseInt(context.getField('POS'));
+    let item = await context.getValue('ITEM');
+
+    slog.dump("listName", listName);
+    slog.dump("list", list);
+    slog.dump("pos", pos);
+    slog.dump("item", item);
+
+    if(!Array.isArray(list)) {
+      slog.e("LIST must be a list");
+      return null;
+    }
+
+    if(pos < 0) pos = list.length + pos + 1;
+    pos = Math.max(0, Math.min(list.length, pos));
+    list.splice(pos, 0, item);
+    slog.dump("list2", list);
+    context.setVar(listName, list);
+  }
+}
+
 async function getBlocks() {
   return {
     "lists_repeat": { run: list_repeat }, 
@@ -313,10 +359,11 @@ async function getBlocks() {
     "lists_getSublist": { run: lists_getSublist }, 
     "lists_setIndex": { run: lists_setIndex }, 
     "lists_split": { run: lists_split }, 
-    "lists_sort": { run: lists_sort }
+    "lists_sort": { run: lists_sort }, 
+    "lists_append": lists_append
   }
 }
 
 module.exports = {
-  getBlocks: getBlocks
+  getBlocks: getBlocks, 
 }
