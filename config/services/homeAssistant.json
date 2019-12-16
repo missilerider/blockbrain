@@ -1,0 +1,6 @@
+{
+    "host": "172.16.0.4", 
+    "port": "", 
+    "secure": false, 
+    "apiToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJiODQzM2YwZjQ1NzM0NDc3YTU4NTBhYWI0Y2JhNzU5YiIsImlhdCI6MTU3NjA5OTczMiwiZXhwIjoxODkxNDU5NzMyfQ._oQz9WMiiuTaJvnEh-YGwSKGwaGa_yjlMqH4KbiuQOw"
+}

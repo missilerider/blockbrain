@@ -35,6 +35,10 @@
             "icon": "wifi", 
             "initialState": 999
           }, 
+          "sensor3": {
+            "type": "sensor", 
+            "icon": "spider"
+          }, 
           "sensor2": {
             "type": "switch", 
             "icon": "toggle-switch"

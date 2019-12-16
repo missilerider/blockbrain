@@ -119,7 +119,7 @@ async function getBlocks() {
     "publishEx": publishMessageExBlock
   };
 
-  blocks = Object.assign(blocks, ha.getBlocks());
+  blocks = Object.assign(blocks, await ha.getBlocks());
   return blocks;
 }
 

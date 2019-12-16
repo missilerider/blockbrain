@@ -28,7 +28,7 @@
     "system": {
       "disableCache": true,
       "log": {
-        "level": "WARNING", 
+        "level": "DEBUG", 
         "stdout": true
       }, 
       "scriptLog": {

@@ -31,8 +31,8 @@ function config(params) {
   utils = params.utils;
 
   commonTools = {
-    executeEvent: async (block, data) => {
-      let ret = await utils.executeEvent(block, data);
+    executeEvent: async (block, data, params) => {
+      let ret = await utils.executeEvent(block, data, params);
       if(ret === null) return null;
 
       return ret.filter(r => r != null);
