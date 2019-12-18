@@ -95,10 +95,17 @@ async function text_trim(context) {
 async function text_print(context) {
   context.blockIn();
   let value  = await context.getValue("TEXT");
-  if(!value)
+  if(value == null)
     slog.p("nullable");
-  else
-    slog.p(value);
+  else {
+    if(Array.isArray(value)) {
+      slog.p("[" + value.toString() + "]");
+    } else if(typeof(value) == "object") {
+      slog.p(JSON.stringify(value, null, 2));
+    }
+    else
+      slog.p(value);
+  }
 }
 
 async function getBlocks() {

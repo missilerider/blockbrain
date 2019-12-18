@@ -312,6 +312,8 @@
   </block>
   <block type="lists_append">
   </block>
+  <block type="lists_remove">
+  </block>
 </category>
 <category name="Colour" colour="#A6745C">
   <block type="colour_picker">

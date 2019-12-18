@@ -127,12 +127,15 @@ var readKeyBlock = {
     context.blockIn();
     let key = context.getField('KEY');
     if(key in data) {
-      log.d("KV read: " + key + " => " + data[key]);
-      if(Array.isArray(data[key]))
-        return data[key].splice(0);
-      else if(Object.isObject(data[key]))
+      if(Array.isArray(data[key])) {
+        return data[key].slice(0);
+      }
+      else if(typeof(data[key]) == "object") {
         return Object.assign({}, data[key]);
-      else return data[key];
+      }
+      else {
+        return data[key];
+      }
     }
     else {
       return null;

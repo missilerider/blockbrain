@@ -191,8 +191,14 @@ class Context {
   }
 
   getVar(varName) {
+//    console.dump("vars", this.vars);
     //log.d("getVar(" + varName + ")");
     var v = this.cleanVarName(varName);
+
+    if(Array.isArray(this.vars[v]))
+      return this.vars[v].slice(0);  
+    if(typeof this.vars[v] == "object")
+      return { ...this.vars[v] }
     return this.vars[v];
   }
 

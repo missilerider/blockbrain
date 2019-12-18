@@ -348,6 +348,50 @@ var lists_append = {
   }
 }
 
+var lists_remove = {
+  block: {
+    "type": "lists_remove",
+    "message0": "remove value %1 from list %2",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "ITEM"
+      },
+      {
+        "type": "field_variable",
+        "name": "LIST",
+        "variable": "list"
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 270,
+    "tooltip": "Negative values counts from the end",
+    "helpUrl": ""
+  }, 
+  run: async (context) => {
+    context.blockIn();
+    let listName = context.getField('LIST');
+    let list = context.getVar(listName);
+    let item = await context.getValue('ITEM');
+
+    if(!Array.isArray(list)) {
+      slog.e("LIST must be a list");
+      return null;
+    }
+
+    for(let n = 0; n < list.length; n++) {
+      if(list[n] == item) {
+        list.splice(n, 1);
+        context.setVar(listName, list);
+        return;
+      }
+    }
+
+    log.i("List value could not be removed (not found)");
+  }
+}
+
 async function getBlocks() {
   return {
     "lists_repeat": { run: list_repeat }, 
@@ -360,7 +404,8 @@ async function getBlocks() {
     "lists_setIndex": { run: lists_setIndex }, 
     "lists_split": { run: lists_split }, 
     "lists_sort": { run: lists_sort }, 
-    "lists_append": lists_append
+    "lists_append": lists_append, 
+    "lists_remove": lists_remove
   }
 }
 
