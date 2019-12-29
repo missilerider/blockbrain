@@ -2,13 +2,24 @@ var app = new Vue({
   el: '#app',
   data: {
     message: 'Hello Vue!',
-    services: {}
+    service: {
+      name: "", 
+      id: "", 
+      description: ""
+    }
   },
   mounted() {
-    var that = this;
-    axios.get('/api/v1/services')
+    let self = this;
+    let url = new URL(window.location.href);
+    let srvId = url.searchParams.get("id");
+    axios.get('/api/v1/services/' + srvId)
       .then(function(resp) {
-        Vue.set(that.$data, 'services', resp.data);
+        if(!('code' in resp.data)) {
+          console.dir(resp.data);
+          Vue.set(self.$data, 'service', resp.data);
+        }
+        else
+          console.error("Could not retrieve service information!");
       });
   },
   methods: {

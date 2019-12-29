@@ -127,15 +127,9 @@ var readKeyBlock = {
     context.blockIn();
     let key = context.getField('KEY');
     if(key in data) {
-      if(Array.isArray(data[key])) {
-        return data[key].slice(0);
-      }
-      else if(typeof(data[key]) == "object") {
-        return Object.assign({}, data[key]);
-      }
-      else {
-        return data[key];
-      }
+      if(data[key])
+        return data[key].getValue();
+      else return data[key];
     }
     else {
       return null;
@@ -145,10 +139,9 @@ var readKeyBlock = {
 
 var keyValueService = {
   getInfo: () => { return {
-    methods: ["start", "stop", "status"],
+    methods: ["start", "stop", "status", "settings"],
     name: "Key-Value Service",
     description: "Stores and manages key-value pairs"
-
   }},
   status: () => { return "TODO"; },
   start: (srv) => {
@@ -180,6 +173,9 @@ var keyValueService = {
     await runPromise;
 
     srv.status = 0;
+  }, 
+  settingsTemplate: (srv) => {
+
   }
 }
 

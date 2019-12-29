@@ -266,7 +266,7 @@ async function lists_sort(context) {
     return null;
   }
 
-  list = list.slice(0);
+  list = list.getValue();
 
   slog.dump("num", list.sort((a,b) => a-b));
 

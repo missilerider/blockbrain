@@ -2,7 +2,12 @@ const slog = global.slog;
 
 async function text(context) {
   context.blockIn();
-  return context.getField("TEXT");
+  console.dir(context.getProgram());
+  let txt = context.getField("TEXT");
+  if(!txt) txt = "";
+  else txt = txt.toString();
+  slog.d("text: " + txt);
+  return txt;
 }
 
 async function text_join(context) {
@@ -11,7 +16,12 @@ async function text_join(context) {
   var ret = "";
   for(let n = 0; n < mut; n++) {
     //ret += await context.execValue(context.program.value[n].block);
-    ret += await context.getValue("ADD" + n);
+    let txt = await context.getValue("ADD" + n);
+    if(txt !== undefined && txt !== null)
+      txt = txt.toString();
+
+      slog.d("join: " + txt);
+    ret += txt;
   }
   return ret;
 }

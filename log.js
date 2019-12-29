@@ -63,6 +63,7 @@ Log.prototype.getLogLevel = function() {
   return levels[this.logLevel];
 };
 
+Log.prototype.trace = function(e) {if(!e) console.trace; else console.error(e); }
 Log.prototype.obj = function(v, d) { if(this.logLevel >= 5) this.doLog(v.toString().green + " = " + JSON.stringify(Object.getOwnPropertyNames(d), null, 2).brightGreen, "OBJ".black.bgGreen); }
 Log.prototype.dump = function(v, d) { if(this.logLevel >= 5) this.doLog(v.toString().green + " = " + JSON.stringify(d, null, 2).brightGreen, "DUMP".black.bgGreen); }
 Log.prototype.d = function(t) { if(this.logLevel >= 5) this.doLog(t.toString().cyan, "DEBUG".bgCyan.black); }

@@ -31,6 +31,7 @@ var messageBlock = {
         matches = context.getVar('msg').topic.match(rgx);
       } catch(e) {
         log.e("Regular expression error: " + e.message);
+        log.trace();
       }
       if(matches)
         return await context.continue("CMD");

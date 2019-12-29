@@ -61,7 +61,7 @@ function GETservices(data) {
     ret[srvIds[n]] = describeService(data, srvIds[n], srv);
   }
 
-  log.dump("GET services", data.config.startupServices);
+  log.dump("GET services", ret);
   data.res.json(ret);
   return true;
 }
@@ -74,7 +74,7 @@ function describeService(data, serviceName, service, extended = false) {
     id: serviceName,
     name: info.name,
     description: info.description,
-    methods: info.methods.filter(value => ["start", "stop", "restart"].includes(value)),
+    methods: info.methods.filter(value => ["start", "stop", "restart", "settings"].includes(value)),
     status: status,
     startOnBoot: (serviceName in data.config.startupServices ? data.config.startupServices[serviceName] : false)
   }

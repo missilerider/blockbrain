@@ -17,7 +17,7 @@ function config(options) {
 }
 
 async function executeProgram(xmlProgram, options) {
-  let json = JSON.parse(xml_js.xml2json(xmlProgram, { compact: true, spaces: 4 }));
+  let json = JSON.parse(xml_js.xml2json(xmlProgram, { compact: true, spaces: 4, trim: false, captureSpacesBetweenElements: true }));
   return executeProgramJson(json, options);
 }
 

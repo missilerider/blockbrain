@@ -13,6 +13,7 @@ const fnBlock = {
         let msg = context.getVar('msg');
 
         if(msg['___Custom Function Definition'] === true) {
+            log.e("compila func");
             let section = context.getField("SECTION");
             let color = context.getField("COLOR");
             let description = context.getField("DESCRIPTION");
@@ -33,16 +34,23 @@ const fnBlock = {
 
             return context.customFunctions;
         } else {
-            let msg = context.params;
-            let vars = Object.keys(context.params);
-            for(let n = 0; n < vars.length; n++) {
-                log.i("Set var: " + vars[n]);
-                context.setVar(vars[n], msg[vars[n]]);
+            if(context.params["___Custom Function Execution"] == "fn.USER_" + fnName) {
+                delete context.params["___Custom Function Execution"];
+
+                log.f("LANZA FUNCION (" + fnName + ")");
+                log.f(Object.keys(context.params));
+                let msg = context.params;
+                let vars = Object.keys(context.params);
+                log.dump("params", context.params);
+                for(let n = 0; n < vars.length; n++) {
+                    log.i("Set var: " + vars[n]);
+                    context.setVar(vars[n], msg[vars[n]]);
+                }
+
+                await context.continue("BODY");
+
+                return context.vars;
             }
-
-            await context.continue("BODY");
-
-            return context.vars;
         }
     }
 }

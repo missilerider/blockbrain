@@ -47,15 +47,21 @@ async function runBlock(context) {
     }
   }
 
+  vars["___Custom Function Execution"] = context.program._attributes.type;
+
   let ret = await runtimeUtils.executeEvent('fn_fn', context.vars, vars);
 
+  let retOk = undefined;
   if(ret.length > 0) {
-    ret = ret[0]; // Single execution only supported!!
+    for(let n = 0; n < ret.length && retOk == undefined; n++)
+        retOk = ret[n]; // Single execution only supported!!
+
+    if(retOk == undefined) return; // No correct execution
 
     for(let n = 0; n < rets.length; n++) {
       let localVar = context.getField("RET_" + rets[n]);
-      context.setVar(localVar, ret[rets[n]]);
-      log.d("Variable output " + localVar + " = " + (ret[rets[n]] || "nullable"));
+      context.setVar(localVar, retOk[rets[n]]);
+      log.d("Variable output " + localVar + " = " + (retOk[rets[n]] || "nullable"));
     }
   }
 }

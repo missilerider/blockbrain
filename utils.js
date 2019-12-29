@@ -16,6 +16,23 @@ var services;
 var eventIndex = {};
 var scriptCache = {};
 
+// Helpers for variable copying where needed (references have to be always killed) and "undefined" and "null" managed accordingly
+function getThis() { return this; }
+Number.prototype.getValue = getThis;
+String.prototype.getValue = getThis;
+Boolean.prototype.getValue = getThis;
+Object.prototype.getValue = function() {
+  let ret = {};
+  let ids = Object.keys(this);
+  for(let n = 0; n < ids.length; n++) { ret[ids[n]] = this[ids[n]] ? this[ids[n]].getValue() : this[ids[n]]; }
+  return ret;
+}
+Array.prototype.getValue = function() {
+  let ret = [];
+  for(let n = 0; n < this.length; n++) { ret[n] = this[n] ? this[n].getValue() : this[n]; }
+  return ret;
+}
+
 function config(params) {
   currentConfig = params.config;
   plugins = params.plugins;
@@ -262,7 +279,7 @@ function getScript(file) {
   }
 
   let xml = loadScript(file);
-  let json = JSON.parse(xml_js.xml2json(xml, { compact: true, spaces: 4 }));
+  let json = JSON.parse(xml_js.xml2json(xml, { compact: true, spaces: 4, trim: false, captureSpacesBetweenElements: true }));
 
     if(!currentConfig.system.disableCache) {
     scriptCache[file] = json;

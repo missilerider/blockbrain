@@ -45,12 +45,13 @@
               <div class="card">
                 <div class="card-header card-header-text card-header-primary">
                   <div class="card-text">
-                    <h4 class="card-title">Global service management</h4>
+                    <h4 class="card-title">{{service.name}} settings</h4>
+                    {{service.description}}
                   </div>
                 </div>
                 <div class="card-body table-responsive">
                     {{ message }} The place is close to Barceloneta Beach and bus stop just 2 min by walk and near to "Naviglio" where you can enjoy the main night life in Barcelona...
-                    <table class="table table-hover">
+<!--                    <table class="table table-hover">
                       <thead class="text-warning">
                         <tr>
                           <th>Name</th>
@@ -86,6 +87,10 @@
                             </div>
                           </td>
                           <td class="td-actions text-right">
+                            <button v-if="srv.methods.includes('settings')" type="button" rel="tooltip" title="Configure service" class="btn btn-primary btn-link btn-sm" v-on:click="">
+                              <i class="material-icons">settings_applications</i>
+                            </button>
+
                             <button v-if="srv.status.status=='stopped'" type="button" rel="tooltip" title="Start" class="btn btn-primary btn-link btn-sm" v-on:click="startService(srvId)">
                               <i class="material-icons">play_arrow</i>
                             </button>
@@ -95,13 +100,10 @@
                             <button v-if="srv.status.status=='running'" type="button" rel="tooltip" title="Stop" class="btn btn-danger btn-link btn-sm" v-on:click="stopService(srvId)">
                               <i class="material-icons">stop</i>
                             </button>
-                            <button v-if="srv.methods.includes('settings')" type="button" rel="tooltip" title="Configure service" class="btn btn-primary btn-link btn-sm" v-on:click="serviceSettings(srvId)">
-                              <i class="material-icons">settings_applications</i>
-                            </button>
                           </td>
                         </tr>
                       </tbody>
-                    </table>
+                    </table>-->
                 </div>
               </div>
             </div>
@@ -130,7 +132,7 @@
     </div>
   </div>
   <script src="/assets/js/vue/template.vue.js"></script>
-  <script src="/assets/js/vue/services.vue.js"></script>
+  <script src="/assets/js/vue/serviceSettings.vue.js"></script>
 </body>
 
 </html>

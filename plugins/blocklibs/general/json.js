@@ -139,7 +139,7 @@ var jsonSetBlock = {
     "previousStatement": null,
     "nextStatement": null,
     "colour": 315,
-    "tooltip": "Convert to json",
+    "tooltip": "Write object property",
     "helpUrl": ""
   },
   "run": async (context) => {
@@ -152,6 +152,76 @@ var jsonSetBlock = {
     oldVar[prop] = data;
     log.d(variable + "." + prop + " = " + data + "(" + context.getVar("msg").id + ")");
     context.setVar(variable, oldVar);
+  }
+}
+
+var jsonSetVarBlock = {
+  "block": {
+    "type": "json_set_var",
+    "message0": "set %1 . %2 to %3",
+    "args0": [
+      {
+        "type": "field_variable",
+        "name": "VARIABLE",
+        "variable": "var"
+      },
+      {
+        "type": "input_value",
+        "name": "PROP",
+        "check": "String"
+      },
+      {
+        "type": "input_value",
+        "name": "DATA"
+      }
+    ],
+    "inputsInline": true,
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 315,
+    "tooltip": "Write object property",
+    "helpUrl": ""
+  },
+  "run": async (context) => {
+    context.blockIn();
+    var variable = context.getField("VARIABLE");
+    var prop = (await context.getValue("PROP")).toString();
+    var data = await context.getValue("DATA");
+    var oldVar = context.getVar(variable);
+    if(oldVar === undefined) oldVar = {};
+    oldVar[prop] = data;
+    log.d(variable + "." + prop + " = " + data + "(" + context.getVar("msg").id + ")");
+    context.setVar(variable, oldVar);
+  }
+}
+
+var jsonContainsKey = {
+  block: {
+    "type": "json_contains_key",
+    "message0": "%1 contains key %2",
+    "args0": [
+      {
+        "type": "field_variable",
+        "name": "VARIABLE",
+        "variable": "tmp"
+      },
+      {
+        "type": "input_value",
+        "name": "PROP",
+        "check": "String"
+      }
+    ],
+    "output": null,
+    "colour": 315,
+    "tooltip": "Returns true if object contains a specific property",
+    "helpUrl": ""
+  }, 
+  run: async (context) => {
+    context.blockIn();
+    var variable = context.getField("VARIABLE");
+    var prop = (await context.getValue("PROP")).toString();
+    var oldVar = context.getVar(variable);
+    return prop in oldVar;
   }
 }
 
@@ -186,6 +256,64 @@ var jsonGetBlock = {
   }
 }
 
+var jsonGetVarBlock = {
+  "block": {
+    "type": "json_get_var",
+    "message0": "%1 . %2",
+    "args0": [
+      {
+        "type": "field_variable",
+        "name": "VARIABLE",
+        "variable": "tmp"
+      },
+      {
+        "type": "input_value",
+        "name": "PROP",
+        "check": "String"
+      }
+    ],
+    "output": null,
+    "colour": 315,
+    "tooltip": "Get json property",
+    "helpUrl": ""
+  },
+  "run": async (context) => {
+    context.blockIn();
+    var variable = context.getField("VARIABLE");
+    var prop = await context.getValue("PROP");
+    var oldVar = context.getVar(variable);
+    if(oldVar === undefined) return undefined;
+    return oldVar[prop];
+  }
+}
+
+var jsonKeysBlock = {
+  "block": {
+    "type": "json_keys",
+    "message0": "keys of %1",
+    "args0": [
+      {
+        "type": "field_variable",
+        "name": "VARIABLE",
+        "variable": "tmp"
+      }
+    ],
+    "output": null,
+    "colour": 315,
+    "tooltip": "Get json property",
+    "helpUrl": ""
+  },
+  "run": async (context) => {
+    context.blockIn();
+    var variable = context.getField("VARIABLE");
+    var oldVar = context.getVar(variable);
+    if(typeof(oldVar) == "object")
+      return Object.keys(oldVar);
+    else
+      return [];
+  }
+}
+
 function getInfo(env) {
   return {
     "id": "json",
@@ -201,7 +329,11 @@ async function getBlocks() {
     "json_stringify_beautify": jsonStringifyBeautifyBlock, 
     "json_parse": jsonParseBlock,
     "json_set": jsonSetBlock,
-    "json_get": jsonGetBlock
+    "json_set_var": jsonSetVarBlock, 
+    "json_get": jsonGetBlock, 
+    "json_get_var": jsonGetVarBlock, 
+    "json_contains_key": jsonContainsKey, 
+    "json_keys": jsonKeysBlock
   };
 }
 
@@ -212,13 +344,17 @@ function getServices() {
 function getToolbox() {
   return {
     "default": {
-      "Functions": ' \
+      "Objects": ' \
         <block type="json.json"></block> \
         <block type="json.json_stringify"></block> \
         <block type="json.json_stringify_beautify"></block> \
         <block type="json.json_parse"></block> \
         <block type="json.json_set"></block> \
-        <block type="json.json_get"></block>'
+        <block type="json.json_set_var"></block> \
+        <block type="json.json_get"></block> \
+        <block type="json.json_get_var"></block> \
+        <block type="json.json_contains_key"></block> \
+        <block type="json.json_keys"></block>'
     }
   }
 }

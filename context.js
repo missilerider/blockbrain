@@ -95,8 +95,7 @@ class Context {
       }
       if(mandatory)
         slog.e("Statement " + statementName + " not found but requested by node " + blockCode._attributes.name);
-      else
-        slog.d("Statement " + statementName + " not found but requested by node " + blockCode._attributes.name);
+
       return null; // Statement not found!
     } else {
       if(mandatory)
@@ -191,15 +190,10 @@ class Context {
   }
 
   getVar(varName) {
-//    console.dump("vars", this.vars);
-    //log.d("getVar(" + varName + ")");
     var v = this.cleanVarName(varName);
 
-    if(Array.isArray(this.vars[v]))
-      return this.vars[v].slice(0);  
-    if(typeof this.vars[v] == "object")
-      return { ...this.vars[v] }
-    return this.vars[v];
+    if(this.vars[v]) return this.vars[v].getValue();
+    else return this.vars[v];
   }
 
   setVar(varName, newValue) {

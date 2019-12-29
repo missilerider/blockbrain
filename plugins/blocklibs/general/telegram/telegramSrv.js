@@ -112,6 +112,7 @@ var telegramTextBlock = {
       matches = context.getVar('msg').text.match(rgx);
     } catch(e) {
       log.e("Regular expression error: " + e.message);
+      log.trace();
     }
     if(matches)
       return await context.continue("CMD");
@@ -128,6 +129,7 @@ var telegramCmdBlock = {
       matches = context.getVar('msg').text.match(rgx);
     } catch(e) {
       log.e("Regular expression error: " + e.message);
+      log.trace(e);
     }
     if(matches)
       return await context.continue("CMD");
@@ -144,6 +146,7 @@ var telegramCallbackQueryBlock = {
       matches = context.getVar('msg').data.match(rgx);
     } catch(e) {
       log.e("Regular expression error: " + e.message);
+      log.trace();
     }
     if(matches)
       return await context.continue("CMD");
@@ -160,6 +163,7 @@ var telegramDocumentBlock = {
       matches = context.getVar('msg').fileName.match(rgx);
     } catch(e) {
       log.e("Regular expression error: " + e.message);
+      log.trace();
     }
     if(matches)
       return await context.continue("CMD");
