@@ -13,7 +13,6 @@ const fnBlock = {
         let msg = context.getVar('msg');
 
         if(msg['___Custom Function Definition'] === true) {
-            log.e("compila func");
             let section = context.getField("SECTION");
             let color = context.getField("COLOR");
             let description = context.getField("DESCRIPTION");

@@ -99,6 +99,12 @@ async function start(srvName, callbackFinish) {
 
     if(callbackFinish)
       callbackFinish();
+  }).catch((err) => {
+    log.e(`Service '${srvName}' stopped on startup with an error (${err}). Service will not run!`);
+    delete servicePromise[srvName];
+    serviceData[srvName].stop = true;
+    serviceData[srvName].status = 0;
+    serviceData[srvName].desiredStatus = 0;
   });
 }
 

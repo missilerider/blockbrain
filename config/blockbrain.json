@@ -1,6 +1,6 @@
 {
     "endpoint": {
-      "port": 80,
+      "port": 8000,
       "bind": "0.0.0.0",
       "path": "msg"
     },

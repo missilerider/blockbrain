@@ -41,7 +41,15 @@
           }, 
           "sensor2": {
             "type": "switch", 
-            "icon": "toggle-switch"
+            "icon": "puzzle"
+          }
+        }
+      }, 
+      "bbBot": {
+        "items": {
+          "testSwitch": {
+            "type": "switch", 
+            "icon": "battery"
           }
         }
       }

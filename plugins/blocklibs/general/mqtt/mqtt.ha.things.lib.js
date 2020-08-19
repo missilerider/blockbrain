@@ -208,6 +208,7 @@ class haThing_switch extends haThing {
 
     onMessage(topic, msg) {
         if(topic == this.commandTopic) {
+            msg = msg.toString();
             if(msg == this.stateOn || msg == this.stateOff) {
                 log.d("Changing thing " + this.id + " to state " + msg);
                 this.state = msg;
