@@ -145,7 +145,12 @@ async function getBlocks(conf, services, utils) {
         if(typeof data[blockIds[n2]].block !== "function")
           blockData = data[blockIds[n2]].block;
         else {
-          blockData = data[blockIds[n2]].block(services.getServices());
+          try {
+            blockData = data[blockIds[n2]].block(services.getServices());
+          } catch(e) {
+            log.e(`Error loading service '${blockName}' blocks: ${e.message}`);
+            debug(e.stack);
+          }
         }
 
         if(typeof(blockData) == "function") {

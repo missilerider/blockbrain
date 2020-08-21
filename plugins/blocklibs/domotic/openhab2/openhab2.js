@@ -1,6 +1,6 @@
 'use strict';
 
-const ha = require('./openhab2.lib.js');
+const oh = require('./openhab2.lib.js');
 const blocks = require('./openhab2.blocks.lib.js');
 
 const debug = require('debug')('blockbrain:service:openhab2');
@@ -17,8 +17,8 @@ var tools = null;
 
 function getInfo(env) {
   return {
-    "id": "homeAssistant",
-    "name": "Home Assistant API integration",
+    "id": "openhab",
+    "name": "Openhab2 REST API integration",
     "author": "Alfonso Vila"
   }
 }
@@ -37,7 +37,7 @@ async function getBlocks() {
 
 function entitiesCombo(base) {
   let ret = { ... base };
-  let things = ha.getEntities();
+  let things = oh.getEntities();
   let thingIds = Object.keys(things).sort();
   let combo = [];
   for(let n = 0; n < thingIds.length; n++) {
@@ -81,7 +81,7 @@ var setStateBlock = {
     var entity = context.getField('THING');
     var newState = await context.getValue('NEWSTATE');
 
-    ha.setState(entity, newState);
+    oh.setState(entity, newState);
   }
 }
 
@@ -95,7 +95,7 @@ var setAttributesBlock = {
     var newState = await context.getValue('NEWSTATE');
     var newAttr = await context.getValue('NEWATTR');
 
-    ha.setState(entity, errornewState, newAttr);
+    oh.setState(entity, errornewState, newAttr);
   }
 }
 
@@ -106,10 +106,10 @@ var getStateBlock = {
   "run": async (context) => {
     context.blockIn();
     var entity = context.getField('THING');
-    var entities = ha.getEntities();
+    var entities = oh.getEntities();
 
     if(entity in entities) return entities[entity].state;
-    log.e(`Home Assistant entity ${entity} not found!`);
+    log.e(`Openhab2 entity ${entity} not found!`);
     return "";
   }
 }
@@ -121,10 +121,10 @@ var getAttributesBlock = {
   "run": async (context) => {
     context.blockIn();
     var entity = context.getField('THING');
-    var entities = ha.getEntities();
+    var entities = oh.getEntities();
 
     if(entity in entities) return entities[entity].attributes;
-    log.e(`Home Assistant entity ${entity} not found!`);
+    log.e(`Openhab2 entity ${entity} not found!`);
     return "";
   }
 }
@@ -135,20 +135,20 @@ function getToolbox() {
       "Sensor": '', 
       "Switch": '',
       "General": ' \
-        <block type="homeAssistant.onChange"></block> \
-        <block type="homeAssistant.setState"></block> \
-        <block type="homeAssistant.setAttributes"></block> \
-        <block type="homeAssistant.getState"></block> \
-        <block type="homeAssistant.getAttributes"></block>'
+        <block type="openhab2.onChange"></block> \
+        <block type="openhab2.setState"></block> \
+        <block type="openhab2.setAttributes"></block> \
+        <block type="openhab2.getState"></block> \
+        <block type="openhab2.getAttributes"></block>'
     }
   }
 }
 
-var haService = {
+var ohService = {
   getInfo: () => { return {
     methods: ["start", "stop"],
-    name: "Home Assistant API integration",
-    description: "Connects directly to a Home Assistant instance and exposes events and things"
+    name: "Openhab2 REST API integration",
+    description: "Connects directly to a Openhab2 instance and exposes events and things"
   }},
   status: () => { return "TODO"; },
   start: (srv) => {
@@ -168,53 +168,49 @@ var haService = {
       runPromiseResolve = resolve;
     });
 
-    let haHost = srv.config.secure ? "https://" : "http://";
-    haHost += srv.config.host;
-    haHost += srv.config.port ? ":" + srv.config.port : ":8123";
+    let host = srv.config.baseUrl || null;
 
-    let apiToken = srv.config.apiToken;
-
-    if(!haHost || !apiToken) {
-      log.f("homeAssistant.json host and apiToken fields must be defined at least for Home Assistant integration");
+    if(!host) {
+      log.f("openhab2.json baseUrl field must be defined at least for Openhab2 integration");
       srv.status = 0;
       return;
     }
 
-    ha.config({
-      host: haHost, 
-      apiToken: apiToken, 
+    oh.config({
+      host: host, 
       thingChanged: thingChanged
     });
 
-    debug("Checking connection to Home Assistant instance " + srv.config.host);
-
-    if(!await ha.ping()) {
-      srv.status = 0;
-      log.e("Home Assistant connection error. Please check configuration and connectivity");
-      debug("Home Assistant API service stopped");
-      return;
+    if(!await oh.start()) {
+      log.e('Openhab2 service cannot subscribe to event bus');
+    } else {
+      debug(`Event bus subscription to host ${host} correct and running`);
     }
 
     srv.status = 1;
   
-    debug("Home Assistant connection correct!");
+    debug("Openhab2 connection correct!");
 
-    var intervalHandler = setInterval(async () => {
-      ha.tick(ha);
-    }, 2000);
+    /*var intervalHandler = setInterval(async () => {
+      oh.tick(oh);
+    }, 2000);*/
 
     await runPromise;
 
-    clearInterval(intervalHandler);
+    debug('OH stop');
+
+    oh.stop(); // Stops thing updates and everything
+   
+    //clearInterval(intervalHandler);
 
     srv.status = 0;
-    debug("Home Assistant API service stopped");
+    debug("Openhab2 REST API service stopped");
   }
 }
 
 async function thingChanged(entity, state, oldState) {
-  debug(`HA ${entity}: ${oldState} => ${state}`);
-  tools.executeEvent('homeAssistant.onChange', { entity: entity }, {
+  debug(`OH ${entity}: ${oldState} => ${state}`);
+  tools.executeEvent('openhab2.onChange', { entity: entity }, {
     entity: entity,
     oldState: oldState, 
     state: state
@@ -224,6 +220,6 @@ async function thingChanged(entity, state, oldState) {
 module.exports = {
   getInfo: getInfo,
   getBlocks: getBlocks,
-  getServices: () => { return { "homeAssistant": haService } },
+  getServices: () => { return { "openhab2": ohService } },
   getToolbox: getToolbox
 }
