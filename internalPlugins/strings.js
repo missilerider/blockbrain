@@ -1,12 +1,13 @@
+const debug = require('debug')('blockbrain:script:string');
+
 const slog = global.slog;
 
 async function text(context) {
   context.blockIn();
-  console.dir(context.getProgram());
   let txt = context.getField("TEXT");
   if(!txt) txt = "";
   else txt = txt.toString();
-  slog.d("text: " + txt);
+  debug("text: " + txt);
   return txt;
 }
 
@@ -20,7 +21,7 @@ async function text_join(context) {
     if(txt !== undefined && txt !== null)
       txt = txt.toString();
 
-      slog.d("join: " + txt);
+      debug("join: " + txt);
     ret += txt;
   }
   return ret;

@@ -1,7 +1,8 @@
 'use strict';
 
+const debug = require('debug')('blockbrain:service:json');
+const sdebug = require('debug')('blockbrain:script:json');
 const log = global.log;
-const slog = global.slog;
 
 var jsonBlock = {
   "block": {
@@ -150,7 +151,7 @@ var jsonSetBlock = {
     var oldVar = context.getVar(variable);
     if(oldVar === undefined) oldVar = {};
     oldVar[prop] = data;
-    log.d(variable + "." + prop + " = " + data + "(" + context.getVar("msg").id + ")");
+    sdebug(variable + "." + prop + " = " + data + "(" + context.getVar("msg").id + ")");
     context.setVar(variable, oldVar);
   }
 }
@@ -190,7 +191,7 @@ var jsonSetVarBlock = {
     var oldVar = context.getVar(variable);
     if(oldVar === undefined) oldVar = {};
     oldVar[prop] = data;
-    log.d(variable + "." + prop + " = " + data + "(" + context.getVar("msg").id + ")");
+    sdebug(variable + "." + prop + " = " + data + "(" + context.getVar("msg").id + ")");
     context.setVar(variable, oldVar);
   }
 }

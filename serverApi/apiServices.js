@@ -1,5 +1,7 @@
 'use strict';
 
+const debug = require('debug')('blockbrain:server');
+
 var fs = require('fs');
 
 function dispatcher(data) {
@@ -61,7 +63,7 @@ function GETservices(data) {
     ret[srvIds[n]] = describeService(data, srvIds[n], srv);
   }
 
-  log.dump("GET services", ret);
+  debug("GET services" + JSON.stringify(ret));
   data.res.json(ret);
   return true;
 }
@@ -88,9 +90,9 @@ function GETservicesId(data) {
 }
 
 function POSTservicesId(data) {
-  log.dump("POST body", data.req.body);
+  debug("POST body" + JSON.stringify(data.req.body));
   Object.keys(data.req.body).forEach((id) => {
-    log.d("Check " + id);
+    debug("Check " + id);
     switch(id) {
       case "startOnBoot": data.services.setStartOnBoot(data.serviceId, data.req.body[id] ? true : false); break;
     }

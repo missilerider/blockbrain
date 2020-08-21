@@ -1,4 +1,5 @@
 const fs = require('fs');
+const debug = require('debug')('blockbrain:service:keyvalue');
 
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -71,9 +72,9 @@ var writeKeyBlock = {
     let key = context.getField('KEY');
     let value = await context.getValue('VALUE');
     data[key] = value;
-    log.d("Key set: " + key + " = " + value);
+    debug("Key set: " + key + " = " + value);
     if(serviceConfig.persistence) {
-      log.d("Starts delayed key persistence...");
+      debug("Starts delayed key persistence...");
       waitingSave = true;
       setTimeout(saveKeys, serviceConfig.saveDelay);
     }
@@ -149,7 +150,7 @@ var keyValueService = {
 
     // Preloads keys and values if necesary
     if(serviceConfig.persistence) {
-      log.d("Loads saved keys");
+      debug("Loads saved keys");
       loadKeys(serviceConfig);
     }
 
@@ -210,14 +211,14 @@ function loadKeys(config) {
       } catch(e) {
         log.e("Loaded data from key-value vault not readable. Disabling persistence!");
         config.persistence = false;
-        log.i("If you want to make persistence work again, please delete the vault file or fix the JSON structure in it manually");
+        log.w("If you want to make persistence work again, please delete the vault file or fix the JSON structure in it manually");
       }
     }
   });
 }
 
 function saveKeys() {
-  log.d("Persists key-value data to file " + serviceConfig.vaultFile);
+  debug("Persists key-value data to file " + serviceConfig.vaultFile);
   try {
     fs.writeFileSync(serviceConfig.vaultFile, JSON.stringify(data), 'utf8');
   } catch(e) {

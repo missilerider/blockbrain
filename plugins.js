@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const debug = require('debug')('blockbrain:plugins');
 const log = global.log;
 const slog = global.slog;
 
@@ -16,7 +17,7 @@ var onReloadEvents = [];
 
 async function reload(globalUtils) {
   blockLibs = {};
-  log.i("Plugin load start...");
+  debug("Plugin load start...");
   await defaultPlugins('./internalPlugins', globalUtils);
   await reloadPlugins('./plugins');
 
@@ -28,7 +29,7 @@ async function reload(globalUtils) {
 
 async function defaultPlugins(dirname, globalUtils) {
   utils = globalUtils;
-  log.d("Reads default plugins directory " + dirname);
+  debug("Reads default plugins directory " + dirname);
   var files = fs.readdirSync(dirname);
   var fk = Object.keys(files);
   for(var fn = 0; fn < fk.length; fn++) {
@@ -40,7 +41,7 @@ async function defaultPlugins(dirname, globalUtils) {
 
     if(stat.isFile()) {
       try {
-        log.i("Reads file " + fromPath);
+        debug("Reads file " + fromPath);
         var lib = require('./' + fromPath);
 
         if("getBlocks" in lib) {
@@ -57,8 +58,8 @@ async function defaultPlugins(dirname, globalUtils) {
         }
       } catch(e) {
         log.e("Error while loading default plugin from " + fromPath);
-        log.d(e.toString() + "(" + e.code + ")");
-        log.d("Stack " + fromPath + ": \n" + e.stack);
+        debug(e.toString() + "(" + e.code + ")");
+        debug("Stack " + fromPath + ": \n" + e.stack);
       }
     } else if(stat.isDirectory()) {
       await defaultPlugins(fromPath, globalUtils);
@@ -67,7 +68,7 @@ async function defaultPlugins(dirname, globalUtils) {
 }
 
 async function reloadPlugins(dirname) {
-  log.i("Reads plugins directory " + dirname);
+  debug("Reads plugins directory " + dirname);
 
   var files = fs.readdirSync(dirname);
 
@@ -83,18 +84,19 @@ async function reloadPlugins(dirname) {
     // *.js but not *.lib.*.js nor *.lib.js
     if(stat.isFile() && fromPath.match(/^((?!\.lib\.).)*\.js$/)) {
       try {
-        log.i("Reads file " + fromPath);
+        debug("Reads file " + fromPath);
         var lib = require('./' + fromPath);
 
         var methods = Object.keys(lib);
 
         if(!('getInfo' in lib)) {
           log.w("File '" + fromPath + "' is not a plugin file. Incorrect methods");
+          debug("File '" + fromPath + "' is not a plugin file. Incorrect methods");
         } else {
           var info = lib.getInfo();
           if(info.id != null) {
             blockLibs[info.id] = lib;
-            log.d("Loaded library '" + info.name + "':'" + info.id + "' from " + fromPath);
+            debug("Loaded library '" + info.name + "':'" + info.id + "' from " + fromPath);
           }
         }
       } catch(e) {
@@ -110,11 +112,11 @@ async function reloadPlugins(dirname) {
 }
 
 async function getDefaultBlocks(conf) {
-  log.d("plugins getDefaultBlocks");
+  debug("plugins getDefaultBlocks");
   var libIds = Object.keys(defaultLib);
   var ret = {};
   for(var n=0; n<libIds.length; n++) {
-    log.d("Default library " + libIds[n]);
+    debug("Default library " + libIds[n]);
     var lib = defaultLib[libIds[n]];
     if("block" in lib) {
       ret[libIds[n]] = lib.block;
@@ -124,7 +126,7 @@ async function getDefaultBlocks(conf) {
 }
 
 async function getBlocks(conf, services, utils) {
-  log.d("plugins getBlocks");
+  debug("plugins getBlocks");
   var libIds = Object.keys(blockLibs);
   var ret = {};
   for(var n=0; n<libIds.length; n++) {
@@ -152,7 +154,7 @@ async function getBlocks(conf, services, utils) {
         blockData.type = blockName;
         blockData.helpUrl = conf.system.helpUrl + "?block=" + blockName;
         ret[blockName] = blockData;
-        log.d("Block added: " + blockName);
+        debug("Block added: " + blockName);
       }
     }
   }
@@ -178,7 +180,7 @@ async function getBlock(blockName, callback) {
     // No dot in name: default operator
     if(blockName in defaultLib) {
       slog.w("Default block: " + blockName);
-      log.dump("Default block", defaultLib[blockName]);
+      debug("Default block" +  JSON.stringify(defaultLib[blockName]));
       callback(false, defaultLib[blockName]);
     } else {
       callback(true, "Block " + blockName + " does no exist in default library");
@@ -187,7 +189,7 @@ async function getBlock(blockName, callback) {
 }
 
 async function getBlockSync(blockName, services, utils) {
-  log.d("getBlockSync: " + blockName);
+  debug("getBlockSync: " + blockName);
   var matches;
   if(matches = blockName.match(/^([^\.]*)\.(.*)/)) {
     var libName = matches[1];
@@ -303,7 +305,10 @@ function getServices(conf) {
   return services;
 }
 
-function onReload(cb) { log.i("Reload events"); onReloadEvents.push(cb); }
+function onReload(cb) {
+  debug("Reload events");
+  onReloadEvents.push(cb);
+}
 
 module.exports = {
   reload: reload,

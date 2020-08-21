@@ -1,3 +1,5 @@
+const sdebug = require('debug')('blockbrain:script:math');
+
 async function math_number(context) {
   return parseFloat(context.getField(context, 'NUM'));
 }
@@ -21,7 +23,7 @@ async function math_change(context) {
   var varName = context.getField(context, "VAR");
   var delta = await context.getValue(context, "DELTA");
 
-  log.d(varName + " += " + delta);
+  sdebug(varName + " += " + delta);
 
   context.setVar(context, varName, context.getVar(context, varName) + delta);
 }
@@ -36,8 +38,8 @@ async function math_modulo(context) {
 async function math_single(context) {
   var op = parseFloat(context.getField(context, "OP"));
   var num = parseFloat(await context.getValue(context, "NUM"));
-  log.dump("op", op);
-  log.dump("num", num);
+  debug("op = " + JSON.stringify(op));
+  debug("num" + JSON.stringify(num));
 
   switch(op) {
     case "ROOT": return Math.sqrt(num);

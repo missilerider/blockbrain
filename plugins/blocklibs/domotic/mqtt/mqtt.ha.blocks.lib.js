@@ -1,5 +1,6 @@
 'use strict';
 
+const sdebug = require('debug')('blockbrain:script:mqtt:ha');
 const slog = global.slog;
 
 let blocks = require('./mqtt.ha.block.defs.lib.js');
@@ -31,7 +32,7 @@ module.exports = {
             let thing = srv.getThing(sensor);
             let value = await context.getValue("VALUE");
             thing.setValue(value);
-            slog.d("HA sensor value of " + sensor + " set to " + value);
+            sdebug("HA sensor value of " + sensor + " set to " + value);
         }
     }, 
     haSetSwitch: {
@@ -60,7 +61,7 @@ module.exports = {
             let srv = context.getService('mqtt');
             let thing = srv.getThing(thingName);
             thing.setValue(newStatus !== "off" ? thing.stateOn : thing.stateOff);
-            slog.d("HA sensor value of " + thingName + " set to " + newStatus);
+            sdebug("HA sensor value of " + thingName + " set to " + newStatus);
         }
     }, 
     haSwitchEvent: {
@@ -118,15 +119,15 @@ module.exports = {
             context.blockIn();
             let thingName = context.getField('THING');
             let newStatus = context.getField('NEWSTATUS');
-            log.dump("newStatus", newStatus);
+            debug("newStatus" + JSON.stringify(newStatus));
             let srv = context.getService('mqtt');
             let thing = srv.getThing(thingName);
             if(newStatus != "disable") {
                 thing.connect();
-                slog.i("HA thing " + thingName + " connected");
+                sdebug("HA thing " + thingName + " connected");
             } else {
                 thing.disconnect();
-                slog.i("HA thing " + thingName + " disconnected");
+                sdebug("HA thing " + thingName + " disconnected");
             }
         }
     }

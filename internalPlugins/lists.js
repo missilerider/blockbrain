@@ -1,3 +1,5 @@
+const debug = require('debug')('blockbrain:script:list');
+
 const log = global.log;
 const slog = global.slog;
 
@@ -172,7 +174,7 @@ async function lists_getSublist(context) {
     return null;
   }
 
-  slog.d("at: " + at1 + ", " + at2);
+  sdebug("at: " + at1 + ", " + at2);
 
   return value.slice(at1 - 1, at2);
 }
@@ -268,7 +270,7 @@ async function lists_sort(context) {
 
   list = list.getValue();
 
-  slog.dump("num", list.sort((a,b) => a-b));
+  debug("num" + JSON.stringify(list.sort((a,b) => a-b)));
 
   switch(type) {
     case "NUMERIC":
@@ -330,10 +332,10 @@ var lists_append = {
     let pos = parseInt(context.getField('POS'));
     let item = await context.getValue('ITEM');
 
-    slog.dump("listName", listName);
-    slog.dump("list", list);
-    slog.dump("pos", pos);
-    slog.dump("item", item);
+    debug("listName" + JSON.stringify(listName));
+    debug("list" + JSON.stringify(list));
+    debug("pos" + JSON.stringify(pos));
+    debug("item" + JSON.stringify(item));
 
     if(!Array.isArray(list)) {
       slog.e("LIST must be a list");
@@ -343,7 +345,7 @@ var lists_append = {
     if(pos < 0) pos = list.length + pos + 1;
     pos = Math.max(0, Math.min(list.length, pos));
     list.splice(pos, 0, item);
-    slog.dump("list2", list);
+    debug("list2" + JSON.stringify(list));
     context.setVar(listName, list);
   }
 }
@@ -388,7 +390,7 @@ var lists_remove = {
       }
     }
 
-    log.i("List value could not be removed (not found)");
+    log.w("List value could not be removed (not found)");
   }
 }
 

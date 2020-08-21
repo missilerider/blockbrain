@@ -1,6 +1,7 @@
 'use strict';
 
 const axios = require('axios');
+const debug = require('debug')('blockbrain:service:homeAssistant');
 
 var haHost = "";
 var apiToken = "";
@@ -13,7 +14,7 @@ async function doAxios(method, ...params) {
         .then((res) => {
             return res;
         }).catch((e) => {
-            console.error(e);
+            log.e(e);
             return { error: "ERROR", data: e }
         });
     
@@ -83,7 +84,7 @@ module.exports = {
                     lastChanged: s.last_changed || "", 
                     lastUpdated: s.last_updated || ""
                 };
-                log.i(`New Home Assistant item ${s.entity_id} [${s.state}]`)
+                debug(`New Home Assistant item ${s.entity_id} [${s.state}]`)
             } else {
                 if(things[s.entity_id].state != s.state || things[s.entity_id].lastChanged != s.last_changed) {
                     let oldState = things[s.entity_id].state;
@@ -93,7 +94,7 @@ module.exports = {
                         lastChanged: s.last_changed || "", 
                         lastUpdated: s.last_updated || ""
                     };
-                    log.i(`Thing ${s.entity_id} changed state from ${oldState} to ${s.state}`);
+                    debug(`Thing ${s.entity_id} changed state from ${oldState} to ${s.state}`);
                     if(thingChanged)
                         thingChanged(s.entity_id, s.state, oldState);
                 }
@@ -102,7 +103,7 @@ module.exports = {
     }, 
 
     setState: async (entity, newState = null, attributes = null) => {
-        log.d(`Set entity ${entity} state to ${newState}`);
+        debug(`Set entity ${entity} state to ${newState}`);
 
         if(attributes === null) 
             attributes = (entity in things) ? things[entity].attributes : {};

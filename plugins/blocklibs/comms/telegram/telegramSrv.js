@@ -1,5 +1,6 @@
 const fs = require('fs');
 const telegram = require('./telegramWrapper.lib.js');
+const debug = require('debug')('blockbrain:service:telegram');
 const log = global.log;
 
 const blocks = require('./telegramBlocks.lib.js');
@@ -30,7 +31,7 @@ var telegramService = {
     serviceConfig = srv.config;
 
     if(serviceConfig.persistence) {
-//      log.d("Loads saved keys");
+//      debug("Loads saved keys");
 //      loadKeys(serviceConfig);
     }
 
@@ -55,7 +56,7 @@ var telegramService = {
         if(msg[n] instanceof telegram.Message) {
           // Commands also contain 'text' and should not be executed in 'text'
           if('text' in msg[n] && !('commands' in msg[n])) {
-            log.d("Telegram text: " + msg[n].text + ' from chat ' + msg[n].chat.id);
+            debug("Telegram text: " + msg[n].text + ' from chat ' + msg[n].chat.id);
             await tools.executeEvent('telegram.telegram_text', {
               text: msg[n].text,
               message: msg[n]
@@ -64,7 +65,7 @@ var telegramService = {
 
           if('commands' in msg[n]) {
             for(let c = 0; c < msg[n].commands.length; c++) {
-              log.d("Telegram command: " + msg[n].commands[c].command + ' from chat ' + msg[n].chat.id);
+              debug("Telegram command: " + msg[n].commands[c].command + ' from chat ' + msg[n].chat.id);
               await tools.executeEvent('telegram.telegram_cmd', {
                 text: msg[n].text,
                 command: msg[n].commands[c].command,
@@ -75,14 +76,14 @@ var telegramService = {
           }
 
           if('document' in msg[n]) {
-            log.d("Telegram document: " + msg[n].document.file_name + ' from chat ' + msg[n].chat.id);
+            debug("Telegram document: " + msg[n].document.file_name + ' from chat ' + msg[n].chat.id);
             await tools.executeEvent('telegram.telegram_document', {
               fileName: msg[n].document.file_name,
               message: msg[n]
             });
           }
         } else if(msg[n] instanceof telegram.CallbackQuery) {
-          log.d("Telegram callbackquery: " + msg[n].data + ' from chat ' + msg[n].chat.id);
+          debug("Telegram callbackquery: " + msg[n].data + ' from chat ' + msg[n].chat.id);
           let params = {
             data: msg[n].data,
             callbackQuery: msg[n]
@@ -316,7 +317,7 @@ var telegramUpdateIkmBlock = {
 };
 
 async function getBlocks() {
-  log.d("telegram getBlocks");
+  debug("telegram getBlocks");
   return {
     "telegram_text": telegramTextBlock,
     "telegram_cmd": telegramCmdBlock,

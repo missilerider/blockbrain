@@ -1,7 +1,7 @@
 'use strict';
 
 var fs = require('fs');
-const log = global.log;
+const debug = require('debug')('blockbrain');
 
 var apiBlocks = require('./serverApi/apiBlocks.js');
 var apiServices = require('./serverApi/apiServices.js');
@@ -28,7 +28,7 @@ async function _dispatcher(req, res, next) {
 }
 
 async function dispatcher(req, res, next) {
-  log.d("API: " + req.method + " " + req._parsedUrl.pathname);
+  debug("API: " + req.method + " " + req._parsedUrl.pathname);
   var path = req._parsedUrl.pathname.split("/");
   path.shift(); // ""
   path.shift(); // "api"
@@ -37,6 +37,7 @@ async function dispatcher(req, res, next) {
   res.type('application/json');
 
   if(path.length < 1) {
+    debug('path.length < 1');
     res.json({ code: 404 });
     return;
   }
@@ -54,11 +55,16 @@ async function dispatcher(req, res, next) {
     path: path
   }
 
+  debug(`API dispatch ${path[0]}`);
+
   switch(path[0]) {
     case "blocks": return apiBlocks.dispatcher(data);
     case "services": return apiServices.dispatcher(data);
     case "system": return apiSystem.dispatcher(data);
   }
+
+  debug('Dispatch not completed');
+  log.e("API section incorrect: " + path[0]);
 
   res.json({ code: 404 });
 }

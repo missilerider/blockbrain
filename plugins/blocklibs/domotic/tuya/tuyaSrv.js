@@ -1,7 +1,7 @@
 'use strict';
 
+const debug = require('debug')('blockbrain:service:tuya');
 const log = global.log;
-const slog = global.slog;
 
 const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -18,15 +18,15 @@ var tuyaService = {
     start: () => { return true; },
     stop: () => { return true; },
     run: async (srv) => {
-      log.d("Tuya service started");
+      debug("Tuya service started");
       srv.status = 1;
-      console.dir(srv);
+      debug(JSON.stringify(srv));
   
       while(!srv.stop) {
           // TODO: Discovery repetitivo
         await sleep(1000);
       }
-      log.d("Tuya service stopped");
+      debug("Tuya service stopped");
       srv.status = 0;
     }
   }

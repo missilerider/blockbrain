@@ -1,7 +1,7 @@
 'use strict';
 
+const debug = require('debug')('blockbrain:script:control');
 const blocks = require('./functions.blocks.lib.js');
-
 
 const fnBlock = {
     block: blocks.fn,
@@ -26,7 +26,7 @@ const fnBlock = {
                 returns: []
             };
 
-            log.i("Function " + fnName);
+            debug("Function " + fnName);
 
             await context.continue("PARAMS", false);
             await context.continue("RETURN", false);
@@ -40,9 +40,9 @@ const fnBlock = {
                 log.f(Object.keys(context.params));
                 let msg = context.params;
                 let vars = Object.keys(context.params);
-                log.dump("params", context.params);
+                debug("params: " + JSON.stringify(context.params));
                 for(let n = 0; n < vars.length; n++) {
-                    log.i("Set var: " + vars[n]);
+                    debug("Set var: " + vars[n]);
                     context.setVar(vars[n], msg[vars[n]]);
                 }
 
@@ -66,7 +66,7 @@ const paramBlock = {
             var: isVar == "TRUE"
         };
 
-        log.i("Param " + paramName);
+        debug("Param " + paramName);
     }
 }
 
@@ -77,7 +77,7 @@ const returnBlock = {
 
         let returnName = context.getField("NAME");
 
-        log.d("Function return " + returnName);
+        debug("Function return " + returnName);
         context.customFunctions.returns.push(returnName);
     }
 }

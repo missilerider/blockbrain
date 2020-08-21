@@ -3,6 +3,8 @@
 const mqtt = require('mqtt');
 const lib = require('./mqtt.lib.js');
 const ha = require('./mqtt.ha.lib.js');
+
+const debug = require('debug')('blockbrain:service:mqtt');
 const log = global.log;
 
 const sleep = (milliseconds) => {
@@ -44,7 +46,7 @@ var publishMessageBlock = {
     async (context) => {
       context.blockIn();
       var topic = context.getField('TOPIC');
-      log.d("MQTT publish on " + topic);
+      debug("MQTT publish on " + topic);
       if(!runPromise) {
         log.e("MQTT service stopped. Cannot send to '" + topic + "'");
         return;
@@ -69,7 +71,7 @@ var publishMessageExBlock = {
     async (context) => {
       context.blockIn();
       var topic = await context.getValue('TOPIC');
-      log.d("MQTT publish on " + topic);
+      debug("MQTT publish on " + topic);
       if(!runPromise) {
         log.e("MQTT service stopped. Cannot send to '" + topic + "'");
         return;
@@ -97,9 +99,9 @@ var publishMessageExBlock = {
         }
       };
 
-      log.dump("topic", topic);
-      log.dump("message", message);
-      log.dump("ops", ops);
+      debug("topic" + JSON.stringify(topic));
+      debug("message" + JSON.stringify(message));
+      debug("ops" + JSON.stringify(ops));
 
       client.publish(topic, message, ops);
   }
@@ -150,7 +152,7 @@ function refreshSubscriptions() {
 
   keys.forEach((t) => {
     client.subscribe(t, function() {
-      log.i("MQTT subscribed to " + t);
+      debug("MQTT subscribed to " + t);
     });
   });
 }
@@ -163,7 +165,7 @@ function setConfig(newConfig) {
     let rgx = keys[n].replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     rgx = rgx.replace("\\+", "[^/]+");
     rgx = rgx.replace("#", ".+");
-    log.i(rgx);
+    debug(rgx);
     topicRgx[n] = rgx;
     topics[rgx] = config.topics[keys[n]];
   }
@@ -171,11 +173,11 @@ function setConfig(newConfig) {
 
 function onMessage(topic, message, packet) {
   let sent = false;
-  log.i("Received '" + message + "' on '" + topic + "'");
+  debug("Received '" + message + "' on '" + topic + "'");
   for(let n = 0; n < topicRgx.length; n++) {
     if(topic.match(topicRgx[n])) {
       if(!sent || !config.messaging.deduplicate) {
-        log.d("Match! " + topic + " = " + topicRgx[n] + " => " + message);
+        debug("Match! " + topic + " = " + topicRgx[n] + " => " + message);
         sent = true;
 
         let data = message;
@@ -205,7 +207,7 @@ function onMessage(topic, message, packet) {
         }
 
         if(topics[topicRgx[n]].filter && !exact) {
-          log.d("MQTT message format & filter not met: " + topics[topicRgx[n]].format);
+          debug("MQTT message format & filter not met: " + topics[topicRgx[n]].format);
         } else {
           tools.executeEvent('mqtt.message', {
             topic: topic,
@@ -218,7 +220,7 @@ function onMessage(topic, message, packet) {
 
   Object.keys(thingSubs).forEach((tTopic) => {
     if(tTopic == topic) {
-      log.d("Topic matches thing " + thingSubs[tTopic].id);
+      debug("Topic matches thing " + thingSubs[tTopic].id);
       let block = thingSubs[tTopic].onMessage(topic, message);
       if(block) {
         tools.executeEvent('mqtt.' + block, {
@@ -244,15 +246,15 @@ var mqttService = {
     setConfig(srv.config);
     if(client) {
       if(config.homeAssistant.enabled) {
-        log.i("Stopping HomeAssistant middleware");
+        debug("Stopping HomeAssistant middleware");
         await ha.stop();
         await sleep(1000);
-        log.d("HA stopped");
+        debug("HA stopped");
       }
 
-      log.i("Closing MQTT client");
+      debug("Closing MQTT client");
       client.end();
-      log.i("MQTT closed");
+      debug("MQTT closed");
       client = null;
     }
     if(!runPromise || !runPromiseResolve) return false;
@@ -298,26 +300,26 @@ var mqttService = {
     if(config.broker.validateCertificate)
       ops.rejectUnauthorized = config.broker.validateCertificate == true;
 
-    log.d("Starting MQTT connection to " + host);
+    debug("Starting MQTT connection to " + host);
     client  = mqtt.connect(host, ops);
 
     let srv2 = srv;
-    log.i("Starting MQTT broker connection");
+    debug("Starting MQTT broker connection");
     client.on('connect', function() {
       srv2.status = 1;
-      log.i("MQTT broker connection OK");
+      debug("MQTT broker connection OK");
 
       client.on('message', onMessage);
 
-      client.on('reconnect', () => { log.i("MQTT reconnecting...") });
+      client.on('reconnect', () => { debug("MQTT reconnecting...") });
       client.on('close', () => { log.e("MQTT disconnected") });
-      client.on('disconnect', () => { log.i("MQTT received diconnect from broker") });
+      client.on('disconnect', () => { log.w("MQTT received diconnect from broker") });
       client.on('offline', () => { log.f("MQTT offline") });
 
       refreshSubscriptions();
 
       if(config.homeAssistant.enabled) {
-        log.i("Starting HomeAssistant middleware");
+        debug("Starting HomeAssistant middleware");
         ha.start({
           mqttLib: client, 
           config: config, 
@@ -326,12 +328,12 @@ var mqttService = {
       }
     });
 
-    log.i("MQTT initialization complete");
+    debug("MQTT initialization complete");
 
     await runPromise;
 
     srv2.status = 0;
-    log.i("MQTT service stopped");
+    debug("MQTT service stopped");
   }, 
   getThing(thingName) {
     return ha.getThing(thingName);

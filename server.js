@@ -7,6 +7,7 @@ var expressSession = require('express-session');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 
+const debug = require('debug')('blockbrain');
 const Log = require('./log.js');
 
 const sleep = (milliseconds) => {
@@ -46,8 +47,6 @@ services.config(globalSetup);
 serverApi.config(globalSetup);
 serverDyn.config(globalSetup);
 
-console.dir(conf);
-
 var runtime = {
   apiKeys: {
     "abc": {
@@ -59,7 +58,7 @@ var runtime = {
   }
 };
 
-log.d("Server start");
+debug("Server start");
 
 // Constants
 const PORT = conf.endpoint.port;
@@ -125,12 +124,12 @@ app.post('/login.run', (req, res, next) => {
   var last = req.body.last;
   password = utils.sha256(password.valueOf());
 
-  log.d("User: " + username);
-  log.d("Pwd: " + password);
+  debug("User: " + username);
+  debug("Pwd: " + password);
 
   for(var n = 0; n < conf.security.users.length; n++) {
     var u = conf.security.users[n];
-    log.d("Check: " + u.name + " / " + u.sha256);
+    debug("Check: " + u.name + " / " + u.sha256);
     if (username.valueOf() === u.name && password.valueOf() === u.sha256) {
       req.session.user = {
         user: u
@@ -169,7 +168,7 @@ app.use('/assets', express.static('public/assets'));
 app.use('/', function(req, res, next) {
   checkAuth(req, res, next, function(req, res, next) {
     const path = req.originalUrl.replace(/\?.*$/, '');
-    log.d("Static: " + path  + " = " + __dirname + '/public' + path);
+    debug("Static: " + path  + " = " + __dirname + '/public' + path);
     try {
       res.sendFile(path, {root: __dirname + '/public'}, (err) => {
         res.end();
@@ -183,9 +182,9 @@ app.use('/', function(req, res, next) {
 });
 
 try {
-  log.i("Script pre-load start");
+  debug("Script pre-load start");
   utils.scriptReload(conf.blocks.path).then(() => {
-    log.i("Script pre-load ended");
+    debug("Script pre-load ended");
   }).catch((e) => {
     log.e("scriptReload");
     log.e(e.message);
@@ -198,7 +197,7 @@ try {
 // General load
 plugins.reload(utils).then(() => {
   // Starts automatic services
-  log.i("Starting services on startup");
+  debug("Starting services on startup");
   Object.keys(conf.startupServices).forEach(id => {
     if(conf.startupServices[id])
       services.start(id);
@@ -206,27 +205,28 @@ plugins.reload(utils).then(() => {
 });
 
 var server = app.listen(PORT, HOST);
-log.i(`Running on http://${HOST}:${PORT}`);
+debug(`Running on http://${HOST}:${PORT}`);
 
 // Graceful exit
 process.on('SIGINT', async function() {
   console.log("SIGINT received");
+  debug("SIGINT received");
   log.f("Blockbrain is closing!");
-  log.i("Stopping HTTP server...");
+  debug("Stopping HTTP server...");
   await server.close();
 
   for(let s = 0; s < Object.keys(services.getServices()).length; s++) {
     let id = Object.keys(services.getServices())[s];
     if(
       services.status(id).status == "running") {
-      log.i("Stopping service " + id + "...");
+      debug("Stopping service " + id + "...");
       await services.stop(id);
     }
   }
 
   await sleep(1000);
 
-  log.d("Important tasks stopped. Closing");
+  debug("Important tasks stopped. Closing");
 
   // The rest is dead crap
   process.exit();

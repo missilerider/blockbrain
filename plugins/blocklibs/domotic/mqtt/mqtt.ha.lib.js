@@ -1,5 +1,7 @@
 "use strict";
 
+const debug = require('debug')('blockbrain:service:mqtt:ha');
+
 var client;
 var config;
 var service;
@@ -18,7 +20,7 @@ function start(options) {
 
     client.on('message', onMessage);
     client.subscribe(config.homeAssistant.prefix + "/+/+", function() {
-        log.i("Waiting for HA messages...");
+        debug("Waiting for HomeAssistant messages...");
     });
 
     createThings();
@@ -39,7 +41,7 @@ async function stop() {
 }
 
 function createThings() {
-    log.i("HA thing creation");
+    debug("HA thing creation");
     if(!"devices" in config.homeAssistant) return;
     let devices = config.homeAssistant.devices;
     Object.keys(devices).forEach((deviceName) => {
@@ -47,12 +49,12 @@ function createThings() {
         let deviceIdentifier = device.identifier || 
             Buffer.from(deviceName).toString('base64').replace(/=/g, '').toLowerCase();
 
-        log.d("Creates device " + deviceName);
+        debug("Creates device " + deviceName);
 
         if("items" in device) {
             Object.keys(device.items).forEach((itemName) => {
                 let item = device.items[itemName];
-                log.d("Creates item " + deviceName + "." + itemName);
+                debug("Creates item " + deviceName + "." + itemName);
                 if(("haThing_" + item.type) in thingClasses) {
                     things[itemName] = new thingClasses["haThing_" + item.type]({
                         mqtt: client, 
@@ -73,7 +75,7 @@ function createThings() {
                     things[itemName].connect();
 
                     if(config.homeAssistant.discovery.enabled) {
-                        log.d("Enables discovery for thing " + itemName);
+                        debug("Enables discovery for thing " + itemName);
                         things[itemName].discovery();
                     }
                 }
@@ -91,7 +93,7 @@ function onMessage(topic, message, packet) {
     let id = matches[1];
     let cmd = matches[2];
 
-    log.i("Incoming HA message at " + topic + " (" + msg + ")");
+    debug("Incoming HomeAssistant message at " + topic + " (" + msg + ")");
 
     let types = [
         "binary_sensor", 
@@ -100,7 +102,7 @@ function onMessage(topic, message, packet) {
 
     for(let n = 0; n < types.length; n++) {
         if(config.homeAssistant.items[types[n]] && id in config.homeAssistant.items[types[n]]) {
-            log.d("Command " + cmd + " on item " + id);
+            debug("Command " + cmd + " on item " + id);
             let item = config.homeAssistant.items[types[n]][id];
             switch(cmd) {
                 case "cmd": 

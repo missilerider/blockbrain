@@ -1,3 +1,5 @@
+const debug = require('debug')('blockbrain:script:control');
+
 async function controls_repeat_ext(context) {
   context.blockIn();
   var initProgram = context.getProgram();
@@ -11,9 +13,9 @@ async function controls_repeat_ext(context) {
       program: initProgram,
       block: initBlock
     })
-    log.d("Starts DO");
+    debug("Starts DO");
     var execValue = await context.continue('DO');
-    log.d("Ends DO");
+    debug("Ends DO");
     context.pop();
     switch(context.getRunFlow().flowState) {
       case 1: // BREAK

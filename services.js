@@ -1,5 +1,7 @@
 'use strict';
 
+const debug = require('debug')('blockbrain:service');
+
 var plugins = null;
 var conf = null;
 var services = [];

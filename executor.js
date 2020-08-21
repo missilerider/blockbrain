@@ -3,6 +3,7 @@
 const xml_js = require('xml-js');
 const contextFactory = require('./context.js');
 const log = global.log;
+const debug = require('debug')('blockbrain:executor');
 
 var plugins = null;
 var services = null;
@@ -38,7 +39,7 @@ async function executeProgramJson(json, options, params = undefined) {
     // Filtered type?
     if(!options.nodeTypeFilter || options.nodeTypeFilter.indexOf(block._attributes.type) > -1) {
       // Get block from plugin library
-      log.d("Get block " + block._attributes.type);
+      debug("Get block " + block._attributes.type);
       let codeBlock = await plugins.getBlockSync(block._attributes.type);
       context = null;
       context = contextFactory.createContext({

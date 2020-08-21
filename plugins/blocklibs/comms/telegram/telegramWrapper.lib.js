@@ -87,14 +87,14 @@ class Bot {
     if(!('parse_mode' in params))
       params.parse_mode = 'Markdown';
 
-    log.dump("Telegram sendMessage", params);
+    debug("Telegram sendMessage" + JSON.stringify(params));
 
-    this.doPostSync("sendMessage", params).catch(e => { console.error(e); });
+    this.doPostSync("sendMessage", params).catch(e => { log.e(e); });
   }
 
   async editMessageReplyMarkup(params) {
-    log.dump("Telegram editMessageReplyMarkup", params);
-    this.doPostSync("editMessageReplyMarkup", params).catch(e => { console.error(e); });
+    debug("Telegram editMessageReplyMarkup" + JSON.stringify(params));
+    this.doPostSync("editMessageReplyMarkup", params).catch(e => { log.e(e); });
   }
 }
 
@@ -108,14 +108,14 @@ class Message {
       this.from = new User(data.from);
       else {
         log.e("Telegram message without FROM field!");
-        log.dump("message", data);
+        debug("message" + JSON.stringify(data));
       }
 
     if('chat' in data)
       this.chat = new Chat(data.chat);
     else {
       log.e("Telegram message without CHAT field!");
-      log.dump("message", data);
+      debug("message" + JSON.stringify(data));
   }
 
     this.setDate(data.date);

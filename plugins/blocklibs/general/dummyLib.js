@@ -1,5 +1,7 @@
 'use strict';
 
+const debug = require('debug')('blockbrain:service:dummy');
+const sdebug = require('debug')('blockbrain:script:dummy');
 const slog = global.slog;
 
 const sleep = (milliseconds) => {
@@ -59,7 +61,7 @@ var pushStartBlock = {
   },
   "run": async (context) => {
     context.blockIn();
-    slog.d(context.getMsg());
+    sdebug(context.getMsg());
     return await context.continue("CMD");
   }
 };
@@ -94,7 +96,7 @@ var consoleLogBlock = {
   },
   "run": async (context) => {
     context.blockIn();
-    console.log("consoleLog: " + await context.getParam('TXT'));
+    sdebug("consoleLog: " + await context.getParam('TXT'));
   }
 };
 
@@ -109,19 +111,19 @@ var testService = {
   start: () => { return true; },
   stop: () => { return true; },
   run: async (srv) => {
-    log.d("Starting...");
+    debug("Starting...");
     await sleep(1000);
     srv.status = 1;
-    log.d("Started");
-    console.dir(srv);
+    debug("Started");
+    debug(JSON.stringify(srv));
 
     while(!srv.stop) {
-      console.log("Servicio vivo!");
+      debug("Servicio vivo!");
       await sleep(1000);
     }
-    log.d("Stopping");
+    debug("Stopping");
     await sleep(2000);
-    log.d("Stopped");
+    debug("Stopped");
     srv.status = 0;
   }
 }

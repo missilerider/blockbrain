@@ -3,6 +3,7 @@
 const ha = require('./homeAssistant.lib.js');
 const blocks = require('./homeAssistant.blocks.lib.js');
 
+const debug = require('debug')('blockbrain:service:homeAssistant');
 const log = global.log;
 
 const sleep = (milliseconds) => {
@@ -185,18 +186,18 @@ var haService = {
       thingChanged: thingChanged
     });
 
-    log.d("Checking connection to Home Assistant instance " + srv.config.host);
+    debug("Checking connection to Home Assistant instance " + srv.config.host);
 
     if(!await ha.ping()) {
       srv.status = 0;
       log.e("Home Assistant connection error. Please check configuration and connectivity");
-      log.i("Home Assistant API service stopped");
+      debug("Home Assistant API service stopped");
       return;
     }
 
     srv.status = 1;
   
-    log.i("Home Assistant connection correct!");
+    debug("Home Assistant connection correct!");
 
     var intervalHandler = setInterval(async () => {
       ha.tick(ha);
@@ -207,12 +208,12 @@ var haService = {
     clearInterval(intervalHandler);
 
     srv.status = 0;
-    log.i("Home Assistant API service stopped");
+    debug("Home Assistant API service stopped");
   }
 }
 
 async function thingChanged(entity, state, oldState) {
-  log.d(`HA ${entity}: ${oldState} => ${state}`);
+  debug(`HA ${entity}: ${oldState} => ${state}`);
   tools.executeEvent('homeAssistant.onChange', { entity: entity }, {
     entity: entity,
     oldState: oldState, 

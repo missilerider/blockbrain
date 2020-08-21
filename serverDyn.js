@@ -149,7 +149,7 @@ async function blocksJs(req, res) {
   let ids = Object.keys(blocks);
 
 	for(let n = 0; n < ids.length; n++) {
-    log.d(ids[n]);
+//    log.d(ids[n]);
     if(n>0) ret += ",\n";
     ret += JSON.stringify(blocks[ids[n]]);
   }
@@ -158,7 +158,7 @@ async function blocksJs(req, res) {
   ids = Object.keys(blocks);
 
   for(let n = 0; n < ids.length; n++) {
-    log.d(ids[n]);
+//    log.d(ids[n]);
     ret += ",\n";
     ret += JSON.stringify(blocks[ids[n]]);
   }

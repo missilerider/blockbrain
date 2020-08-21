@@ -13,7 +13,7 @@ Blockly.Extensions.registerMutator('control_obj_builder',
         blocks.push(b.id);
         b = b.childBlocks_[0];
       }
-      console.log(this);
+      //console.log(this);
       //var numProps = this.getFieldValue('NUMPROPS');
       //numProps = this.getField;
       //console.log(numProps);

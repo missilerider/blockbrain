@@ -1,5 +1,6 @@
 'use strict';
 
+const sdebug = require('debug')('blockbrain:script:functions');
 const log = global.log;
 const slog = global.slog;
 var runtimeUtils = null;
@@ -61,7 +62,7 @@ async function runBlock(context) {
     for(let n = 0; n < rets.length; n++) {
       let localVar = context.getField("RET_" + rets[n]);
       context.setVar(localVar, retOk[rets[n]]);
-      log.d("Variable output " + localVar + " = " + (retOk[rets[n]] || "nullable"));
+      sdebug("Variable output " + localVar + " = " + (retOk[rets[n]] || "nullable"));
     }
   }
 }

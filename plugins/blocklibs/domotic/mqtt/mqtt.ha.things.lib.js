@@ -1,5 +1,6 @@
 'use strict';
 
+const debug = require('debug')('blockbrain:service:mqtt:thing');
 const log = global.log;
 
 var mqtt = null;
@@ -37,7 +38,7 @@ class haThing {
         }
 
         if(this.availabilityTopic && this.stateOnline) {
-            log.d("Starting HA thing " + this.id);
+            debug("Starting HA thing " + this.id);
             let ops = {
                 qos: 0,
                 retain: "TRUE",
@@ -55,14 +56,14 @@ class haThing {
             if(value == "[object Object]")
                 value = this.initialState.toString();
 
-            log.d("HQ thing " + this.id + " initial value " + value + " @ " + this.stateTopic);
+            debug("HQ thing " + this.id + " initial value " + value + " @ " + this.stateTopic);
             mqtt.publish(this.stateTopic, value);
         }
     }
 
     async disconnect() {
         if(this.availabilityTopic && this.stateOffline && mqtt) {
-            log.d("Stopping HA thing " + this.id);
+            debug("Stopping HA thing " + this.id);
             let ops = {
                 qos: 0,
                 retain: "TRUE", 
@@ -71,10 +72,10 @@ class haThing {
                 }
             };
 
-            log.d("HA: " + this.availabilityTopic + ": " + this.stateOffline);
+            debug("HA: " + this.availabilityTopic + ": " + this.stateOffline);
 
             await mqtt.publish(this.availabilityTopic, this.stateOffline, ops);
-            log.d("Done!");
+            debug("Done!");
         }
     }
 
@@ -105,7 +106,7 @@ class haThing {
 
     async discovery() {
         if(!this.discoveryTopic) {
-            log.d("Cannot set discovery topic for thing " + this.id);
+            debug("Cannot set discovery topic for thing " + this.id);
             return;
         }
 
@@ -120,9 +121,9 @@ class haThing {
                 }
             };
         
-            log.d("Creates discovery for thing " + this.id);
-//            log.d("MQTT => " + this.discoveryTopic);
-//            log.d("\t=> " + JSON.stringify(msg, null, 2));
+            debug("Creates discovery for thing " + this.id);
+//            debug("MQTT => " + this.discoveryTopic);
+//            debug("\t=> " + JSON.stringify(msg, null, 2));
             mqtt.publish(this.discoveryTopic, JSON.stringify(msg), ops);
         } else {
             log.w("Could not create discovery for thing " + this.id);
@@ -130,7 +131,7 @@ class haThing {
     }
 
     subscribe(topic) {
-        log.d("Subscribe " + topic);
+        debug("Subscribe " + topic);
         mqttSrv.addThingSubscription(topic, this);
     }
 
@@ -196,21 +197,21 @@ class haThing_switch extends haThing {
         let that = this;
         this.subscribe(this.commandTopic);
         mqtt.subscribe(this.commandTopic, function() {
-            log.i("MQTT subscribed to " + that.commandTopic);
+            debug("MQTT subscribed to " + that.commandTopic);
           });
       
     }
 
     disconnect() {
         mqtt.unsubscribe(this.commandTopic);
-        log.i("MQTT unsubscribed to " + this.commandTopic);
+        debug("MQTT unsubscribed to " + this.commandTopic);
     }
 
     onMessage(topic, msg) {
         if(topic == this.commandTopic) {
             msg = msg.toString();
             if(msg == this.stateOn || msg == this.stateOff) {
-                log.d("Changing thing " + this.id + " to state " + msg);
+                debug("Changing thing " + this.id + " to state " + msg);
                 this.state = msg;
                 mqtt.publish(this.stateTopic, msg);
                 return 'haSwitchEvent';

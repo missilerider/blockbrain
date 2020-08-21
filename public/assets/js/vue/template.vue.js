@@ -44,6 +44,18 @@ Vue.component('nav-sidebar', {
         <p>Live testing</p> \
       </a> \
     </li> \
+    <li v-bind:class="false"> \
+      <a class="nav-link" target="_blank" href="/blockly/demos/blockfactory/index.html"> \
+        <i class="material-icons-outlined">extension</i> \
+        <p>Block editor</p> \
+      </a> \
+    </li> \
+    <li v-bind:class="false"> \
+      <a class="nav-link" target="_blank" href="https://material.io/resources/icons/?style=baseline"> \
+        <i class="material-icons">material_design</i> \
+        <p>Block editor</p> \
+      </a> \
+    </li> \
   </ul>'
 });
 

@@ -7,6 +7,7 @@ const fs = require('fs');
 const xml_js = require('xml-js');
 const executor = require('./executor.js');
 
+const debug = require('debug')('blockbrain');
 const log = global.log;
 
 var currentConfig;
@@ -160,7 +161,7 @@ function stringify(o, depth = 1) {
 }
 
 async function endpoint(req, res, next) {
-  log.d("Endpoint request");
+  debug("Endpoint request");
 
   let ret = await executeEvent('http_endpoint', req.body);
 
@@ -180,7 +181,7 @@ async function executeEvent(eventName, vars, params = undefined) {
     for(let n = 0; n < eventIndex[eventName].length; n++) {
       let script = eventIndex[eventName][n];
       let json = getScript(script);
-      log.d("Execute " + eventName + " from " + script);
+      debug("Execute " + eventName + " from " + script);
       proms = proms.concat(await executor.executeProgramJson(json, {
         nodeTypeFilter: eventName,
         msg: vars
@@ -203,11 +204,11 @@ async function executeEventLike(eventRegex, vars) {
   for(let n = 0; n < indexes.length; n++) {
     if(indexes[n].toString().match(eventRegex)) {
       let eventName = eventIndex[indexes[n]];
-      log.d("Execution of " + eventName + " in files:");
+      debug("Execution of " + eventName + " in files:");
       for(let n = 0; n < eventIndex[eventName].length; n++) {
         let script = eventIndex[eventName][n];
         let json = getScript(script);
-        log.d("Execute " + eventName + " from " + script);
+        debug("Execute " + eventName + " from " + script);
         proms = proms.concat(await executor.executeProgramJson(json, {
           nodeTypeFilter: eventName,
           msg: vars
@@ -235,13 +236,13 @@ function clearEventRef(file) {
 // Returns file contents
 function loadScript(file) {
   let fileReal = fs.realpathSync(file);
-  log.d("Reads script file " + fileReal);
+  debug("Reads script file " + fileReal);
   return fs.readFileSync(fileReal);
 }
 
 // Rebuilds script root node references
 function buildScriptRefs(file) {
-  log.d("buildScriptRefs " + file);
+  debug("buildScriptRefs " + file);
   clearEventRef(file);
 
   let inserted = {};
@@ -290,7 +291,7 @@ function getScript(file) {
 }
 
 async function scriptReload(dirname) {
-  log.d("scriptReload " + dirname);
+  debug("scriptReload " + dirname);
   var files = fs.readdirSync(dirname);
 
   var fk = Object.keys(files);

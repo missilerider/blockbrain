@@ -29,5 +29,5 @@ for(var f in blockFiles) {
 
 function saveCode() {
   var code = Blockly.JavaScript.workspaceToCode(workspace);
-  console.log(code);
+//  console.log(code);
 }
