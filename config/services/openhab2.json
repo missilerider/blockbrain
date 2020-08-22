@@ -1,4 +1,5 @@
 {
     "baseUrl": "http://172.16.0.4:8080/", 
-    "updateThingsDelay": 30
+    "updateThingsDelay": 5, 
+    "metadataTag": "blockbrain"
 }

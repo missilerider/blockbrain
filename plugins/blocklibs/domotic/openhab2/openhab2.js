@@ -15,6 +15,8 @@ var runPromiseResolve = null;
 
 var tools = null;
 
+var metadataTag = "blockbrain";
+
 function getInfo(env) {
   return {
     "id": "openhab",
@@ -169,6 +171,7 @@ var ohService = {
     });
 
     let host = srv.config.baseUrl || null;
+    metadataTag = srv.config.metadataTag || "blockbrain";
 
     if(!host) {
       log.f("openhab2.json baseUrl field must be defined at least for Openhab2 integration");
@@ -178,7 +181,12 @@ var ohService = {
 
     oh.config({
       host: host, 
-      thingChanged: thingChanged
+      updateThingsDelay: srv.config.updateThingsDelay, 
+
+      // Events
+      onThingChanged: onThingChanged, 
+
+      onItemChanged: onItemChanged
     });
 
     if(!await oh.start()) {
@@ -208,13 +216,18 @@ var ohService = {
   }
 }
 
-async function thingChanged(entity, state, oldState) {
-  debug(`OH ${entity}: ${oldState} => ${state}`);
-  tools.executeEvent('openhab2.onChange', { entity: entity }, {
+function onThingChanged(oldThing, newThing) {
+  debug(`Openhab2 entity changed ${newThing.label}: ${oldThing.label}`);
+
+/*  tools.executeEvent('openhab2.onChange', { entity: entity }, {
     entity: entity,
     oldState: oldState, 
     state: state
-  });
+  });*/
+}
+
+function onItemChanged(data) {
+
 }
 
 module.exports = {
