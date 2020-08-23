@@ -315,6 +315,31 @@ var jsonKeysBlock = {
   }
 }
 
+var jsonIsNullBlock = {
+  "block": {
+    "type": "json_is_null",
+    "message0": "%1 is null",
+    "args0": [
+      {
+        "type": "field_variable",
+        "name": "VARIABLE",
+        "variable": "tmp"
+      }
+    ],
+    "output": "Boolean",
+    "colour": 315,
+    "tooltip": "Returns true if variable contains exactly null",
+    "helpUrl": ""
+  },
+  "run": async (context) => {
+    context.blockIn();
+    var variable = context.getField("VARIABLE");
+    var oldVar = context.getVar(variable);
+    return oldVar === null;
+  }
+}
+
+
 function getInfo(env) {
   return {
     "id": "json",
@@ -329,6 +354,7 @@ async function getBlocks() {
     "json_stringify": jsonStringifyBlock,
     "json_stringify_beautify": jsonStringifyBeautifyBlock, 
     "json_parse": jsonParseBlock,
+    "json_is_null": jsonIsNullBlock, 
     "json_set": jsonSetBlock,
     "json_set_var": jsonSetVarBlock, 
     "json_get": jsonGetBlock, 
@@ -350,6 +376,7 @@ function getToolbox() {
         <block type="json.json_stringify"></block> \
         <block type="json.json_stringify_beautify"></block> \
         <block type="json.json_parse"></block> \
+        <block type="json.json_is_null"></block> \
         <block type="json.json_set"></block> \
         <block type="json.json_set_var"></block> \
         <block type="json.json_get"></block> \

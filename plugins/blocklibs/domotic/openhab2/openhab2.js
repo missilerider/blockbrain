@@ -19,78 +19,98 @@ var metadataTag = "blockbrain";
 
 function getInfo(env) {
   return {
-    "id": "openhab",
+    "id": "openhab2",
     "name": "Openhab2 REST API integration",
     "author": "Alfonso Vila"
   }
 }
 
-async function getBlocks() {
-  var blocks = {
-    "onChange": onChangeBlock,
-    "setState": setStateBlock, 
-    "setAttributes": setAttributesBlock, 
-    "getState": getStateBlock, 
-    "getAttributes": getAttributesBlock
-  };
-
-  return blocks;
-}
-
-function entitiesCombo(base) {
+function entitiesCombo(base, all = false) {
   let ret = { ... base };
-  let things = oh.getEntities();
-  let thingIds = Object.keys(things).sort();
-  let combo = [];
+  let things = oh.getThings();
+  let thingLabels = [];
+  let thingsByLabel = {};
+  let thingIds = Object.keys(things);
+
   for(let n = 0; n < thingIds.length; n++) {
-      combo.push([ thingIds[n], thingIds[n] ]);
+    thingsByLabel[things[thingIds[n]].label] = things[thingIds[n]];
+    thingLabels.push(things[thingIds[n]].label);
+  }
+
+  thingLabels = thingLabels.sort();
+
+  let combo = [];
+  if(all)
+    ret.args0[0].options = [[ "<any thing>", "___ALL___" ]];
+
+  for(let n = 0; n < thingLabels.length; n++) {
+      combo.push([ thingLabels[n], thingsByLabel[thingLabels[n]].uid ]);
   }
   ret.args0[0].options = combo;
   if(ret.args0[0].options.length == 0)
-      ret.args0[0].options = [[
-          "<no entities>",
-          "___NONE___"
-      ]];
+      ret.args0[0].options = [[ "<no things>", "___NONE___" ]];
 
   return ret;
 }
 
-var onChangeBlock = {
+var onItemStateEventBlock = {
   "block": function(services) {
-    return entitiesCombo(blocks.onChange);
+    return entitiesCombo(blocks.onItemState, true);
   },
   "run": async (context) => {
     context.blockIn();
-    var entity = context.getField('THING');
-    var oldState = context.getField('OLDSTATE');
-    var newState = context.getField('NEWSTATE');
 
-    if(entity == context.params.entity) {
-      context.setVar(newState, context.params.state);
-      context.setVar(oldState, context.params.oldState);
+    var thingId = context.getField('THING');
+    var channelVar = context.getField('CHANNEL');
+    var valueVar = context.getField('VALUE');
 
-      context.continue('CMD');
+    if(thingId === '___ALL___' || thingId == context.params.thing) {
+      context.setVar(channelVar, context.params.channel);
+      context.setVar(valueVar, context.params.value);
+
+      return await context.continue("CMD");
     }
   }
 }
 
-var setStateBlock = {
+var onItemStateChangedEventBlock = {
   "block": function(services) {
-    return entitiesCombo(blocks.setState);
+    return entitiesCombo(blocks.onItemStateChanged, true);
   },
   "run": async (context) => {
     context.blockIn();
-    var entity = context.getField('THING');
-    var newState = await context.getValue('NEWSTATE');
 
-    oh.setState(entity, newState);
+    var thingId = context.getField('THING');
+    var channelVar = context.getField('CHANNEL');
+    var oldValueVar = context.getField('OLDVALUE');
+    var valueVar = context.getField('VALUE');
+
+    if(thingId === '___ALL___' || thingId == context.params.thing) {
+      context.setVar(channelVar, context.params.channel);
+      context.setVar(oldValueVar, context.params.oldValue);
+      context.setVar(valueVar, context.params.value);
+
+      return await context.continue("CMD");
+    }
   }
 }
 
-var setAttributesBlock = {
+var getThingChannelsBlock = {
   "block": function(services) {
-    return entitiesCombo(blocks.setAttributes);
+    return entitiesCombo(blocks.getThingChannels);
   },
+  "run": async (context) => {
+    context.blockIn();
+    let thing = await context.getValue('THING');
+
+    let things = oh.getThings();
+    if(!(thing in things)) return null;
+    return Object.keys(things[thing].channels);
+  }
+}
+
+var getThingChannelsParamBlock = {
+  "block": blocks.getThingChannelsParam,
   "run": async (context) => {
     context.blockIn();
     var entity = context.getField('THING');
@@ -101,6 +121,31 @@ var setAttributesBlock = {
   }
 }
 
+var getChannelPropertyBlock = {
+  "block": blocks.getChannelProperty,
+  "run": async (context) => {
+    context.blockIn();
+    var channel = await context.getValue('CHANNEL');
+    var prop = await context.getField('PROP');
+
+    let ch = oh.getChannel(channel);
+
+    switch(prop) {
+      case "LABEL": return ch.label;
+      case "THING": return ch.thing.uid;
+      case "PROPERTIES": return ch.properties;
+      case "UID": return ch.uid;
+      case "DEFAULTTAGS": return ch.defaultTags;
+      case "KIND": return ch.kind;
+      case "ITEMTYPE": return ch.itemType;
+      case "CONFIGURATION": return ch.configuration;
+    }
+
+    log.f(`Openhab2 library cannot understand channel property ${prop}. Is script saved using a greater OH2 lib version?`);
+    return null;
+  }
+}
+
 var getStateBlock = {
   "block": function(services) {
     return entitiesCombo(blocks.getState);
@@ -108,7 +153,7 @@ var getStateBlock = {
   "run": async (context) => {
     context.blockIn();
     var entity = context.getField('THING');
-    var entities = oh.getEntities();
+    var entities = oh.getThings();
 
     if(entity in entities) return entities[entity].state;
     log.e(`Openhab2 entity ${entity} not found!`);
@@ -123,26 +168,11 @@ var getAttributesBlock = {
   "run": async (context) => {
     context.blockIn();
     var entity = context.getField('THING');
-    var entities = oh.getEntities();
+    var entities = oh.getThings();
 
     if(entity in entities) return entities[entity].attributes;
     log.e(`Openhab2 entity ${entity} not found!`);
     return "";
-  }
-}
-
-function getToolbox() {
-  return {
-    "home assistant": {
-      "Sensor": '', 
-      "Switch": '',
-      "General": ' \
-        <block type="openhab2.onChange"></block> \
-        <block type="openhab2.setState"></block> \
-        <block type="openhab2.setAttributes"></block> \
-        <block type="openhab2.getState"></block> \
-        <block type="openhab2.getAttributes"></block>'
-    }
   }
 }
 
@@ -186,7 +216,8 @@ var ohService = {
       // Events
       onThingChanged: onThingChanged, 
 
-      onItemChanged: onItemChanged
+      onItemStateEvent: onItemStateEvent, 
+      onItemStateChangedEvent: onItemStateChangedEvent
     });
 
     if(!await oh.start()) {
@@ -226,12 +257,61 @@ function onThingChanged(oldThing, newThing) {
   });*/
 }
 
-function onItemChanged(data) {
+function onItemStateEvent(data) {
+  //log.f(`${data.thing.uid} [${data.channel.uid}]: ${data.value}`);
+  tools.executeEvent('openhab2.onItemStateEvent', {}, {
+    thing: data.thing.uid,
+    channel: data.channel.uid, 
+    value: data.value
+  });
+}
 
+function onItemStateChangedEvent(data) {
+  //log.f(`${data.thing.uid} [${data.channel.uid}]: ${data.oldValue} => ${data.value}`);
+  tools.executeEvent('openhab2.onItemStateChangedEvent', {}, {
+    thing: data.thing.uid,
+    channel: data.channel.uid, 
+    value: data.value, 
+    oldValue: data.oldValue
+  });
+}
+
+async function getBlocks() {
+  var blocks = {
+    // Events
+    "onItemStateEvent": onItemStateEventBlock, 
+    "onItemStateChangedEvent": onItemStateChangedEventBlock, 
+
+    // Channel Methods
+    "getThingChannels": getThingChannelsBlock, 
+    "getThingChannelsParam": getThingChannelsParamBlock, 
+    "getChannelProperty": getChannelPropertyBlock
+  };
+
+  return blocks;
+}
+
+function getToolbox() {
+  return {
+    "openhab2": {
+      "Things": '', 
+      "Thing Events": ' \
+        <block type="openhab2.onItemStateEvent"></block> \
+        <block type="openhab2.onItemStateChangedEvent"></block> \
+        <block type="openhab2.getThingChannels"></block> \
+        <block type="openhab2.getThingChannelsParam"></block> \
+        <block type="openhab2.getChannelProperty"></block> \
+        '
+    }
+  }
 }
 
 module.exports = {
-  getInfo: getInfo,
+  getInfo: () => { return {
+      "id": "openhab2",
+      "name": "Openhab2 REST API integration",
+      "author": "Alfonso Vila"
+    } }, 
   getBlocks: getBlocks,
   getServices: () => { return { "openhab2": ohService } },
   getToolbox: getToolbox

@@ -92,7 +92,7 @@ module.exports = {
                 context.setVar(stateVar, thing.state);
                 context.setVar('msg', {});
 
-                context.continue('CMD');
+                return await context.continue('CMD');
             }
         }
     }, 

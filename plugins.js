@@ -147,6 +147,7 @@ async function getBlocks(conf, services, utils) {
         else {
           try {
             blockData = data[blockIds[n2]].block(services.getServices());
+            if(!blockData) log.f(`'block' incorrectly defined in block ${blockIds[n2]}`);
           } catch(e) {
             log.e(`Error loading service '${blockName}' blocks: ${e.message}`);
             debug(e.stack);

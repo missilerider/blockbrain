@@ -67,7 +67,7 @@ var onChangeBlock = {
       context.setVar(newState, context.params.state);
       context.setVar(oldState, context.params.oldState);
 
-      context.continue('CMD');
+      return await context.continue('CMD');
     }
   }
 }
