@@ -1,6 +1,7 @@
 'use strict';
 
 const axios = require('axios');
+const debug = require('debug')('blockbrain:service:telegram');
 
 class Bot {
   constructor(params) {

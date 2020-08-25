@@ -1,13 +1,23 @@
-FROM node:8-alpine
+FROM node:10-alpine
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
-RUN npm install
+COPY package*.json postinstall.sh /usr/src/app/
 
-COPY . .
+RUN apk update && apk upgrade && \
+        apk add git && \
+        npm install
 
-EXPOSE 80
+RUN pwd && ls -la && \
+        git clone https://github.com/google/blockly.git blockly && \
+        git clone https://github.com/google/closure-library.git closure-library && \
+        apk remove git
+
+COPY . /usr/src/app/
+
+EXPOSE 8000
 EXPOSE 443
+
+USER node
 
 CMD [ "npm", "start" ]
