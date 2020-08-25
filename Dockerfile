@@ -11,7 +11,9 @@ RUN apk update && apk upgrade && \
 RUN pwd && ls -la && \
         git clone https://github.com/google/blockly.git blockly && \
         git clone https://github.com/google/closure-library.git closure-library && \
-        apk del git
+        apk del git && \
+        chown node:node -R /usr/src/app/config && \
+        chown node:node -R /usr/src/app/vault
 
 COPY . /usr/src/app/
 
