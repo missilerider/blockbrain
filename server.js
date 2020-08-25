@@ -1,5 +1,9 @@
 'use strict';
 
+process.on('warning', (warning) => {
+  console.log(warning.stack);
+});
+
 const express = require('express');
 const helmet = require('helmet');
 var cookieParser = require('cookie-parser');
@@ -13,6 +17,9 @@ const Log = require('./log.js');
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
+
+global.config_path = process.env.CONFIG_PATH || "./config";
+global.vault_path = process.env.VAULT_PATH || "./vault";
 
 const log = Log.newLogger();
 const slog = Log.newLogger("S =>\t");

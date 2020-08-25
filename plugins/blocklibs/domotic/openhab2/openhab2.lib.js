@@ -76,7 +76,7 @@ async function updateThings(fireEvents = true) {
     let req = http.get(`${host}rest/things`, function(res) {
         res.on('data', (chunk) => { data = [ ...data, ...chunk ]; });
         res.on('end', () => {
-            let txtData = (new Buffer(data)).toString();
+            let txtData = (Buffer.from(data)).toString();
             let objData = null;
             try {
                 objData = JSON.parse(txtData);
@@ -173,7 +173,7 @@ async function startEventBus() {
             busRequest = http.get(`${host}rest/events`, function(res) {
                 res.on('data', function(chunk) {
                     //debug('Incoming event bus data');
-                    chunk = (new Buffer(chunk)).toString('ascii');
+                    chunk = (Buffer.from(chunk)).toString('ascii');
                     processEventBuffer(chunk);
                 });
                 res.on('end', function() {

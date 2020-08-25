@@ -50,7 +50,7 @@ function loadConfig() {
       "path": "msg"
     },
     "blocks": {
-      "path": "./vault"
+      "path": global.vault_path
     },
     "security": {
       "cookie": {
@@ -100,9 +100,11 @@ function loadConfig() {
     "keyValue": true
   }
 
-  var userConf = JSON.parse(fs.readFileSync('config/blockbrain.json'));
+  debug(`Load config from ${global.config_path}/blockbrain.json`);
+  var userConf = JSON.parse(fs.readFileSync(`${global.config_path}/blockbrain.json`));
 
-  var userStartupServices = JSON.parse(fs.readFileSync('config/startupServices.json'));
+  debug(`Load userStartupServices from ${global.config_path}/blockbrain.json`);
+  var userStartupServices = JSON.parse(fs.readFileSync(`${global.config_path}/startupServices.json`));
 
   var conf = Object.assign(defaultConf, userConf);
   conf.startupServices = Object.assign(defaultStartupServices, userStartupServices);
@@ -122,13 +124,15 @@ function loadConfig() {
 
 function loadServiceConfig(srvName) {
   try {
-    return JSON.parse(fs.readFileSync('config/services/' + srvName + '.json'));
+    debug(`Load ServiceConfig ${srvName} from ${global.config_path}/blockbrain.json`);
+
+    return JSON.parse(fs.readFileSync(`${global.config_path}/services/${srvName}.json`));
   } catch (Exception) {}
   return {};
 }
 
 function saveStartupServices(startupServices) {
-  fs.writeFileSync('config/startupServices.json', JSON.stringify(startupServices));
+  fs.writeFileSync(`${global.config_path}/startupServices.json`, JSON.stringify(startupServices));
 }
 
 function login(req, res) {

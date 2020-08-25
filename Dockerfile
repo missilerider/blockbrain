@@ -19,6 +19,9 @@ RUN pwd && ls -la && \
 
 COPY . /usr/src/app/
 
+ENV VAULT_PATH /home/node/vault           
+ENV CONFIG_PATH /home/node/config
+
 EXPOSE 8000
 EXPOSE 443
 
