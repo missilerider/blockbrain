@@ -11,7 +11,7 @@ RUN apk update && apk upgrade && \
 RUN pwd && ls -la && \
         git clone https://github.com/google/blockly.git blockly && \
         git clone https://github.com/google/closure-library.git closure-library && \
-        apk remove git
+        apk del git
 
 COPY . /usr/src/app/
 
