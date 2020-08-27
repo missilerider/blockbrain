@@ -194,12 +194,7 @@ var app = new Vue({
       this.canRedo = this.undone > 0;
     },
     customPropComponent: function(t) {
-      switch(t) {
-        case "hr": return "property-hr";
-        case "text": return "property-text";
-        case "textarea": return "property-textarea";
-        default: return "";
-      }
+      return customComponents(t);
     },
     setProperty(prop, val) {
       this.selectedBlock.customProperties[prop] = val;

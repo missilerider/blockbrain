@@ -169,11 +169,25 @@ function settingsTemplate(srvName) {
   }
 
   if('settingsTemplate' in services[srvName]) {
-    services[srvName].settingsTemplate(serviceData[srvName], commonTools);
+    return services[srvName].settingsTemplate(serviceData[srvName], commonTools);
   } else {
-    
+    log.f(`Service ${srvName} does not contain 'settingsTemplate' as it should!`);
+    return {};
+  }
+}
+
+function applySettings(srvName, params) {
+  if(!(srvName in services)) {
+    log.e("Service start " + srvName + " not found");
+    return;
   }
 
+  if('applySettings' in services[srvName]) {
+    return services[srvName].applySettings(params, commonTools);
+  } else {
+    log.f(`Service ${srvName} does not contain 'applySettings' as it should!`);
+    return {};
+  }
 }
 
 module.exports = {
@@ -184,5 +198,6 @@ module.exports = {
   waitForStatusSync: waitForStatusSync,
   getServices: () => { return services; },
   setStartOnBoot: setStartOnBoot, 
-  settingsTemplate: settingsTemplate
+  settingsTemplate: settingsTemplate, 
+  applySettings: applySettings
 }

@@ -9,6 +9,7 @@ const log = global.log;
 
 var utils = null;
 var serviceConfig = {};
+var handlerAutoDiscovery = null;
 
 var devices = {};
 
@@ -124,7 +125,7 @@ function loadDevs() {
   devices = utils.loadServiceAdditionalConfig("tuya", "devices");
   if(devices === null) {
     log.e("Could not load devices JSON file! Assuming empty device list and disabling auto-discovery (that would overwrite existing file!");
-    serviceConfig.autoDiscovery.enable = false;
+    serviceConfig.autoDiscovery.enabled = false;
     devices = {};
   }
 }
@@ -153,18 +154,65 @@ var tuyaService = {
     srv.status = 1;
     debug(JSON.stringify(srv));
 
+    if(serviceConfig.autoDiscovery.enabled) {
+      debug(`Initiating auto discovery every ${serviceConfig.autoDiscovery.interval} secs`)
+      handlerAutoDiscovery = setInterval(performDiscovery, serviceConfig.autoDiscovery.interval * 1000);
+    }
+
     while(!srv.stop) {
         // TODO: Discovery repetitivo
       await sleep(1000);
     }
+
+    if(handlerAutoDiscovery != null)
+      clearInterval(handlerAutoDiscovery);
+
     debug("Tuya service stopped");
     srv.status = 0;
   }, 
   settingsTemplate: (srv, tools) => {
     debug('settingsTemplate');
-    debug(srv);
-  }
+    return {
+      "form": [
+        {
+          "name": "autoDiscovery",
+          "desc": "Auto discovery enabled",
+          "type": "checkbox",
+          "width": 12
+        }, 
+        {
+          "name": "autoDiscoveryInterval",
+          "desc": "Time between auto discoveries, in seconds",
+          "type": "number",
+          "width": 12
+        }
+      ],
+      "default": {
+        "autoDiscovery": serviceConfig.autoDiscovery.enabled, 
+        "autoDiscoveryInterval": serviceConfig.autoDiscovery.interval, 
+      }
+    };
+  }, 
+  applySettings: (params, commonTools) => {
+    let changeSettings = false; // Must we restart service?
+    if("autoDiscovery" in params) { serviceConfig.autoDiscovery.enabled = params.autoDiscovery; changeSettings = true; }
+    if("autoDiscoveryInterval" in params) { serviceConfig.autoDiscovery.interval = params.autoDiscoveryInterval; changeSettings = true; }
 
+    if(("autoDiscovery" in params) || ("autoDiscoveryInterval" in params)) {
+      if(handlerAutoDiscovery != null)
+        clearInterval(handlerAutoDiscovery);
+
+      handlerAutoDiscovery = null;
+
+      if(serviceConfig.autoDiscovery.enabled)
+        handlerAutoDiscovery = setInterval(performDiscovery, serviceConfig.autoDiscovery.interval * 1000);
+    }
+
+    debug("Apply settings!!");
+    debug(params);
+
+    return { result: "OK" };//, action: "Service must be restarted manually" }
+  }
 }
 
 async function getBlocks() {

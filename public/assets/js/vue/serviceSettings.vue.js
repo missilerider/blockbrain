@@ -1,12 +1,12 @@
 var app = new Vue({
   el: '#app',
   data: {
-    message: 'Hello Vue!',
     service: {
       name: "", 
       id: "", 
       description: ""
-    }
+    }, 
+    customProperties: {}
   },
   mounted() {
     let self = this;
@@ -15,7 +15,8 @@ var app = new Vue({
     axios.get('/api/v1/services/' + srvId)
       .then(function(resp) {
         if(!('code' in resp.data)) {
-          console.dir(resp.data);
+          self.customProperties = resp.data.template;
+
           Vue.set(self.$data, 'service', resp.data);
         }
         else
@@ -103,6 +104,14 @@ var app = new Vue({
     serviceSettings: function(id) {
       window.location = "serviceSettings.html?id=" + id;
     }, 
+    customPropComponent: function(t) {
+      return customComponents(t);
+    },
+    setProperty(prop, val) {
+      console.dir(prop);
+      console.dir(val);
+      this.customProperties.default[prop] = val;
+    }, 
     showNotification: function(msg, type, icon, timeout) {
       $.notify({
         icon: icon, // material
@@ -116,6 +125,21 @@ var app = new Vue({
           align: 'right'
         }
       });
+    }, 
+    applyChanges: function() {
+      //console.dir(this.customProperties.default);
+      let that = this;
+      axios.post(`/api/v1/services/${that.service.id}/settings`, that.customProperties.default)
+        .then(function(resp) {
+          if(resp.data.result != "OK") {
+            that.showNotification(`Configuration of service ${that.service.name} could not be applied. Reason: ${resp.data.message}`, 'danger', 'error', 10000);
+          } else {
+            if(resp.data.action)
+              that.showNotification(`Configuration of service ${that.service.name} correctly applied.<br/><h3>${resp.data.action}</h3>`, 'info', 'thumb_up', 2000);
+            else
+            that.showNotification(`Configuration of service ${that.service.name} completely be applied`, 'success', 'thumb_up', 1000);
+          }
+        });
     }
   }
 })

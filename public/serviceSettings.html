@@ -50,7 +50,19 @@
                   </div>
                 </div>
                 <div class="card-body table-responsive">
-                    {{ message }} The place is close to Barceloneta Beach and bus stop just 2 min by walk and near to "Naviglio" where you can enjoy the main night life in Barcelona...
+                    <div class="row">
+                      <div class="col-md-12" id="blocklyArea">
+                        <div v-for="field in customProperties.form">
+                          <component :is="customPropComponent(field.type)"
+                            v-bind="field"
+                            :value="customProperties.default[field.name]"
+                            @changed="setProperty">
+                          </component>
+                        </div>
+                      </div>
+                    </div>
+
+                    
 <!--                    <table class="table table-hover">
                       <thead class="text-warning">
                         <tr>
@@ -104,7 +116,11 @@
                         </tr>
                       </tbody>
                     </table>-->
-                </div>
+                    <button class="btn btn-rose btn-round" data-toggle="tooltip" data-placement="top" title="Apply changes" v-on:click="applyChanges">
+                      Apply changes <i class="material-icons">save</i>
+                    </button>
+                  </div>
+
               </div>
             </div>
           </div>
@@ -132,6 +148,7 @@
     </div>
   </div>
   <script src="/assets/js/vue/template.vue.js"></script>
+  <script src="/assets/js/vue/customproperties.vue.js"></script>
   <script src="/assets/js/vue/serviceSettings.vue.js"></script>
 </body>
 

@@ -43,8 +43,14 @@ function dispatcher(data) {
             case "restart": return GETservicesIdRestart(data);
           }
           break;
+
+        case "POST":
+          switch(data.path[0]) {
+            case "settings": return POSTservicesIdSettings(data);
+          }
       }
 
+      log.e("Service API incorrectly called: " + data.path[0]);
       data.res.json({ code: 404 });
       return true;
     }
@@ -86,10 +92,12 @@ function describeService(data, serviceName, service, extended = false) {
 function GETservicesId(data) {
   debug(`Describe complete service ${data.serviceId}`);
   var ret = describeService(data, data.serviceId, data.service, true);
-  debug(ret);
 
   var template = data.services.settingsTemplate(data.serviceId);
 
+  ret.template = template;
+
+  debug(ret);
   data.res.json(ret);
   return true;
 }
@@ -142,6 +150,11 @@ async function GETservicesIdRestart(data) {
   data.services.stop(data.serviceId, () => {
     return GETservicesIdStart(data);
   });
+}
+
+async function POSTservicesIdSettings(data) {
+  debug(`Service ${data.serviceId} settings apply`);
+  data.res.json(data.services.applySettings(data.serviceId, data.req.body));
 }
 
 module.exports = {
