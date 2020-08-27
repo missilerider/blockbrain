@@ -3,5 +3,9 @@
     "password": "!Next32go", 
     "countryCode": "34",
     "bizType": "smart_life",
-    "region": "eu"
+    "region": "eu", 
+    "autoDiscovery": {
+        "enabled": true, 
+        "interval": 5
+    }
 }

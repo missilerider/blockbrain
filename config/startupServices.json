@@ -1,1 +1,1 @@
-{"keyValue":true,"testService":false,"telegram":false,"mqtt":true,"homeAssistant":false,"tuyaService":false,"openhab2":true}
+{"keyValue":true,"testService":false,"telegram":false,"mqtt":true,"homeAssistant":false,"tuyaService":true,"openhab2":true}

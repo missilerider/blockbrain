@@ -8,6 +8,8 @@ const sleep = (milliseconds) => {
 var runPromise = null;
 var runPromiseResolve = null;
 
+var utils = null; // Set at "start" from service "commonTools"
+
 var data = {};
 var serviceConfig = null;
 var waitingSave = false;
@@ -145,12 +147,12 @@ var keyValueService = {
     description: "Stores and manages key-value pairs"
   }},
   status: () => { return "TODO"; },
-  start: (srv) => {
+  start: (srv, tools) => {
     serviceConfig = srv.config;
+    utils = tools.utils;
 
     // Preloads keys and values if necesary
     if(serviceConfig.persistence) {
-      debug("Loads saved keys");
       loadKeys(serviceConfig);
     }
 
@@ -202,7 +204,17 @@ function getToolbox() {
 }
 
 function loadKeys(config) {
-  fs.readFile(config.vaultFile, (err, newData) => {
+  debug(`Load vault file "keyValue.${config.vaultFile}.json"`);
+  data = utils.loadServiceAdditionalConfig("keyValue", config.vaultFile);
+
+  if(data === null) {
+    log.e("Loaded data from key-value vault not readable. Disabling persistence!");
+    config.persistence = false;
+    log.w("If you want to make persistence work again, please delete the vault file or fix the JSON structure in it manually");
+    data = {};
+  }
+
+/*  fs.readFile(config.vaultFile, (err, newData) => {
     if(err) {
       log.w("Could not read key-value vault file. Starting from scratch!");
     } else {
@@ -214,14 +226,12 @@ function loadKeys(config) {
         log.w("If you want to make persistence work again, please delete the vault file or fix the JSON structure in it manually");
       }
     }
-  });
+  });*/
 }
 
 function saveKeys() {
-  debug("Persists key-value data to file " + serviceConfig.vaultFile);
-  try {
-    fs.writeFileSync(serviceConfig.vaultFile, JSON.stringify(data), 'utf8');
-  } catch(e) {
+  debug(`Persists key-value data to file "keyValue.${serviceConfig.vaultFile}.json"`);
+  if(!utils.saveServiceAdditionalConfig("keyValue", serviceConfig.vaultFile, data)) {
     log.e("Could not save key-value data to file. Disabling persistence");
     serviceConfig.persistence = false;
   }

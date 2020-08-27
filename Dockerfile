@@ -6,9 +6,8 @@ COPY package*.json postinstall.sh /usr/src/app/
 
 RUN apk update && apk upgrade && \
         apk add git && \
-        npm install
-
-RUN pwd && ls -la && \
+        npm install && \
+        pwd && ls -la && \
         git clone https://github.com/google/blockly.git blockly && \
         git clone https://github.com/google/closure-library.git closure-library && \
         apk del git && \

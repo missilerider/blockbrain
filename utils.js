@@ -124,15 +124,41 @@ function loadConfig() {
 
 function loadServiceConfig(srvName) {
   try {
-    debug(`Load ServiceConfig ${srvName} from ${global.config_path}/blockbrain.json`);
+    debug(`Load ServiceConfig ${srvName} from ${global.config_path}/services/${srvName}.json`);
 
     return JSON.parse(fs.readFileSync(`${global.config_path}/services/${srvName}.json`));
-  } catch (Exception) {}
+  } catch (e) {}
   return {};
 }
 
+function loadServiceAdditionalConfig(srvName, fileId) {
+  try {
+    debug(`Load ServiceAdditionalConfig ${srvName}.${fileId} from ${global.config_path}/services/${srvName}.${fileId}.json`);
+
+    return JSON.parse(fs.readFileSync(`${global.config_path}/services/${srvName}.${fileId}.json`));
+  } catch (e) {
+    log.e(`Could not load additional service config file ${global.config_path}/services/${srvName}.${fileId}.json`);
+    log.e(e.message);
+  }
+  return null;
+}
+
+function saveServiceAdditionalConfig(srvName, fileId, data) {
+  try {
+    debug(`Save ServiceAdditionalConfig ${srvName}.${fileId} from ${global.config_path}/services/${srvName}.${fileId}.json`);
+
+    fs.writeFileSync(`${global.config_path}/services/${srvName}.${fileId}.json`, JSON.stringify(data, null, 2), 'utf8');
+
+    return true;
+  } catch (e) {
+    log.e(`Could not save additional service config file ${global.config_path}/services/${srvName}.${fileId}.json`);
+    log.e(e.message);
+    return false;
+  }
+}
+
 function saveStartupServices(startupServices) {
-  fs.writeFileSync(`${global.config_path}/startupServices.json`, JSON.stringify(startupServices));
+  fs.writeFileSync(`${global.config_path}/startupServices.json`, JSON.stringify(startupServices, null, 2));
 }
 
 function login(req, res) {
@@ -316,17 +342,19 @@ async function scriptReload(dirname) {
 }
 
 module.exports = {
-  config: config,
-  loadConfig: loadConfig,
-  loadServiceConfig: loadServiceConfig,
-  saveStartupServices: saveStartupServices,
-  login: login,
-  sha256: sha256,
-  stringify: stringify,
-  endpoint: endpoint,
-  executeEvent: executeEvent,
+  config: config, 
+  loadConfig: loadConfig, 
+  loadServiceConfig: loadServiceConfig, 
+  loadServiceAdditionalConfig: loadServiceAdditionalConfig, 
+  saveServiceAdditionalConfig: saveServiceAdditionalConfig, 
+  saveStartupServices: saveStartupServices, 
+  login: login, 
+  sha256: sha256, 
+  stringify: stringify, 
+  endpoint: endpoint, 
+  executeEvent: executeEvent, 
   executeEventLike: executeEventLike, 
-  buildScriptRefs: buildScriptRefs,
-  getScript: getScript,
+  buildScriptRefs: buildScriptRefs, 
+  getScript: getScript, 
   scriptReload: scriptReload
 };

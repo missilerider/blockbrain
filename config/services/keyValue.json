@@ -1,5 +1,5 @@
 {
   "persistence": true,
-  "vaultFile": "./config/services/keyValue.vault.json",
+  "vaultFile": "vault",
   "saveDelay": 5000
 }

@@ -216,11 +216,16 @@ var telegramSendMessageExBlock = {
 
     if(!Array.isArray(chat)) {
       let params = {
-        chat_id: chat != -1 ? chat : context.getVar('msg').message.chat.id,
+        chat_id: chat, 
         text: text,
         parse_mode: parse,  // "Markdown" | "HTML"
         disable_web_page_preview: !linkPrev,
         disable_notification: !notification
+      }
+
+      if(chat == -1) {
+        console.dir(context.getVar('msg'));
+        params.chat = context.getVar('msg').message ? context.getVar('msg').message.chat.id : -1;
       }
   
       if(replyId != -1) params.reply_to_message_id = replyId;

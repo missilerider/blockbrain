@@ -1,1 +1,19 @@
-{"kk":"jjijeeewd","telegram.administrators":{"483364322":{"name":"Alfonso.Vila","chatId":483364322}},"test":[1234,123]}
+{
+  "kk": "jjijeeewd",
+  "telegram.administrators": {
+    "483364322": {
+      "name": "Alfonso.Vila",
+      "chatId": 483364322
+    }
+  },
+  "test": [
+    1234,
+    123
+  ],
+  "tuya": [
+    {
+      "id": "bfc6e8828b6ae70fe3pzgj",
+      "ip": "172.16.0.194"
+    }
+  ]
+}
