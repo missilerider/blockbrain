@@ -88,6 +88,8 @@ function GETservicesId(data) {
   var ret = describeService(data, data.serviceId, data.service, true);
   debug(ret);
 
+  var template = data.services.settingsTemplate(data.serviceId);
+
   data.res.json(ret);
   return true;
 }

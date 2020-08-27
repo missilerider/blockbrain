@@ -162,6 +162,20 @@ function setStartOnBoot(srvName, start) {
   utils.saveStartupServices(conf.startupServices);
 }
 
+function settingsTemplate(srvName) {
+  if(!(srvName in services)) {
+    log.e("Service start " + srvName + " not found");
+    return;
+  }
+
+  if('settingsTemplate' in services[srvName]) {
+    services[srvName].settingsTemplate(serviceData[srvName], commonTools);
+  } else {
+    
+  }
+
+}
+
 module.exports = {
   config: config,
   start: start,
@@ -169,5 +183,6 @@ module.exports = {
   status: status,
   waitForStatusSync: waitForStatusSync,
   getServices: () => { return services; },
-  setStartOnBoot: setStartOnBoot
+  setStartOnBoot: setStartOnBoot, 
+  settingsTemplate: settingsTemplate
 }

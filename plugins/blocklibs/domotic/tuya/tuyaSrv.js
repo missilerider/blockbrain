@@ -159,7 +159,12 @@ var tuyaService = {
     }
     debug("Tuya service stopped");
     srv.status = 0;
+  }, 
+  settingsTemplate: (srv, tools) => {
+    debug('settingsTemplate');
+    debug(srv);
   }
+
 }
 
 async function getBlocks() {
