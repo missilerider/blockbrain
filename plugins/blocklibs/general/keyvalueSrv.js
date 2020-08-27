@@ -178,7 +178,7 @@ var keyValueService = {
     srv.status = 0;
   }, 
   settingsTemplate: (srv) => {
-
+    debug('settingsTemplate');
   }
 }
 

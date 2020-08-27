@@ -16,7 +16,6 @@ const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
-// MOST OF THE DISCOVERY CODE HAS BEEN TAKEN FROM NJSTUYA, A TUYAPI WRRAPPER
 var discoveryBlock = {
   "block": blocks.discovery, 
   "run": async (context) => {
@@ -24,6 +23,7 @@ var discoveryBlock = {
   }
 }
 
+// MOST OF THE DISCOVERY CODE HAS BEEN TAKEN FROM NJSTUYA, A TUYAPI WRRAPPER
 function performDiscovery() {
   let tuya = new TuyaDevice({
     id: '00000000000000000000',
@@ -73,18 +73,6 @@ function performDiscovery() {
   });
 }
 
-function loadDevs() {
-  devices = utils.loadServiceAdditionalConfig("tuya", "devices");
-  if(devices === null) {
-    log.e("Could not load devices JSON file! Assuming empty device list and disabling auto-discovery (that would overwrite existing file!");
-    serviceConfig.autoDiscovery.enable = false;
-    devices = {};
-  }
-}
-
-function saveDevs() {
-  utils.saveServiceAdditionalConfig("tuya", "devices", devices);
-}
 /*
 async function getSchema(ip, id, key = '1000000000000000', version = '') {
   return new Promise((resolve, reject) => {
@@ -132,9 +120,22 @@ async function getSchema(ip, id, key = '1000000000000000', version = '') {
 }
 */
 
+function loadDevs() {
+  devices = utils.loadServiceAdditionalConfig("tuya", "devices");
+  if(devices === null) {
+    log.e("Could not load devices JSON file! Assuming empty device list and disabling auto-discovery (that would overwrite existing file!");
+    serviceConfig.autoDiscovery.enable = false;
+    devices = {};
+  }
+}
+
+function saveDevs() {
+  utils.saveServiceAdditionalConfig("tuya", "devices", devices);
+}
+
 var tuyaService = {
   getInfo: () => { return {
-    methods: ["start", "stop", "status"],
+    methods: ["start", "stop", "status", "settings"],
     name: "Tuya service",
     description: "Tuya cloud integration and device discovery"
 

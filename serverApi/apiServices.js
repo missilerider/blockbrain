@@ -69,6 +69,7 @@ function GETservices(data) {
 }
 
 function describeService(data, serviceName, service, extended = false) {
+  debug(`describeService ${serviceName}`);
   let info = service.getInfo();
   let status = data.services.status(serviceName, extended);
 
@@ -83,7 +84,9 @@ function describeService(data, serviceName, service, extended = false) {
 }
 
 function GETservicesId(data) {
+  debug(`Describe complete service ${data.serviceId}`);
   var ret = describeService(data, data.serviceId, data.service, true);
+  debug(ret);
 
   data.res.json(ret);
   return true;
@@ -101,6 +104,7 @@ function POSTservicesId(data) {
 }
 
 async function GETservicesIdStart(data) {
+  debug(`Service ${data.serviceId} start`);
   data.services.start(data.serviceId);
   if(data.services.waitForStatusSync(data.serviceId, 1, 5000)) {
     await data.sleep(100);
@@ -116,6 +120,7 @@ async function GETservicesIdStart(data) {
 }
 
 async function GETservicesIdStop(data) {
+  debug(`Service ${data.serviceId} stop`);
   data.services.stop(data.serviceId);
   if(data.services.waitForStatusSync(data.serviceId, 0, 5000)) {
     await data.sleep(100);
@@ -131,6 +136,7 @@ async function GETservicesIdStop(data) {
 }
 
 async function GETservicesIdRestart(data) {
+  debug(`Service ${data.serviceId} restart`);
   data.services.stop(data.serviceId, () => {
     return GETservicesIdStart(data);
   });
