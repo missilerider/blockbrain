@@ -82,7 +82,7 @@ async function start(srvName, callbackFinish) {
     }
   }
 
-  if(serviceData[srvName].start) return false;
+  if(!('start' in serviceData[srvName])) return false;
 
   // Reload config when service starts
   serviceData[srvName].config = utils.loadServiceConfig(srvName);
@@ -90,6 +90,7 @@ async function start(srvName, callbackFinish) {
   serviceData[srvName].stop = false;
   serviceData[srvName].desiredStatus = 1;
 
+  debug(`start ${srvName}`);
   if('start' in services[srvName]) {
     services[srvName].start(serviceData[srvName], commonTools);
   }

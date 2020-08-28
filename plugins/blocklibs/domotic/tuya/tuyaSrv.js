@@ -143,7 +143,12 @@ var tuyaService = {
   }},
   status: () => { return "Running"; },
   start: (srv, tools) => {
+    debug("config:");
+    debug(srv);
+    debug(blocks.defaultConfig);
     serviceConfig = Object.assign(blocks.defaultConfig, srv.config);
+    debug(serviceConfig);
+    debug(Object.assign(srv.config, blocks.defaultConfig));
     utils = tools.utils;
     loadDevs();
     return true;
