@@ -69,6 +69,7 @@ function status(srvName, extended = false) {
 }
 
 async function start(srvName, callbackFinish) {
+  debug(`Start service ${srvName}`);
   if(!(srvName in services)) {
     log.e("Service start " + srvName + " not found");
     return;

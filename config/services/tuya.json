@@ -1,11 +1,11 @@
 {
-    "email": "alfonso.vila.lopez@gmail.com", 
-    "password": "!Next32go", 
-    "countryCode": "34",
-    "bizType": "smart_life",
-    "region": "eu", 
-    "autoDiscovery": {
-        "enabled": true, 
-        "interval": 5
-    }
+  "email": "alfonso.vila.lopez@gmail.com",
+  "password": "!Next32go",
+  "countryCode": 34,
+  "bizType": "smart_life",
+  "region": "eu",
+  "autoDiscovery": {
+    "enabled": true,
+    "interval": 299
+  }
 }

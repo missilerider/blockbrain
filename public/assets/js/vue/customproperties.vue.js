@@ -35,7 +35,7 @@ Vue.component('property-text', {
     };
   },
   watch: {
-    newvalue() { this.$emit('changed', this.name, parseInt(this.newvalue)); }
+    newvalue() { this.$emit('changed', this.name, this.newvalue); }
   },
   template: '<div :class="\'col-md-\' + width"> \
     <br /> \

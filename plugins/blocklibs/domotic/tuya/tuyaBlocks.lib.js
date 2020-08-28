@@ -10,6 +10,59 @@ module.exports.defaultConfig = {
   }
 }
 
+module.exports.serviceSettingsForm = [
+  {
+    "name": "email",
+    "desc": "Tuya app email address",
+    "type": "text",
+    "width": 6
+  }, 
+  {
+    "name": "password",
+    "desc": "Tuya app password",
+    "type": "text",
+    "width": 3
+  }, 
+  {
+    "name": "countryCode",
+    "desc": "Local country code",
+    "type": "number",
+    "width": 2
+  }, 
+  {
+    "name": "bizType",
+    "desc": "Tuya business type",
+    "type": "text",
+    "width": 3
+  }, 
+  {
+    "name": "region",
+    "desc": "Tuya server region",
+    "type": "text",
+    "width": 2
+  }, 
+  {
+    "name": "testHr", 
+    "type": "hr"
+  }, 
+  {
+    "name": "autoDiscovery",
+    "desc": "Auto discovery enabled",
+    "type": "checkbox",
+    "width": 3
+  }, 
+  {
+    "name": "autoDiscoveryInterval",
+    "desc": "Time between auto discoveries, in seconds",
+    "type": "number",
+    "width": 4
+  },
+  {
+    "name": "testHr", 
+    "type": "hr"
+  } 
+];
+
 module.exports.tuyaSendCommand = {
   "type": "tuya_cmd",
   "message0": "new telegram text message %1 regex %2 %3 %4",
