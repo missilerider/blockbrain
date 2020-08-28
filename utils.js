@@ -127,7 +127,20 @@ function loadServiceConfig(srvName) {
     debug(`Load ServiceConfig ${srvName} from ${global.config_path}/services/${srvName}.json`);
 
     return JSON.parse(fs.readFileSync(`${global.config_path}/services/${srvName}.json`));
-  } catch (e) {}
+  } catch (e) {
+    log.e(`Could not load config. ${e.message}`);
+  }
+  return {};
+}
+
+function saveServiceConfig(srvName, config) {
+  try {
+    debug(`Save ServiceConfig ${srvName} to ${global.config_path}/services/${srvName}.json`);
+
+    return fs.writeFileSync(`${global.config_path}/services/${srvName}.json`, JSON.stringify(config, null, 2));
+  } catch (e) {
+    log.e(`Could not save config. ${e.message}`);
+  }
   return {};
 }
 
@@ -345,6 +358,7 @@ module.exports = {
   config: config, 
   loadConfig: loadConfig, 
   loadServiceConfig: loadServiceConfig, 
+  saveServiceConfig: saveServiceConfig, 
   loadServiceAdditionalConfig: loadServiceAdditionalConfig, 
   saveServiceAdditionalConfig: saveServiceAdditionalConfig, 
   saveStartupServices: saveStartupServices, 

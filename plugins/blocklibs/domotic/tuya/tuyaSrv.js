@@ -1,5 +1,7 @@
 'use strict';
 
+const SERVICE_NAME = "tuya";
+
 const TuyaDevice = require('tuyapi');
 const blocks = require('./tuyaBlocks.lib.js');
 //const utils = require('tuyapi/lib/utils');
@@ -35,7 +37,6 @@ function performDiscovery() {
   });
 
   return new Promise((resolve, reject) => {
-    //const devices = [];
     debug("Starting Tuya device discovery...");
     tuya.find({ timeout: 8, all: true }).then(async () => {
       debug(`devices ${JSON.stringify(tuya.foundDevices)}`);
@@ -74,55 +75,8 @@ function performDiscovery() {
   });
 }
 
-/*
-async function getSchema(ip, id, key = '1000000000000000', version = '') {
-  return new Promise((resolve, reject) => {
-    let deviceData = {};
-    const newTuya = new TuyaDevice({
-      id,
-      ip,
-      key,
-      version,
-    });
-    setTimeout(() => {
-      debug('Timeout');
-      newTuya.disconnect();
-      reject(new Error('Timeout getting schema'));
-    }, 5000);
-    newTuya.on('disconnected', () => {
-      debug('Disconnected from device.');
-    });
-    newTuya.on('error', (error) => {
-      debug('Error', error);
-      newTuya.disconnect();
-      reject(error);
-    });
-    newTuya.on('connected', () => {
-      debug('Connected to device!');
-    });
-    newTuya.on('data', (schema) => {
-      debug(`${id}: ${JSON.stringify(schema)}`);
-      try {
-        newTuya.disconnect();
-        const broadcast = {};
-        Object.keys(newTuya.device).forEach((dkey) => {
-          if(dkey !== 'parser' && dkey !== 'key') broadcast[dkey] = newTuya.device[dkey];
-        });
-        deviceData = {id, broadcast, schema};
-        print(JSON.stringify(deviceData));
-        Object.keys(schema).forEach(attname => debug(`${attname}: ${JSON.stringify(schema[attname])}`));
-        resolve(deviceData);
-      } catch(error) {
-        debug(error);
-      }
-    });
-    newTuya.connect();
-  });
-}
-*/
-
 function loadDevs() {
-  devices = utils.loadServiceAdditionalConfig("tuya", "devices");
+  devices = utils.loadServiceAdditionalConfig(SERVICE_NAME, "devices");
   if(devices === null) {
     log.e("Could not load devices JSON file! Assuming empty device list and disabling auto-discovery (that would overwrite existing file!");
     serviceConfig.autoDiscovery.enabled = false;
@@ -131,13 +85,13 @@ function loadDevs() {
 }
 
 function saveDevs() {
-  utils.saveServiceAdditionalConfig("tuya", "devices", devices);
+  utils.saveServiceAdditionalConfig(SERVICE_NAME, "devices", devices);
 }
 
 var tuyaService = {
   getInfo: () => { return {
     methods: ["start", "stop", "status", "settings"],
-    name: "Tuya service",
+    name: "Tuya connector service",
     description: "Tuya cloud integration and device discovery"
 
   }},
@@ -172,31 +126,55 @@ var tuyaService = {
   }, 
   settingsTemplate: (srv, tools) => {
     debug('settingsTemplate');
-    return {
-      "form": [
-        {
-          "name": "autoDiscovery",
-          "desc": "Auto discovery enabled",
-          "type": "checkbox",
-          "width": 12
-        }, 
-        {
-          "name": "autoDiscoveryInterval",
-          "desc": "Time between auto discoveries, in seconds",
-          "type": "number",
-          "width": 12
-        }
-      ],
+    let ret = {
+      "form": blocks.serviceSettingsForm, 
       "default": {
+        "email": serviceConfig.email, 
+        "password": serviceConfig.password, 
+        "countryCode": serviceConfig.countryCode, 
+        "bizType": serviceConfig.bizType, 
+        "region": serviceConfig.region, 
+
         "autoDiscovery": serviceConfig.autoDiscovery.enabled, 
         "autoDiscoveryInterval": serviceConfig.autoDiscovery.interval, 
       }
     };
+
+    let ids = Object.keys(devices);
+    for(let n = 0; n < ids.length; n++) {
+      let dev = devices[ids[n]];
+      ret.form.push({
+        "name": `deviceName.${dev}`,
+        "desc": `Device ID ${ids[n]} name`,
+        "type": "text",
+        "width": 3
+      });
+      ret.default[`deviceName.${dev}`] = dev.name;
+      ret.form.push({
+        "name": `deviceType.${dev}`,
+        "desc": `Device ID ${ids[n]} type`,
+        "type": "text",
+        "width": 3
+      });
+      ret.default[`deviceType.${dev}`] = dev.type;
+    }
+
+    return ret;
   }, 
   applySettings: (params, commonTools) => {
-    let changeSettings = false; // Must we restart service?
-    if("autoDiscovery" in params) { serviceConfig.autoDiscovery.enabled = params.autoDiscovery; changeSettings = true; }
-    if("autoDiscoveryInterval" in params) { serviceConfig.autoDiscovery.interval = params.autoDiscoveryInterval; changeSettings = true; }
+    debug("Apply settings");
+    if("autoDiscovery" in params) serviceConfig.autoDiscovery.enabled = params.autoDiscovery;
+    if("autoDiscoveryInterval" in params) serviceConfig.autoDiscovery.interval = params.autoDiscoveryInterval;
+
+    if("email" in params) serviceConfig.email = params.email;
+    if("password" in params) serviceConfig.password = params.password;
+    if("countryCode" in params) serviceConfig.countryCode = params.countryCode;
+    if("bizType" in params) serviceConfig.bizType = params.bizType;
+    if("region" in params) serviceConfig.region = params.region;
+
+    debug(params);
+    debug("Config final");
+    debug(serviceConfig);
 
     if(("autoDiscovery" in params) || ("autoDiscoveryInterval" in params)) {
       if(handlerAutoDiscovery != null)
@@ -208,11 +186,18 @@ var tuyaService = {
         handlerAutoDiscovery = setInterval(performDiscovery, serviceConfig.autoDiscovery.interval * 1000);
     }
 
+    saveConfig();
+
     debug("Apply settings!!");
     debug(params);
 
     return { result: "OK" };//, action: "Service must be restarted manually" }
   }
+}
+
+function saveConfig() {
+  debug("Save config");
+  utils.saveServiceConfig(SERVICE_NAME, serviceConfig);
 }
 
 async function getBlocks() {
@@ -234,11 +219,11 @@ function getToolbox() {
 
 module.exports = {
   getInfo: () => { return {
-    "id": "tuya",
+    "id": SERVICE_NAME,
     "name": "Tuya service",
     "author": "Alfonso Vila"
   } },
   getBlocks: getBlocks,
-  getServices: () => { return { "tuyaService": tuyaService } },
+  getServices: () => { return { tuya: tuyaService } },
   getToolbox: getToolbox
 }
