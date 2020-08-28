@@ -1,5 +1,6 @@
 const customComponents = (t) => {
   switch(t) {
+    case "card": return "property-card";
     case "hr": return "property-hr";
     case "text": return "property-text";
     case "number": return "property-number";
@@ -8,6 +9,36 @@ const customComponents = (t) => {
     default: return "";
   }
 }
+
+Vue.component('property-card', {
+  props: [ 'name', 'title', 'components' ],
+  data: function() {
+    return {
+    };
+  },
+  methods: {
+    getComponents: function(type) { return customComponents(type); }, 
+    setProperty: function(prop, val) { this.$emit('changed', prop, val); }
+  }, 
+  template: ' \
+  <div class="col-lg-3 col-md-3 col-sm-3"> \
+    <div class="card"> \
+      <div class="card-header card-header-primary card-header-icon"> \
+        <h4 class="card-title">{{title}}</h4> \
+      </div> \
+      <div class="card-body"> \
+        <component v-for="field in components.form" \
+          v-bind:data="field" \
+          v-bind:key="field.text" \
+          :is="getComponents(field.type)" \
+          v-bind="field" \
+          :value="components.default[field.name]" \
+          @changed="setProperty"> \
+        </component> \
+      </div> \
+    </div> \
+  </div>'
+});
 
 Vue.component('property-hr', {
   props: [ 'name', 'value' ],

@@ -83,7 +83,7 @@ async function start(srvName, callbackFinish) {
     }
   }
 
-  if(!('start' in serviceData[srvName])) return false;
+  if(!('start' in services[srvName])) return false;
 
   // Reload config when service starts
   serviceData[srvName].config = utils.loadServiceConfig(srvName);
