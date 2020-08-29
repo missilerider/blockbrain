@@ -149,19 +149,19 @@ var tuyaService = {
     for(let n = 0; n < ids.length; n++) {
       let dev = devices[ids[n]];
       ret.form.push({
-        "name": `deviceName.${dev}`,
+        "name": `deviceName.${ids[n]}`,
         "desc": `Device ID ${ids[n]} name`,
         "type": "text",
         "width": 3
       });
       ret.default[`deviceName.${dev}`] = dev.name;
       ret.form.push({
-        "name": `deviceType.${dev}`,
+        "name": `deviceType.${ids[n]}`,
         "desc": `Device ID ${ids[n]} type`,
         "type": "text",
         "width": 3
       });
-      ret.default[`deviceType.${dev}`] = dev.type;
+      ret.default[`deviceType.${ids[n]}`] = dev.type;
     }
 
     return ret;

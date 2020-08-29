@@ -1,1 +1,14 @@
-{"bfc6e8828b6ae70fe3pzgj":{"type":"unknown","name":"bfc6e8828b6ae70fe3pzgj"}}
+{
+  "bfc6e8828b6ae70fe3pzgj": {
+    "type": "switch",
+    "name": "Fuente"
+  },
+  "test": {
+    "type": "test",
+    "name": "Dispositivo de pruebas fake"
+  },
+  "bfbaa3b3a50f8e09e4kl1v": {
+    "type": "switch",
+    "name": "test"
+  }
+}
