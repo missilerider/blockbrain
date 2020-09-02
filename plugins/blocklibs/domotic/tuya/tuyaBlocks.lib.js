@@ -18,6 +18,40 @@ module.exports.serviceSettingsForm = [
     "width": 6
   }, 
   {
+    "name": "card1",
+    "title": "Prueba de tarjeta",
+    "type": "card",
+    "width": 12, 
+    "components": {
+      "form": [{
+        "name": "email_test",
+        "desc": "Tuya app email address",
+        "type": "text",
+        "width": 6
+      }], 
+      "default": {
+        "email_test": "1234"
+      }
+    }
+  }, 
+  {
+    "name": "card2",
+    "title": "Prueba de tarjeta 2",
+    "type": "card",
+    "width": 12, 
+    "components": {
+      "form": [{
+        "name": "email_test",
+        "desc": "Tuya app email address",
+        "type": "text",
+        "width": 6
+      }], 
+      "default": {
+        "email_test": "1234"
+      }
+    }
+  }, 
+  {
     "name": "password",
     "desc": "Tuya app password",
     "type": "text",

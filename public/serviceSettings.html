@@ -52,13 +52,15 @@
                 <div class="card-body table-responsive">
                     <div class="row">
                       <div class="col-md-12" id="blocklyArea">
-                        <div v-for="field in customProperties.form">
-                          <component :is="customPropComponent(field.type)"
+<!--                        <div v-for="field in customProperties.form">-->
+                          <component 
+                            v-for="field in customProperties.form"
+                            :is="customPropComponent(field.type)"
                             v-bind="field"
                             :value="customProperties.default[field.name]"
                             @changed="setProperty">
                           </component>
-                        </div>
+<!--                        </div>-->
                       </div>
                     </div>
 
