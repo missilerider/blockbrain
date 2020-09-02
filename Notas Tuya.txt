@@ -1,0 +1,34 @@
+DEBUG=* node cli.js link --ssid FLYNNs --password Aa123456789 --api-key wtampgrc9rwukzw8snyh --api-secret d65ffcf5aac74436befcf946f2823f58 --schema Flynns
+
+
+  @tuyapi/link:wizard Found device(s)! [ { id: 'eb5693af5145f7ad32lc9c',
+    ip: '185.105.39.200',
+    name: '智能通断器',
+    productId: '5vorxbbzvavwrrqs',
+    uuid: '8a5d9f7bb396bbe1' } ] +0ms
+  @tuyapi/link:manual Aborting broadcast of data... +9s
+✔ Device(s) registered!
+[ { id: 'eb5693af5145f7ad32lc9c',
+    ip: '185.105.39.200',
+    localKey: 'e50022751e0e15b8',
+    name: '智能通断器' } ]
+
+
+  @tuyapi/link:wizard Found device(s)! [ { id: 'ebd3c0811075b74fd0gl3g',
+    ip: '185.105.39.200',
+    name: '智能通断器 2',
+    productId: '5vorxbbzvavwrrqs',
+    uuid: '70dfefb672596c0b' } ] +0ms
+  @tuyapi/link:manual Aborting broadcast of data... +11s
+✔ Device(s) registered!
+[ { id: 'ebd3c0811075b74fd0gl3g',
+    ip: '185.105.39.200',
+    localKey: 'b3ed78348faa6a13',
+    name: '智能通断器 2' } ]
+
+
+
+// Tuya app
+bf8e95ebaf2c08e75anilo
+172.16.0.179
+

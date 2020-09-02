@@ -75,6 +75,10 @@ function performDiscovery() {
   });
 }
 
+function sendCommand(command, id) {
+  
+}
+
 function loadDevs() {
   devices = utils.loadServiceAdditionalConfig(SERVICE_NAME, "devices");
   if(devices === null) {
@@ -154,7 +158,7 @@ var tuyaService = {
         "type": "text",
         "width": 3
       });
-      ret.default[`deviceName.${dev}`] = dev.name;
+      ret.default[`deviceName.${ids[n]}`] = dev.name;
       ret.form.push({
         "name": `deviceType.${ids[n]}`,
         "desc": `Device ID ${ids[n]} type`,

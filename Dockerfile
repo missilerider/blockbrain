@@ -26,4 +26,6 @@ EXPOSE 443
 
 USER node
 
+SHELL [ "/bin/ash" ]
+
 CMD [ "npm", "start" ]

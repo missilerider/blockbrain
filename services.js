@@ -76,6 +76,7 @@ async function start(srvName, callbackFinish) {
   }
 
   if(!(srvName in serviceData)) {
+    debug(`Set initial '${srvName}' service status data`)
     serviceData[srvName] = {
       stop: true,
       status: 0,
@@ -83,7 +84,11 @@ async function start(srvName, callbackFinish) {
     }
   }
 
-  if(!('start' in services[srvName])) return false;
+  if(!('start' in services[srvName])) {
+    log.e(`Service ${srvName} does not contain 'start'`);
+    debug(Object.keys(services[srvName]));
+    return false;
+  }
 
   // Reload config when service starts
   serviceData[srvName].config = utils.loadServiceConfig(srvName);
