@@ -68,6 +68,16 @@ async function stop() {
     }
 }
 
+async function updateData(fireEvents = true) {
+    updateThings.then(() => {
+        debug('Things updated');
+    }).catch((e) => {
+        log.e(`There was an error trying to update OH things`);
+        debug(e.message);
+        debug(e.stack);
+    });
+}
+
 async function updateThings(fireEvents = true) {
     debug('Starting thing polling update');
 
