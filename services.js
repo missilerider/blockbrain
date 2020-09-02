@@ -79,11 +79,16 @@ async function start(srvName, callbackFinish) {
     serviceData[srvName] = {
       stop: true,
       status: 0,
-      desiredStatus: 0
+      desiredStatus: 0, 
+      config: null
     }
   }
 
-  if(!('start' in serviceData[srvName])) return false;
+  if(!('start' in services[srvName])) {
+    log.e(`Service '${srvName}' without start method!`);
+    debug(Object.keys(services[srvName]));
+    return false;
+  }
 
   // Reload config when service starts
   serviceData[srvName].config = utils.loadServiceConfig(srvName);
