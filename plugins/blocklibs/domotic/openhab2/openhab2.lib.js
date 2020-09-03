@@ -7,6 +7,7 @@ const edebug = require('debug')('blockbrain:service:openhab2:event');
 
 var host = null;
 var updateThingsDelay = 30;
+var metadataNamespace = "blockbrain";
 
 var onThingCreated = null;
 var onThingChanged = null;
@@ -32,6 +33,7 @@ const sleep = (milliseconds) => {
 function config(params) {
     host = params.host || null;
     updateThingsDelay = params.updateThingsDelay || 120;
+    metadataNamespace = params.metadataNamespace || "blockbrain";
 
     onThingCreated = params.onThingCreated || null;
     onThingChanged = params.onThingChanged || null;
@@ -44,9 +46,9 @@ function config(params) {
 
 async function start() {
     running = true;
-    updateThings(false); // Initial thing update. Don't fire updates!
+    updateData(false); // Initial thing update. Don't fire updates!
     debug('Start thing update polling');
-    handlerUpdateThings = setInterval(updateThings, updateThingsDelay * 1000);
+    handlerUpdateThings = setInterval(updateData, updateThingsDelay * 1000);
     startEventBus();
     return true;
 }
@@ -68,9 +70,18 @@ async function stop() {
     }
 }
 
+// Updates stored OpenHab2 stored data and launches events if required
 async function updateData(fireEvents = true) {
-    updateThings.then(() => {
+    updateThings(fireEvents).then(() => {
         debug('Things updated');
+        updateItems().then(() => {
+            debug('Channels updated');
+        }).catch((e) => {
+            log.e(`There was an error trying to update OH channels`);
+            debug(e.message);
+            debug(e.stack);
+        });
+
     }).catch((e) => {
         log.e(`There was an error trying to update OH things`);
         debug(e.message);
@@ -78,101 +89,187 @@ async function updateData(fireEvents = true) {
     });
 }
 
-async function updateThings(fireEvents = true) {
-    debug('Starting thing polling update');
+// Updates thing list
+function updateThings(fireEvents = true) {
+    return new Promise((resolve, reject) => {
+        debug('Starting thing polling update');
 
-    let data = [];
+        let data = [];
 
-    let req = http.get(`${host}rest/things`, function(res) {
-        res.on('data', (chunk) => { data = [ ...data, ...chunk ]; });
-        res.on('end', () => {
-            let txtData = (Buffer.from(data)).toString();
-            let objData = null;
-            try {
-                objData = JSON.parse(txtData);
-            } catch(e) {
-                log.w('Could not parse Openhab2 server thing request. Is Openhab server restarting?');
-                return;
-            }
-            
-            let newThings = {};
-            let newItems = {};
-            let newLinks = {};
-            let newChannels = {};
-
-            for(let n = 0; n < objData.length; n++) {
-                let obj = objData[n];
-
-                if(!obj.UID) {
-                    log.e("Thing received format not recognized!");
-                    debug(JSON.stringify(obj));
-                } else {
-                    let thing = {
-                        uid: obj.UID, 
-                        label: obj.label, 
-                        location: obj.location, 
-                        configuration: obj.configuration, 
-                        properties: obj.properties, 
-                        statusInfo: obj.statusInfo, 
-                        channels: {}
-                    };
-
-                    if(obj.channels) {
-                        for(let c = 0; c < obj.channels.length; c++) {
-                            let ch = obj.channels[c];
-                            let channel = {
-                                thing: thing, 
-                                id: ch.id, 
-                                uid: ch.uid, 
-                                itemType: ch.itemType, 
-                                kind: ch.kind, 
-                                label: ch.label, 
-                                properties: ch.properties, 
-                                configuration: ch.configuration, 
-                                defaultTags: ch.defaultTags
-                            }
-
-                            newChannels[channel.uid] = thing.uid;
-
-                            for(let l = 0; l < ch.linkedItems.length; l++) {
-                                newLinks[ch.linkedItems[l]] = {
-                                    channel: channel.uid, 
-                                    thing: obj.UID
-                                }
-                            }
-
-                            thing.channels[channel.uid] = channel;
-                        }
-                    }
-
-                    newThings[obj.UID] = thing;
+        let req = http.get(`${host}rest/things`, function(res) {
+            res.on('data', (chunk) => { data = [ ...data, ...chunk ]; });
+            res.on('end', () => {
+                let txtData = (Buffer.from(data)).toString();
+                let objData = null;
+                try {
+                    objData = JSON.parse(txtData);
+                } catch(e) {
+                    log.w('Could not parse Openhab2 server thing request. Is Openhab server restarting?');
+                    return;
                 }
-            }
+                
+                let newThings = {};
+                let newItems = {};
+                let newLinks = {};
+                let newChannels = {};
 
-            if(fireEvents) {
-                fireThingEvents({ ...things }, newThings);
-                fireItemEvents({ ...items }, newItems);
-            }
-            things = newThings;
-            items = newItems;
-            links = newLinks;
-            channels = newChannels;
+                for(let n = 0; n < objData.length; n++) {
+                    let obj = objData[n];
 
-            debug("Thing update complete");
+                    if(!obj.UID) {
+                        log.e("Thing received format not recognized!");
+                        debug(JSON.stringify(obj));
+                    } else {
+                        let thing = {
+                            uid: obj.UID, 
+                            label: obj.label, 
+                            location: obj.location, 
+                            configuration: obj.configuration, 
+                            properties: obj.properties, 
+                            statusInfo: obj.statusInfo, 
+                            channels: {}
+                        };
+
+                        if(obj.channels) {
+                            for(let c = 0; c < obj.channels.length; c++) {
+                                let ch = obj.channels[c];
+                                let channel = {
+                                    thing: thing, 
+                                    id: ch.id, 
+                                    uid: ch.uid, 
+                                    itemType: ch.itemType, 
+                                    kind: ch.kind, 
+                                    label: ch.label, 
+                                    properties: ch.properties, 
+                                    configuration: ch.configuration, 
+                                    defaultTags: ch.defaultTags, 
+                                    state: "", 
+                                    type: "", 
+                                    tags: [], 
+                                    groupNames: []
+                                }
+
+                                newChannels[channel.uid] = thing.uid;
+
+                                for(let l = 0; l < ch.linkedItems.length; l++) {
+                                    newLinks[ch.linkedItems[l]] = {
+                                        channel: channel.uid, 
+                                        thing: obj.UID
+                                    }
+                                }
+
+                                thing.channels[channel.uid] = channel;
+                            }
+                        }
+
+                        newThings[obj.UID] = thing;
+                    }
+                }
+
+                if(fireEvents) {
+                    fireThingEvents({ ...things }, newThings);
+                    fireItemEvents({ ...items }, newItems);
+                }
+                things = newThings;
+                items = newItems;
+                links = newLinks;
+                channels = newChannels;
+
+                debug("Thing update complete");
+
+                resolve();
+            });
+        });
+
+        req.on('error', (err) => {
+            log.e("Could not update things from Openhab2 server!");
+            if(err.errno == "ECONNREFUSED") {
+                debug('Connection refused. Probably Openhab2 server down');
+            } else {
+                debug("Unknown error: " + JSON.stringify(err));
+            }
+            if(req)
+                req.end();
+
+            reject(err);
         });
     });
+}
 
-    req.on('error', (err) => {
-        log.e("Could not update things from Openhab2 server!");
-        if(err.errno == "ECONNREFUSED") {
-            debug('Connection refused. Probably Openhab2 server down');
-        } else {
-            debug("Unknown error: " + JSON.stringify(err));
-        }
-        if(req)
-            req.end();
+// Updates specific Item properties (label). Items are inside thing(channel(item))
+function updateItems() {
+    return new Promise((resolve, reject) => {
+        debug('Starting items polling update');
+
+        let data = [];
+
+        let url = `${host}rest/items?recursive=false&fields=name%2Clabel%2Cstate%2Ctype%2Ctags%2CgroupNames%2Cmetadata`;
+
+        if(metadataNamespace)
+            url += `&metadata=${metadataNamespace}`;
+
+        let req = http.get(url, function(res) {
+            res.on('data', (chunk) => { data = [ ...data, ...chunk ]; });
+            res.on('end', () => {
+                let txtData = (Buffer.from(data)).toString();
+                let objData = null;
+                try {
+                    objData = JSON.parse(txtData);
+                } catch(e) {
+                    log.w('Could not parse Openhab2 server thing request. Is Openhab server restarting?');
+                    return;
+                }
+                
+                for(let n = 0; n < objData.length; n++) {
+                    let obj = objData[n];
+
+                    if(obj.name in links && links[obj.name].thing in things) {
+
+                        let thing = things[links[obj.name].thing];
+
+                        if(links[obj.name].channel in thing.channels) {
+                            let channel = thing.channels[links[obj.name].channel];
+
+                            channel.label = obj.label;
+                            channel.state = obj.state;
+                            channel.type = obj.type;
+                            channel.groupNames = obj.groupNames;
+
+                            if('metadata' in obj) {
+                                channel.metadata = obj.metadata[metadataNamespace].config;
+                            }
+                            else {
+                                channel.metadata = {};
+                            }
+
+                        } else {
+                            log.e(`Channel ${obj.name} not found in thing ${thing.label}`);
+                        }
+                    } else {
+                        log.i(`Item link ${obj.name} to thing not found. Probably not assigned to a thing channel`);
+                    }
+                }
+
+                debug('Thing polling update finished');
+                resolve();
+            });
+        });
+
+        req.on('error', (err) => {
+            log.e("Could not update things from Openhab2 server!");
+            if(err.errno == "ECONNREFUSED") {
+                debug('Connection refused. Probably Openhab2 server down');
+            } else {
+                debug("Unknown error: " + JSON.stringify(err));
+            }
+            if(req)
+                req.end();
+
+            Log.e('Thing polling update aborted');
+            debug(err.message);
+            reject(err);
+        });
     });
-
 }
 
 async function startEventBus() {
@@ -180,9 +277,8 @@ async function startEventBus() {
         debug('Initiates OH event bus connection');
 
         let p = new Promise((resolve, reject) => {
-            busRequest = http.get(`${host}rest/events`, function(res) {
+            busRequest = http.get(`${host}rest/events`, (res) => {
                 res.on('data', function(chunk) {
-                    //debug('Incoming event bus data');
                     chunk = (Buffer.from(chunk)).toString('ascii');
                     processEventBuffer(chunk);
                 });
@@ -200,7 +296,7 @@ async function startEventBus() {
                     busRequest.end();
                 busRequest = null;
             });
-    });
+        });
 
         await p.then(() => {
             debug('Bus listener finished');
@@ -212,8 +308,9 @@ async function startEventBus() {
         .catch(() => {
             debug('Bus listener ended abruptly');
 
-            if(running)
+            if(running) {
                 log.e('An error occurred during Openhab2 bus event listening. Trying to restart');
+            }
         });
 
         if(running) {
@@ -230,7 +327,105 @@ function processEventBuffer(buffer) {
     lines.forEach((line) => {
         let matches = line.match(/^data: (\{.+\}$)/)
         if(matches) {
-            //debug('Bus data: ' + matches[1]);
+            let data;
+            try {
+                data = JSON.parse(matches[1]);
+                if(!data.type) {
+                    log.e("Data does not contain 'type' field!");
+                    return;
+                }
+                if(!data.payload) {
+                    log.w("Data does not contain 'payload' field!");
+                }
+                if(!data.topic) {
+                    log.w("Data does not contain 'topic' field!");
+                }
+            } catch(e) {
+                log.e("Could not parse event data!");
+                debug(matches[1]);
+                return;
+            }
+
+            let payload = JSON.parse(data.payload || "{}");
+
+            let linkedItem = undefined;
+            let oldValue = null;
+            let value = undefined;
+            let thingName = null;
+
+            // From the docs https://www.openhab.org/javadoc/v2.5/org/eclipse/smarthome/core/events/event
+            // ChannelTriggeredEvent, ConfigStatusInfoEvent, ExtensionEvent, FirmwareStatusInfoEvent, FirmwareUpdateProgressInfoEvent, FirmwareUpdateResultInfoEvent, GroupItemStateChangedEvent, InboxAddedEvent, InboxRemovedEvent, InboxUpdatedEvent, ItemAddedEvent, ItemChannelLinkAddedEvent, ItemChannelLinkRemovedEvent, ItemCommandEvent, ItemRemovedEvent, ItemStateChangedEvent, ItemStateEvent, ItemStatePredictedEvent, ItemUpdatedEvent, RuleAddedEvent, RuleRemovedEvent, RuleStatusInfoEvent, RuleUpdatedEvent, ThingAddedEvent, ThingRemovedEvent, ThingStatusInfoChangedEvent, ThingStatusInfoEvent, ThingUpdatedEvent
+            switch(data.type) {
+                case "ItemStateChangedEvent": // {"type":"Quantity","value":"0.0 s","oldType":"Quantity","oldValue":"282.0 s"}
+                    oldValue = payload.oldValue || null;
+
+                case "ItemStateEvent": // {"type":"Decimal","value":"-66"}
+                    matches = data.topic.match(/^[^\/]+\/items\/(.*)\/state(changed)?$/);
+                    linkedItem = matches ? matches[1] : false;
+                    value = payload.value || undefined;
+
+                    //changeChannelState(linkedItem, value, oldValue);
+                    console.log(`onChannelStateChanged('${linkedItem}', '${value}', '${oldValue}')`);
+                    onChannelStateChanged(thingFromLinkedItem(linkedItem), value, oldValue);
+
+                    log.d(`Cambio de estado ${linkedItem}: ${oldValue} => ${value}`);
+                    break;
+            }
+        }
+    });
+}
+
+function onChannelStateChanged(thingData, value, oldValue = null) {
+    if(thingData.channel) {
+        // Updates channel info
+
+        if(oldValue === null) {
+            oldValue = thingData.channel.state;
+        }
+
+        if(thingData.channel.state !== value) {
+            debug(`Channel ${thingData.channel.label} changed value from '${thingData.channel.state}' to '${value}'`);
+            thingData.channel.state = value;
+        }
+    }
+
+    if(thingData.thing) {
+
+    }
+}
+
+function thingFromLinkedItem(linkedItem) {
+    let thing = null;
+    let channel = null;
+
+    if(linkedItem in links) {
+        if(links[linkedItem].thing in things) {
+            thing = things[links[linkedItem].thing];
+
+            if(links[linkedItem].channel in thing.channels) {
+                channel = thing.channels[links[linkedItem].channel];
+            } else {
+                log.w(`Cannot find channel ${links[linkedItem].channel} inside thing ${links[linkedItem].thing}`);
+            }
+
+        } else {
+            log.w(`Cannot find thing ${links[linkedItem].thing}`);
+        }
+    } else {
+        log.w(`linkedItem ${linkedItem} not found (but should)`);
+    }
+
+    return {
+        thing: thing, 
+        channel: channel
+    }
+}
+
+function processEventBuffer_old(buffer) {
+    let lines = buffer.split(/\r?\n/);
+    lines.forEach((line) => {
+        let matches = line.match(/^data: (\{.+\}$)/)
+        if(matches) {
             let data;
             try {
                 data = JSON.parse(matches[1]);
@@ -264,18 +459,18 @@ function processEventBuffer(buffer) {
             // ChannelTriggeredEvent, ConfigStatusInfoEvent, ExtensionEvent, FirmwareStatusInfoEvent, FirmwareUpdateProgressInfoEvent, FirmwareUpdateResultInfoEvent, GroupItemStateChangedEvent, InboxAddedEvent, InboxRemovedEvent, InboxUpdatedEvent, ItemAddedEvent, ItemChannelLinkAddedEvent, ItemChannelLinkRemovedEvent, ItemCommandEvent, ItemRemovedEvent, ItemStateChangedEvent, ItemStateEvent, ItemStatePredictedEvent, ItemUpdatedEvent, RuleAddedEvent, RuleRemovedEvent, RuleStatusInfoEvent, RuleUpdatedEvent, ThingAddedEvent, ThingRemovedEvent, ThingStatusInfoChangedEvent, ThingStatusInfoEvent, ThingUpdatedEvent
             switch(data.type) {
                 // Items ********************************
-                case "ItemStateEvent": // {"type":"Decimal","value":"-66"}
-                    fireEvent = onItemStateEvent;
-                    matches = data.topic.match(/^[^\/]+\/items\/(.*)\/state$/);
-                    linkedItem = matches ? matches[1] : false;
-                    value = payload.value || undefined;
-                    break;
-
                 case "ItemStateChangedEvent": // {"type":"Quantity","value":"0.0 s","oldType":"Quantity","oldValue":"282.0 s"}
                     fireEvent = onItemStateChangedEvent;
                     matches = data.topic.match(/^[^\/]+\/items\/(.*)\/statechanged$/);
                     linkedItem = matches ? matches[1] : false;
                     oldValue = payload.oldValue || undefined;
+                    value = payload.value || undefined;
+                    break;
+
+                case "ItemStateEvent": // {"type":"Decimal","value":"-66"}
+                    fireEvent = onItemStateEvent;
+                    matches = data.topic.match(/^[^\/]+\/items\/(.*)\/state$/);
+                    linkedItem = matches ? matches[1] : false;
                     value = payload.value || undefined;
                     break;
 
@@ -377,38 +572,14 @@ function processEventBuffer(buffer) {
                     thing: channel ? channel.thing : undefined, 
                     channel: channel, 
                     oldValue: oldValue, 
-                    value : value
+                    value : value, 
+                    data: data
                 };
 
                 fireEvent(params);
             }
         }
     });
-}
-
-function getChannelByLink(link) {
-    console.log('getChannelByLink ' + link);
-    if(link in links) {
-        console.log(`gCBL thing? ${links[link].thing}`);
-        if(links[link].thing in things) {
-            let thing = things[links[link].thing];
-            console.log(`gCBL channel? ${links[link].channel}`);
-            if(links[link].channel in thing.channels) {
-                console.log(`gCBL ok`);
-                console.dir(thing.channels[links[link].channel]);
-                return thing.channels[links[link].channel];
-            } else {
-                log.w(`Cannot find channel ${links[link].channel} inside thing ${links[link].thing}`);
-            }
-        } else {
-            log.w(`Cannot find thing ${links[link].thing}`);
-            //debug(links[link]);
-        }
-    } else {
-        debug(`Link ${link} not found`);
-    }
-
-    return null;
 }
 
 function fireThingEvents(th, newTh) {
@@ -514,10 +685,10 @@ module.exports = {
     stop: stop, 
     getThings: getThings, 
     getChannel: getChannel, 
-    ping: ping, 
-    getConfig: getConfig, 
-    getInfo: getInfo, 
-    getStates: getStates, 
+//    ping: ping, 
+//    getConfig: getConfig, 
+//    getInfo: getInfo, 
+//    getStates: getStates, 
 //    tick: tick, 
-    setState: setState
+//    setState: setState
 }

@@ -59,7 +59,7 @@ module.exports = {
     "args0": [
       {
         "type": "field_dropdown",
-        "name": "THING",
+        "name": "CHANNEL",
         "options": [
           [
             "op1",

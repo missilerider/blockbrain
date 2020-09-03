@@ -15,7 +15,7 @@ var runPromiseResolve = null;
 
 var tools = null;
 
-var metadataTag = "blockbrain";
+var metadataNamespace = "blockbrain";
 
 function getInfo(env) {
   return {
@@ -33,22 +33,63 @@ function entitiesCombo(base, all = false) {
   let thingIds = Object.keys(things);
 
   for(let n = 0; n < thingIds.length; n++) {
-    thingsByLabel[things[thingIds[n]].label] = things[thingIds[n]];
+    thingsByLabel[things[thingIds[n]].label] = things[thingIds[n]].uid;
     thingLabels.push(things[thingIds[n]].label);
   }
 
-  thingLabels = thingLabels.sort();
+  thingLabels = thingLabels.sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
+
+  if(all) {
+    thingsByLabel["<any thing>"] = "___ALL___";
+    thingLabels.unshift("<any thing>");
+  }
 
   let combo = [];
-  if(all)
-    ret.args0[0].options = [[ "<any thing>", "___ALL___" ]];
 
   for(let n = 0; n < thingLabels.length; n++) {
-      combo.push([ thingLabels[n], thingsByLabel[thingLabels[n]].uid ]);
+      combo.push([ thingLabels[n], thingsByLabel[thingLabels[n]]]);
   }
   ret.args0[0].options = combo;
   if(ret.args0[0].options.length == 0)
       ret.args0[0].options = [[ "<no things>", "___NONE___" ]];
+
+  return ret;
+}
+
+function entitiyChannelsCombo(base, all = false) {
+  let ret = { ... base };
+  let things = oh.getThings();
+  let labels = [];
+  let itemsByLabel = {};
+  let thingIds = Object.keys(things);
+
+  for(let n = 0; n < thingIds.length; n++) {
+    let chs = things[thingIds[n]].channels;
+    let chIds = Object.keys(chs);
+
+    for(let m = 0; m < chIds.length; m++) {
+      let label = things[thingIds[n]].label + "/" + chs[chIds[m]].label;
+
+      itemsByLabel[label] = chs[chIds[m]].uid;
+      labels.push(label);
+    }
+  }
+
+  labels = labels.sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
+
+  if(all) {
+    itemsByLabel["<any thing/channel>"] = "___ALL___";
+    labels.unshift("<any thing/channel>");
+  }
+
+  let combo = [];
+
+  for(let n = 0; n < labels.length; n++) {
+      combo.push([ labels[n], itemsByLabel[labels[n]]]);
+  }
+  ret.args0[0].options = combo;
+  if(ret.args0[0].options.length == 0)
+      ret.args0[0].options = [[ "<no things/channels>", "___NONE___" ]];
 
   return ret;
 }
@@ -67,6 +108,28 @@ var onItemStateEventBlock = {
     if(thingId === '___ALL___' || thingId == context.params.thing) {
       context.setVar(channelVar, context.params.channel);
       context.setVar(valueVar, context.params.value);
+
+      return await context.continue("CMD");
+    }
+  }
+}
+
+var onChannelStateEventBlock = {
+  "block": function(services) {
+    return entitiyChannelsCombo(blocks.onChannelState, true);
+  },
+  "run": async (context) => {
+    context.blockIn();
+
+    var channelId = context.getField('CHANNEL');
+//    var channelVar = context.getField('CHANNEL');
+    var valueVar = context.getField('VALUE');
+
+    if(channelId === '___ALL___' || channelId == context.params.channel) {
+//      slog.f(`Verifica ${channelId} == ${context.params.channel}`);
+      context.setVar(valueVar, context.params.value);
+//      console.log("##############DATA###############");
+//      console.dir(context.params.data);
 
       return await context.continue("CMD");
     }
@@ -201,7 +264,7 @@ var ohService = {
     });
 
     let host = srv.config.baseUrl || null;
-    metadataTag = srv.config.metadataTag || "blockbrain";
+    metadataNamespace = srv.config.metadataNamespace || "blockbrain";
 
     if(!host) {
       log.f("openhab2.json baseUrl field must be defined at least for Openhab2 integration");
@@ -216,8 +279,10 @@ var ohService = {
       // Events
       onThingChanged: onThingChanged, 
 
-      onItemStateEvent: onItemStateEvent, 
-      onItemStateChangedEvent: onItemStateChangedEvent
+//      onItemStateEvent: onItemStateEvent, 
+//      onItemStateChangedEvent: onItemStateChangedEvent, 
+
+      onChannelValueChanged: onChannelValueChanged
     });
 
     if(!await oh.start()) {
@@ -229,10 +294,6 @@ var ohService = {
     srv.status = 1;
   
     debug("Openhab2 connection correct!");
-
-    /*var intervalHandler = setInterval(async () => {
-      oh.tick(oh);
-    }, 2000);*/
 
     await runPromise;
 
@@ -264,6 +325,16 @@ function onItemStateEvent(data) {
     channel: data.channel.uid, 
     value: data.value
   });
+
+//  log.f("Evento onItemStateEvent / channel");
+//  console.dir(data);
+  log.d("Dispara eventos onChannelStateEvent: " + data.channel.uid);
+  tools.executeEvent('openhab2.onChannelStateEvent', {}, {
+//    thing: data.thing.uid,
+    channel: data.channel.uid, 
+    value: data.value, 
+    data: data
+  });
 }
 
 function onItemStateChangedEvent(data) {
@@ -275,11 +346,21 @@ function onItemStateChangedEvent(data) {
     oldValue: data.oldValue
   });
 }
+function onChannelValueChanged(data) {
+  //log.f(`${data.thing.uid} [${data.channel.uid}]: ${data.oldValue} => ${data.value}`);
+  tools.executeEvent('openhab2.onChannelStateEvent', {}, {
+    thing: data.thing.uid,
+    channel: data.channel.uid, 
+    value: data.value, 
+    oldValue: data.oldValue
+  });
+}
 
 async function getBlocks() {
   var blocks = {
     // Events
     "onItemStateEvent": onItemStateEventBlock, 
+    "onChannelStateEvent": onChannelStateEventBlock, 
     "onItemStateChangedEvent": onItemStateChangedEventBlock, 
 
     // Channel Methods
@@ -297,6 +378,7 @@ function getToolbox() {
       "Things": '', 
       "Thing Events": ' \
         <block type="openhab2.onItemStateEvent"></block> \
+        <block type="openhab2.onChannelStateEvent"></block> \
         <block type="openhab2.onItemStateChangedEvent"></block> \
         <block type="openhab2.getThingChannels"></block> \
         <block type="openhab2.getThingChannelsParam"></block> \
