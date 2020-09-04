@@ -126,10 +126,30 @@ var onChannelStateEventBlock = {
     var valueVar = context.getField('VALUE');
 
     if(channelId === '___ALL___' || channelId == context.params.channel) {
-//      slog.f(`Verifica ${channelId} == ${context.params.channel}`);
       context.setVar(valueVar, context.params.value);
-//      console.log("##############DATA###############");
-//      console.dir(context.params.data);
+
+      return await context.continue("CMD");
+    }
+  }
+}
+
+var onThingStatusChangedBlock = {
+  "block": function(services) {
+    return entitiesCombo(blocks.onThingStatusChanged, true);
+  },
+  "run": async (context) => {
+    context.blockIn();
+
+    var thingId = context.getField('THING');
+    var oldStatusVar = context.getField('OLDSTATUS');
+    var statusVar = context.getField('STATUS');
+
+    debug(thingId);
+    debug(context.params);
+
+    if(thingId === '___ALL___' || thingId == context.params.thing) {
+      context.setVar(oldStatusVar, context.params.oldStatus);
+      context.setVar(statusVar, context.params.status);
 
       return await context.continue("CMD");
     }
@@ -277,7 +297,7 @@ var ohService = {
       updateThingsDelay: srv.config.updateThingsDelay, 
 
       // Events
-      onThingChanged: onThingChanged, 
+      onThingStatusChanged: onThingStatusChanged, 
 
 //      onItemStateEvent: onItemStateEvent, 
 //      onItemStateChangedEvent: onItemStateChangedEvent, 
@@ -308,16 +328,6 @@ var ohService = {
   }
 }
 
-function onThingChanged(oldThing, newThing) {
-  debug(`Openhab2 entity changed ${newThing.label}: ${oldThing.label}`);
-
-/*  tools.executeEvent('openhab2.onChange', { entity: entity }, {
-    entity: entity,
-    oldState: oldState, 
-    state: state
-  });*/
-}
-
 function onItemStateEvent(data) {
   //log.f(`${data.thing.uid} [${data.channel.uid}]: ${data.value}`);
   tools.executeEvent('openhab2.onItemStateEvent', {}, {
@@ -346,13 +356,28 @@ function onItemStateChangedEvent(data) {
     oldValue: data.oldValue
   });
 }
-function onChannelValueChanged(data) {
+function onChannelValueChanged(data, value, oldValue) {
   //log.f(`${data.thing.uid} [${data.channel.uid}]: ${data.oldValue} => ${data.value}`);
   tools.executeEvent('openhab2.onChannelStateEvent', {}, {
     thing: data.thing.uid,
     channel: data.channel.uid, 
-    value: data.value, 
-    oldValue: data.oldValue
+    value: value, 
+    oldValue: oldValue
+  });
+
+  tools.executeEvent('openhab2.onItemStateChangedEvent', {}, {
+    thing: data.thing.uid,
+    channel: data.channel.uid, 
+    value: value, 
+    oldValue: oldValue
+  });
+}
+
+function onThingStatusChanged(data, status, oldStatus) {
+  tools.executeEvent('openhab2.onThingStatusChangedEvent', {}, {
+    thing: data.thing.uid,
+    oldStatus: oldStatus.status, 
+    status: status.status
   });
 }
 
@@ -362,6 +387,7 @@ async function getBlocks() {
     "onItemStateEvent": onItemStateEventBlock, 
     "onChannelStateEvent": onChannelStateEventBlock, 
     "onItemStateChangedEvent": onItemStateChangedEventBlock, 
+    "onThingStatusChangedEvent": onThingStatusChangedBlock, 
 
     // Channel Methods
     "getThingChannels": getThingChannelsBlock, 
@@ -377,14 +403,16 @@ function getToolbox() {
     "openhab2": {
       "Things": '', 
       "Thing Events": ' \
-        <block type="openhab2.onItemStateEvent"></block> \
-        <block type="openhab2.onChannelStateEvent"></block> \
         <block type="openhab2.onItemStateChangedEvent"></block> \
-        <block type="openhab2.getThingChannels"></block> \
-        <block type="openhab2.getThingChannelsParam"></block> \
-        <block type="openhab2.getChannelProperty"></block> \
+        <block type="openhab2.onThingStatusChangedEvent"></block> \
         '
     }
+/*        <block type="openhab2.onItemStateEvent"></block> \
+        <block type="openhab2.onChannelStateEvent"></block> \
+        <block type="openhab2.getThingChannels"></block> \
+        <block type="openhab2.getThingChannelsParam"></block> \
+        <block type="openhab2.getChannelProperty"></block> \*/
+
   }
 }
 

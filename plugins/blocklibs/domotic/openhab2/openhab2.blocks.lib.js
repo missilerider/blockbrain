@@ -209,6 +209,62 @@ module.exports = {
     "tooltip": "Thrown when an OpenHab2 thing channel value changed to a new value",
     "helpUrl": ""
   }, 
+  onThingStatusChanged: {
+    "type": "oh_on_thing_status",
+    "message0": "When OpenHab2 thing %1 status has a changed %2 From %3 to %4 %5 %6 %7",
+    "args0": [
+      {
+        "type": "field_dropdown",
+        "name": "THING",
+        "options": [
+          [
+            "op1",
+            "OPTIONNAME"
+          ],
+          [
+            "op2",
+            "OPTIONNAME"
+          ],
+          [
+            "op3",
+            "OPTIONNAME"
+          ]
+        ]
+      },
+      {
+        "type": "input_dummy"
+      },
+      {
+        "type": "field_variable",
+        "name": "OLDSTATUS",
+        "variable": "oldStatus"
+      },
+      {
+        "type": "field_variable",
+        "name": "STATUS",
+        "variable": "status"
+      },
+      {
+        "type": "input_dummy",
+        "align": "RIGHT"
+      },
+      {
+        "type": "input_dummy",
+        "align": "RIGHT"
+      },
+      {
+        "type": "input_statement",
+        "name": "CMD"
+      }
+    ],
+    "colour": "#FF6600",
+    "tooltip": "Thrown when an OpenHab2 thing status changes",
+    "helpUrl": ""
+  },
+
+
+
+
   getThingChannels: {
     "type": "oh_get_thing_channels",
     "message0": "get channels from thing %1",

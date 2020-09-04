@@ -9,6 +9,9 @@ var host = null;
 var updateThingsDelay = 30;
 var metadataNamespace = "blockbrain";
 
+var onThingStatusChanged = null;
+var onChannelValueChanged = null;
+
 var onThingCreated = null;
 var onThingChanged = null;
 var onThingRemoved = null;
@@ -28,20 +31,38 @@ var channels = {};
 
 const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
-  }
+}
+
+function difference(origObj, newObj) {
+    function changes(newObj, origObj) {
+        let arrayIndexCounter = 0
+        return _.transform(newObj, function (result, value, key) {
+        if (!_.isEqual(value, origObj[key])) {
+            let resultKey = _.isArray(origObj) ? arrayIndexCounter++ : key
+            result[resultKey] = (_.isObject(value) && _.isObject(origObj[key])) ? changes(value, origObj[key]) : value
+        }
+        })
+    }
+    return changes(newObj, origObj)
+}
   
+
 function config(params) {
     host = params.host || null;
     updateThingsDelay = params.updateThingsDelay || 120;
     metadataNamespace = params.metadataNamespace || "blockbrain";
 
-    onThingCreated = params.onThingCreated || null;
+    onChannelValueChanged = params.onChannelValueChanged || null;
+    onThingStatusChanged = params.onThingStatusChanged || null;
+
+//    onThingChanged = params.onThingChanged || null;
+/*    onThingCreated = params.onThingCreated || null;
     onThingChanged = params.onThingChanged || null;
     onThingRemoved = params.onThingRemoved || null;
     onItemCreated = params.onItemCreated || null;
     onItemStateEvent = params.onItemStateEvent || null;
     onItemStateChangedEvent = params.onItemStateChangedEvent || null;
-    onItemRemoved = params.onItemRemoved || null;
+    onItemRemoved = params.onItemRemoved || null;*/
 }
 
 async function start() {
@@ -70,12 +91,20 @@ async function stop() {
     }
 }
 
-// Updates stored OpenHab2 stored data and launches events if required
+// Updates stored OpenHab2 stored data and launches events if required [disabled!]
 async function updateData(fireEvents = true) {
-    updateThings(fireEvents).then(() => {
+    let oldThings = { ...things };
+    let oldItems = { ...items };
+    
+    updateThings().then(() => {
         debug('Things updated');
         updateItems().then(() => {
             debug('Channels updated');
+
+/*            if(fireEvents) {
+                fireThingEvents(oldThings, things);
+                fireItemEvents(oldItems, items);
+            }*/
         }).catch((e) => {
             log.e(`There was an error trying to update OH channels`);
             debug(e.message);
@@ -90,7 +119,7 @@ async function updateData(fireEvents = true) {
 }
 
 // Updates thing list
-function updateThings(fireEvents = true) {
+function updateThings() {
     return new Promise((resolve, reject) => {
         debug('Starting thing polling update');
 
@@ -166,10 +195,6 @@ function updateThings(fireEvents = true) {
                     }
                 }
 
-                if(fireEvents) {
-                    fireThingEvents({ ...things }, newThings);
-                    fireItemEvents({ ...items }, newItems);
-                }
                 things = newThings;
                 items = newItems;
                 links = newLinks;
@@ -342,16 +367,17 @@ function processEventBuffer(buffer) {
                 }
             } catch(e) {
                 log.e("Could not parse event data!");
-                debug(matches[1]);
+                edebug(matches[1]);
                 return;
             }
 
+            edebug(`Received '${data.type}' event on '${data.topic}'`);
+            
             let payload = JSON.parse(data.payload || "{}");
 
             let linkedItem = undefined;
             let oldValue = null;
             let value = undefined;
-            let thingName = null;
 
             // From the docs https://www.openhab.org/javadoc/v2.5/org/eclipse/smarthome/core/events/event
             // ChannelTriggeredEvent, ConfigStatusInfoEvent, ExtensionEvent, FirmwareStatusInfoEvent, FirmwareUpdateProgressInfoEvent, FirmwareUpdateResultInfoEvent, GroupItemStateChangedEvent, InboxAddedEvent, InboxRemovedEvent, InboxUpdatedEvent, ItemAddedEvent, ItemChannelLinkAddedEvent, ItemChannelLinkRemovedEvent, ItemCommandEvent, ItemRemovedEvent, ItemStateChangedEvent, ItemStateEvent, ItemStatePredictedEvent, ItemUpdatedEvent, RuleAddedEvent, RuleRemovedEvent, RuleStatusInfoEvent, RuleUpdatedEvent, ThingAddedEvent, ThingRemovedEvent, ThingStatusInfoChangedEvent, ThingStatusInfoEvent, ThingUpdatedEvent
@@ -364,37 +390,80 @@ function processEventBuffer(buffer) {
                     linkedItem = matches ? matches[1] : false;
                     value = payload.value || undefined;
 
-                    //changeChannelState(linkedItem, value, oldValue);
-                    console.log(`onChannelStateChanged('${linkedItem}', '${value}', '${oldValue}')`);
-                    onChannelStateChanged(thingFromLinkedItem(linkedItem), value, oldValue);
+                    fireChannelValueChange(dataFromLinkedItem(linkedItem), value, oldValue);
+                    break;
 
-                    log.d(`Cambio de estado ${linkedItem}: ${oldValue} => ${value}`);
+                case "ThingStatusInfoChangedEvent":
+                    matches = data.topic.match(/^[^\/]+\/things\/(.*)\/statuschanged?$/);
+
+                    oldValue = payload[1];
+                    value = payload[0];
+
+                    if(matches) fireThingStatusChange(dataFromThing(matches[1]), value, oldValue);
+                    break;
+
+                case "ThingStatusInfoEvent":
+                    matches = data.topic.match(/^[^\/]+\/things\/(.*)\/status?$/);
+
+                    value = payload;
+
+                    if(matches) fireThingStatusChange(dataFromThing(matches[1]), value);
+                    break;
+
+                default:
+                    log.d(`Event not managed: ${data.type}`);
+                    log.dump('topic', data.topic);
+                    log.dump('payload', data.payload);
                     break;
             }
         }
     });
 }
 
-function onChannelStateChanged(thingData, value, oldValue = null) {
-    if(thingData.channel) {
-        // Updates channel info
-
-        if(oldValue === null) {
-            oldValue = thingData.channel.state;
-        }
-
-        if(thingData.channel.state !== value) {
-            debug(`Channel ${thingData.channel.label} changed value from '${thingData.channel.state}' to '${value}'`);
-            thingData.channel.state = value;
-        }
+// If oldValue is replaced with value before change if ==null
+function fireChannelValueChange(thingData, value, oldValue = null) {
+    if(!thingData.channel || !thingData.thing) {
+        log.w(`Could not set new channel value from ${oldValue} to ${value}`);
+        return;
     }
 
-    if(thingData.thing) {
+    if(oldValue === null) {
+        oldValue = thingData.channel.state;
+    }
 
+    if(thingData.channel.state !== value) {
+        edebug(`Channel ${thingData.channel.label} changed value from '${thingData.channel.state}' to '${value}'`);
+
+        if(onChannelValueChanged) {
+            onChannelValueChanged(thingData, value, oldValue);
+        }
+
+        thingData.channel.state = value;
     }
 }
 
-function thingFromLinkedItem(linkedItem) {
+function fireThingStatusChange(thingData, status, oldStatus = null) {
+    if(!thingData.thing) {
+        log.w(`Could not set new thing status from ${oldStatus.status} to ${status.status}`);
+        return;
+    }
+
+    if(oldStatus === null) {
+        oldStatus = thingData.thing.statusInfo;
+    }
+
+    if(thingData.thing.statusInfo.status !== status.status) {
+        edebug(`Thing '${thingData.thing.label}' changed status from '${thingData.thing.statusInfo.status}' to '${status.status}'`);
+
+        if(onThingStatusChanged) {
+            onThingStatusChanged(thingData, status, oldStatus);
+        }
+
+        thingData.thing.statusInfo = status;
+    }
+}
+
+function dataFromLinkedItem(linkedItem) {
     let thing = null;
     let channel = null;
 
@@ -406,7 +475,7 @@ function thingFromLinkedItem(linkedItem) {
                 channel = thing.channels[links[linkedItem].channel];
             } else {
                 log.w(`Cannot find channel ${links[linkedItem].channel} inside thing ${links[linkedItem].thing}`);
-            }
+            }4
 
         } else {
             log.w(`Cannot find thing ${links[linkedItem].thing}`);
@@ -418,168 +487,22 @@ function thingFromLinkedItem(linkedItem) {
     return {
         thing: thing, 
         channel: channel
-    }
+    };
 }
 
-function processEventBuffer_old(buffer) {
-    let lines = buffer.split(/\r?\n/);
-    lines.forEach((line) => {
-        let matches = line.match(/^data: (\{.+\}$)/)
-        if(matches) {
-            let data;
-            try {
-                data = JSON.parse(matches[1]);
-                if(!data.type) {
-                    log.e("Data does not contain 'type' field!");
-                    return;
-                }
-                if(!data.payload) {
-                    log.w("Data does not contain 'payload' field!");
-                }
-                if(!data.topic) {
-                    log.w("Data does not contain 'topic' field!");
-                }
-            } catch(e) {
-                log.e("Could not parse event data!");
-                debug(matches[1]);
-                return;
-            }
-            
-            let fireEvent = null;
-            let linkedItem = undefined;
-            let oldValue = undefined;
-            let value = undefined;
-            let thingName = null;
+function dataFromThing(thingName) {
+    let thing = null;
 
-            //let matches = null;
+    if(thingName in things) {
+        thing = things[thingName];
+    } else {
+        log.w(`linkedItem ${thingName} not found (but should)`);
+        debug(Object.keys(things));
+    }
 
-            let payload = JSON.parse(data.payload || "{}");
-
-            // From the docs https://www.openhab.org/javadoc/v2.5/org/eclipse/smarthome/core/events/event
-            // ChannelTriggeredEvent, ConfigStatusInfoEvent, ExtensionEvent, FirmwareStatusInfoEvent, FirmwareUpdateProgressInfoEvent, FirmwareUpdateResultInfoEvent, GroupItemStateChangedEvent, InboxAddedEvent, InboxRemovedEvent, InboxUpdatedEvent, ItemAddedEvent, ItemChannelLinkAddedEvent, ItemChannelLinkRemovedEvent, ItemCommandEvent, ItemRemovedEvent, ItemStateChangedEvent, ItemStateEvent, ItemStatePredictedEvent, ItemUpdatedEvent, RuleAddedEvent, RuleRemovedEvent, RuleStatusInfoEvent, RuleUpdatedEvent, ThingAddedEvent, ThingRemovedEvent, ThingStatusInfoChangedEvent, ThingStatusInfoEvent, ThingUpdatedEvent
-            switch(data.type) {
-                // Items ********************************
-                case "ItemStateChangedEvent": // {"type":"Quantity","value":"0.0 s","oldType":"Quantity","oldValue":"282.0 s"}
-                    fireEvent = onItemStateChangedEvent;
-                    matches = data.topic.match(/^[^\/]+\/items\/(.*)\/statechanged$/);
-                    linkedItem = matches ? matches[1] : false;
-                    oldValue = payload.oldValue || undefined;
-                    value = payload.value || undefined;
-                    break;
-
-                case "ItemStateEvent": // {"type":"Decimal","value":"-66"}
-                    fireEvent = onItemStateEvent;
-                    matches = data.topic.match(/^[^\/]+\/items\/(.*)\/state$/);
-                    linkedItem = matches ? matches[1] : false;
-                    value = payload.value || undefined;
-                    break;
-
-                case "ItemAddedEvent": // {"type":"Switch","name":"BbBotSwitch_Ymjcb3q_2DtestSwitch_State","label":"state","tags":[],"groupNames":[]}
-                    edebug(`[${data.type}] => ${data.topic}`);
-                    break;
-
-                case "ItemChannelLinkAddedEvent": // {"channelUID":"mqtt:homeassistant_6001942ba582:tron:6001942ba582:ESPsensorgaraje_5Fesphome_5Fversion#sensor","configuration":{"profile":"system:default"},"itemName":"GarageVersion"}
-                edebug(`[${data.type}] => ${data.topic}`);
-                break;
-
-                case "ItemRemovedEvent": // {"type":"Switch","name":"BbBotSwitch_Ymjcb3q_2DtestSwitch_State","label":"state","tags":[],"groupNames":[]}
-                    edebug(`[${data.type}] => ${data.topic}`);
-                    break;
-
-                case "ItemCommandEvent": // "topic": "smarthome/items/Blockbrain_Dgvzdf9kzxzpy2vfb2s_2Dsensor2_State/command" // {"type":"OnOff","value":"ON"}
-                    edebug(`[${data.type}] => ${data.topic}`);
-                    break;
-
-                case "ItemStatePredictedEvent": // "topic": "smarthome/items/Blockbrain_Dgvzdf9kzxzpy2vfb2s_2Dsensor2_State/statepredicted" // {"predictedType":"OnOff","predictedValue":"ON","isConfirmation":false}
-                    edebug(`[${data.type}] => ${data.topic}`);
-                    break;
-
-                // Things ********************************
-                case "ThingStatusInfoEvent": // {"status":"ONLINE","statusDetail":"NONE"}
-                    edebug(`[${data.type}] => ${data.topic}`);
-                    break;
-
-                case "ThingStatusInfoChangedEvent": // [{"status":"OFFLINE","statusDetail":"NONE"},{"status":"ONLINE","statusDetail":"NONE"}]
-                    edebug(`[${data.type}] => ${data.topic}`);
-                    break;
-
-                case "ThingAddedEvent": // {"label":"bbBot (Switch)","bridgeUID":"mqtt:systemBroker:tron","configuration":{"topics":["switch/testSwitch"],"basetopic":"homeassistant"},"properties":{"firmwareVersion":"BlockBrain","modelId":"BlockBrain","vendor":"BlockBrain"},"UID":"mqtt:homeassistant_ymjcb3q:tron:ymjcb3q","thingTypeUID":"mqtt:homeassistant_ymjcb3q","channels":[]}
-                    edebug(`[${data.type}] => ${data.topic}`);
-                    break;
-
-                case "ThingRemovedEvent": // {"label":"bbBot (Switch)","bridgeUID":"mqtt:systemBroker:tron","configuration":{"topics":["switch/testSwitch"],"basetopic":"homeassistant"},"properties":{"firmwareVersion":"BlockBrain","modelId":"BlockBrain","vendor":"BlockBrain"},"UID":"mqtt:homeassistant_ymjcb3q:tron:ymjcb3q","thingTypeUID":"mqtt:homeassistant_ymjcb3q","channels":[{"uid":"mqtt:homeassistant_ymjcb3q:tron:ymjcb3q:ymjcb3q_2DtestSwitch#switch","id":"ymjcb3q_2DtestSwitch#switch","channelTypeUID":"mqtt:ymjcb3q_2DtestSwitch_switch","itemType":"Switch","kind":"STATE","label":"state","defaultTags":[],"properties":{},"configuration":{"component":"switch","config":"{\"name\":\"testSwitch\",\"unique_id\":\"ymjcb3q-testSwitch\",\"icon\":\"mdi:battery\",\"state_topic\":\"bbBot/switch/testSwitch/state\",\"availability_topic\":\"bbBot/testSwitch/status\",\"device\":{\"identifiers\":\"ymjcb3q\",\"name\":\"bbBot\",\"model\":\"BlockBrain\",\"manufacturer\":\"BlockBrain\",\"sw_version\":\"BlockBrain\"},\"command_topic\":\"bbBot/switch/testSwitch/command\",\"state_on\":\"ON\",\"state_off\":\"OFF\",\"payload_on\":\"ON\",\"payload_off\":\"OFF\"}","nodeid":"","objectid":"testSwitch"}}]}
-                    edebug(`[${data.type}] => ${data.topic}`);
-                    break;
-
-                case "ThingUpdatedEvent": // Creado canal nuevo, por ejemplo
-                edebug(`[${data.type}] => ${data.topic}`);
-                break;
-
-                // Inbox ********************************
-                case "InboxUpdatedEvent": // {"bridgeUID":"mqtt:systemBroker:tron","flag":"NEW","label":"bbBot (Switch)","properties":{"firmwareVersion":"BlockBrain","modelId":"BlockBrain","topics":["switch/testSwitch"],"vendor":"BlockBrain","basetopic":"homeassistant"},"representationProperty":"objectid","thingUID":"mqtt:homeassistant_ymjcb3q:tron:ymjcb3q","thingTypeUID":"mqtt:homeassistant_ymjcb3q"}
-                    edebug(`[${data.type}] => ${data.topic}`);
-                    break;
-
-                case "InboxRemovedEvent": // {"bridgeUID":"mqtt:systemBroker:tron","flag":"NEW","label":"bbBot (Switch)","properties":{"firmwareVersion":"BlockBrain","modelId":"BlockBrain","topics":["switch/testSwitch"],"vendor":"BlockBrain","basetopic":"homeassistant"},"representationProperty":"objectid","thingUID":"mqtt:homeassistant_ymjcb3q:tron:ymjcb3q","thingTypeUID":"mqtt:homeassistant_ymjcb3q"}
-                    edebug(`[${data.type}] => ${data.topic}`);
-                    break;
-
-                // Unknown ********************************
-                default:
-                    log.w(`Cannot manage event ${data.type}`);
-                    debug(JSON.stringify(data, null, 2));
-                    break;
-            }
-
-            if(fireEvent) {
-                let thing = undefined;
-                let channel = undefined;
-
-                if(!thingName && linkedItem) { // thing referenced by linkedItem?
-                    if(linkedItem in links) {
-                        if(links[linkedItem].thing in things) {
-                            thing = things[links[linkedItem].thing];
-                        } else {
-                            log.w(`Cannot find thing ${links[linkedItem].thing}`);
-                            return;
-                        }
-                    } else {
-                        log.w(`linkedItem ${linkedItem} not found (but should)`);
-                        return;
-                    }
-                } else {
-                    // TODO: NOT VERIFIED!!
-                    if(thingName) {
-                        if(thingName in things) {
-                            thing = things[links[linkedItem].thing];
-                        } else {
-                            log.w(`Cannot find thing ${links[linkedItem].thing}`);
-                            return;
-                        }
-                    }
-                }
-
-                if(linkedItem && thing) { // channel identified by linkedItem?
-                    if(links[linkedItem].channel in thing.channels) {
-                        channel = thing.channels[links[linkedItem].channel];
-                    } else {
-                        log.w(`Cannot find channel ${links[linkedItem].channel} inside thing ${links[linkedItem].thing}`);
-                        return;
-                    }
-                }
-
-                let params = {
-                    thing: channel ? channel.thing : undefined, 
-                    channel: channel, 
-                    oldValue: oldValue, 
-                    value : value, 
-                    data: data
-                };
-
-                fireEvent(params);
-            }
-        }
-    });
+    return {
+        thing: thing
+    };
 }
 
 function fireThingEvents(th, newTh) {
@@ -591,11 +514,14 @@ function fireThingEvents(th, newTh) {
                 // Compare things
                 if(!_.isEqual(t, nt)) {
                     debug(`Thing changed ${t.label} [${tk}]`);
+                    debug(difference(t, nt));
 
                     if(onThingChanged) {
                         debug("Fires onThingChanged");
                         onThingChanged(t, nt);
                     }
+                } else {
+                    log.f("nto changed");
                 }
             } else {
                 // Thing has been removed
