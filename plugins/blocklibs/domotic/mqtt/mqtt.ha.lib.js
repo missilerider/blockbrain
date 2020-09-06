@@ -61,11 +61,13 @@ function createThings() {
                         mqttSrv: service, 
                         type: item.type, 
                         id: itemName,
+                        value: item.initialState || "", 
                         device: deviceName, 
                         deviceIdentifier: deviceIdentifier, 
                         uniqueId: item.uniqueId || deviceIdentifier + "-" + itemName, 
 
-                        discoveryTopic: config.homeAssistant.discovery.prefix + "/" + item.type + "/" + itemName + "/config", 
+                        discoveryPrefix: config.homeAssistant.discovery.prefix, 
+                        //discoveryTopic: config.homeAssistant.discovery.prefix + "/" + item.type + "/" + itemName + "/config", 
 //                        availabilityTopic: "blockbrain/" + deviceName + "/status", 
 
                         icon: item.icon, 

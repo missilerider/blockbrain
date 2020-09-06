@@ -14,13 +14,16 @@ class haThing {
         this.id = params.id;
         this.type = this.getType();
 
+        this.value = params.initialState;
+
         this.device = params.device || "blockbrain";
         this.deviceIdentifier = params.deviceIdentifier;
         this.uniqueId = params.uniqueId;
 
         this.stateTopic = this.device + "/" + this.type + "/" + this.id + "/state";
         this.availabilityTopic = params.availabilityTopic || this.device + "/" + this.id + "/status";
-        this.discoveryTopic = params.discoveryTopic;
+        //this.discoveryTopic = params.discoveryTopic;
+        this.discoveryTopic = params.discoveryPrefix + "/" + this.getType() + "/" + this.id + "/config", 
 
         this.stateOnline = params.stateOnline || "online";
         this.stateOffline = params.stateOffline || "offline";
@@ -28,6 +31,8 @@ class haThing {
 
         this.initialState = params.initialState;
     }
+
+    toString() { return (this.value || "").toString(); }
 
     onMessage(topic, msg) {}
 
@@ -56,8 +61,8 @@ class haThing {
             if(value == "[object Object]")
                 value = this.initialState.toString();
 
-            debug("HQ thing " + this.id + " initial value " + value + " @ " + this.stateTopic);
-            mqtt.publish(this.stateTopic, value);
+            debug("HQ thing " + this.id + " initial value " + this.toString() + " @ " + this.stateTopic);
+            mqtt.publish(this.stateTopic, this.toString());
         }
     }
 
@@ -121,7 +126,7 @@ class haThing {
                 }
             };
         
-            debug("Creates discovery for thing " + this.id);
+            debug(`Creates discovery for thing ${this.id} on '${this.discoveryTopic}'`);
 //            debug("MQTT => " + this.discoveryTopic);
 //            debug("\t=> " + JSON.stringify(msg, null, 2));
             mqtt.publish(this.discoveryTopic, JSON.stringify(msg), ops);
@@ -153,7 +158,7 @@ class haThing {
             };
         }
 
-        mqtt.publish(this.stateTopic, value, ops);
+        mqtt.publish(this.stateTopic, this.toString(), ops);
     }
 }
 
@@ -170,7 +175,7 @@ class haThing_binary_sensor extends haThing {
 }
 
 class haThing_switch extends haThing {
-    getType() { return "switch"; }
+    getType() { return "sensor"; }
 
     constructor(params) {
         super(params);
@@ -235,8 +240,26 @@ class haThing_sensor extends haThing {
     }
 }
 
+class haThing_timer extends haThing {
+    getType() { return "sensor"; }
+
+    constructor(params) {
+        super(params);
+    }
+
+    toString() {
+        console.dir(this);
+        return (this.value || 0) + " secs";
+    }
+
+    buildDiscovery() {
+        return super.buildDiscovery();
+    }
+}
+
 module.exports = {
     haThing_binary_sensor: haThing_binary_sensor, 
     haThing_switch: haThing_switch, 
-    haThing_sensor: haThing_sensor
+    haThing_sensor: haThing_sensor,
+    haThing_timer: haThing_timer
 };
