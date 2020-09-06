@@ -188,19 +188,6 @@ app.use('/', function(req, res, next) {
   })
 });
 
-try {
-  debug("Script pre-load start");
-  utils.scriptReload(conf.blocks.path).then(() => {
-    debug("Script pre-load ended");
-  }).catch((e) => {
-    log.e("scriptReload");
-    log.e(e.message);
-    log.e(e.stack);
-  })
-} catch(e) {
-  log.e(e.message);
-}
-
 // General load
 plugins.reload(utils).then(() => {
   // Starts automatic services
@@ -209,6 +196,20 @@ plugins.reload(utils).then(() => {
     if(conf.startupServices[id])
       services.start(id);
   });
+
+  // Preloads every script
+  try {
+    debug("Script pre-load start");
+    utils.scriptReload(conf.blocks.path).then(() => {
+      debug("Script pre-load ended");
+    }).catch((e) => {
+      log.e("scriptReload");
+      log.e(e.message);
+      log.e(e.stack);
+    })
+  } catch(e) {
+    log.e(e.message);
+  }  
 });
 
 var server = app.listen(PORT, HOST);

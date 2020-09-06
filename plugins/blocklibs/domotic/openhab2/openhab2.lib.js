@@ -444,7 +444,7 @@ function fireChannelValueChange(thingData, value, oldValue = null) {
 
 function fireThingStatusChange(thingData, status, oldStatus = null) {
     if(!thingData.thing) {
-        log.w(`Could not set new thing status from ${oldStatus.status} to ${status.status}`);
+        log.w(`Could not set new thing status from ${oldStatus ? oldStatus.status : "null"} to ${status.status}`);
         return;
     }
 

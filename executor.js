@@ -3,7 +3,7 @@
 const xml_js = require('xml-js');
 const contextFactory = require('./context.js');
 const log = global.log;
-const debug = require('debug')('blockbrain:executor');
+const debug = require('debug')('blockbrain');
 
 var plugins = null;
 var services = null;

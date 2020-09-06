@@ -123,14 +123,21 @@ function loadConfig() {
 }
 
 function loadServiceConfig(srvName) {
+  let data;
   try {
     debug(`Load ServiceConfig ${srvName} from ${global.config_path}/services/${srvName}.json`);
-
-    return JSON.parse(fs.readFileSync(`${global.config_path}/services/${srvName}.json`));
+    data = fs.readFileSync(`${global.config_path}/services/${srvName}.json`);
   } catch (e) {
-    log.e(`Could not load config. ${e.message}`);
+    log.i(`Service ${srvName} configuration not found or not readable`);
+    return {}
   }
-  return {};
+
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    log.e(`Could not parse config file ${srvName}.json: ${e.message}`);
+    return {};
+  }
 }
 
 function saveServiceConfig(srvName, config) {
@@ -269,6 +276,21 @@ async function executeEventLike(eventRegex, vars) {
   return ret;
 }
 
+async function executeCode(json, vars, params = undefined) {
+  if(!('_attributes' in json) || !('type' in json._attributes)) {
+    log.e("Could not execute block");
+    return null;
+  }
+
+  let nodeType = json._attributes.type;
+
+  return await executor.executeProgramJson({ xml: { block: json } }, {
+    nodeTypeFilter: nodeType,
+    msg: vars
+  }, params);
+}
+
+
 function clearEventRef(file) {
   let ids = Object.keys(eventIndex);
   for(let n = 0; n < ids.length; n++) {
@@ -285,7 +307,7 @@ function loadScript(file) {
 
 // Rebuilds script root node references
 function buildScriptRefs(file) {
-  debug("buildScriptRefs " + file);
+  debug("Rebuilds script block references for file " + file);
   clearEventRef(file);
 
   let inserted = {};
@@ -302,7 +324,7 @@ function buildScriptRefs(file) {
       json.xml.block = [json.xml.block];
     json.xml.block.forEach((b) => {
       if(!(b._attributes.type in inserted)) {
-        inserted[b._attributes.type] = true; // Don't insert twice
+        inserted[b._attributes.type] = true; // Don't insert twice (the same type of block?)
 
         if(!(b._attributes.type in eventIndex)) // If event does not exist
           eventIndex[b._attributes.type] = [];
@@ -310,6 +332,8 @@ function buildScriptRefs(file) {
         eventIndex[b._attributes.type].push(file);
       }
     });
+
+    services.onSaveScript(file, json.xml.block);
   }
 
   return true;
@@ -368,6 +392,7 @@ module.exports = {
   endpoint: endpoint, 
   executeEvent: executeEvent, 
   executeEventLike: executeEventLike, 
+  executeCode: executeCode, 
   buildScriptRefs: buildScriptRefs, 
   getScript: getScript, 
   scriptReload: scriptReload

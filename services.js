@@ -198,6 +198,29 @@ function applySettings(srvName, params) {
   }
 }
 
+function onSaveScript(file, blocks) {
+  debug('onSaveScript ' + file);
+  Object.keys(services).forEach((sId) => {
+    if(services[sId].getInfo().methods.includes('onSave') && ('onSave' in services[sId])) { // Service accepts onSave event?
+      let srvPrefix = sId + ".";
+      let b = [];
+      for(let n = 0; n < blocks.length; n++) {
+        if(blocks[n]._attributes.type.startsWith(srvPrefix)) {
+          b.push(blocks[n]);
+        }
+      }
+
+      if(b.length > 0) {
+        debug(`onSave for service ${sId} and file ${file} (${b.length} blocks)`);
+        services[sId].onSave(file, {
+          blocks: b
+        });
+      }
+  }
+  });
+
+}
+
 module.exports = {
   config: config,
   start: start,
@@ -207,5 +230,6 @@ module.exports = {
   getServices: () => { return services; },
   setStartOnBoot: setStartOnBoot, 
   settingsTemplate: settingsTemplate, 
-  applySettings: applySettings
+  applySettings: applySettings, 
+  onSaveScript: onSaveScript
 }
