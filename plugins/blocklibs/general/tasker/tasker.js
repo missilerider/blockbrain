@@ -123,7 +123,8 @@ module.exports.getBlocks = () => {
     "cron_dom": { block: blocks.cronDom, run: blockCode.cronDom }, 
     "cron_dow": { block: blocks.cronDow, run: blockCode.cronDow }, 
     "cron_every_time": { block: blocks.cronEveryTime, run: blockCode.cronEveryTime }, 
-    "cron_hours": { block: blocks.cronHours, run: blockCode.cronHours }
+    "cron_hours": { block: blocks.cronHours, run: blockCode.cronHours }, 
+    "program_job": { block: blocks.programJob, run: blockCode.programJob }
   }
 }
 
@@ -137,6 +138,7 @@ module.exports.getToolbox = () => {
             <block type="tasker.cron_dow"></block> \
             <block type="tasker.cron_every_time"></block> \
             <block type="tasker.cron_hours"></block> \
+            <block type="tasker.program_job"></block> \
             '
         }
     }

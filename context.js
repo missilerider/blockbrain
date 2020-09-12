@@ -156,6 +156,184 @@ class Context {
     return this.getMsg();
   }
 
+  async fork(nextStatement, mandatory = true) {
+    sdebug("Execution " + this.executionId + " continues on " + nextStatement);
+    var newBlock  = null;
+    var lastRet = undefined;
+    try {
+      newBlock = this.findStatement(this.getProgram(), nextStatement, mandatory);
+    } catch(e) {
+      slog.e("Execution stops due to error");
+      sdebug(e.stack);
+      return null;
+    }
+
+    var newContext = this.clone();
+
+    return {
+      run: async () => {
+        while(newBlock != null) {
+          let codeBlock;
+
+          try {
+            codeBlock = await this.getPlugins().getBlockSync(newBlock.block._attributes.type, this.services, this.utils);
+          } catch(e) {
+            sdebug("message: " + JSON.stringify(e.message));
+    //        sdebug(JSON.stringify(e.stack));
+            sdebug(e.stack);
+            slog.e("Block type not found:");
+            slog.e(newBlock.block);
+            throw new Error("Block not found: " + newBlock.block._attributes.type)
+          }
+
+          this.push();
+          this.jump({
+            program: newBlock.block,
+            block: codeBlock
+          });
+
+          this.runFlow.step++;
+          sdebug("RUN: " + newBlock.block._attributes.type);
+          await codeBlock.run(this);
+          this.pop();
+          if('next' in newBlock.block && !this.getRunFlow().flowState) {
+            newBlock = newBlock.block.next;
+          } else {
+            newBlock = null;
+          }
+
+          //updateContext(this, context);
+        }
+      }
+    }
+  }
+
+
+  async fork2(nextStatement) {
+    sdebug("Execution " + this.executionId + " forks on " + nextStatement);
+    var newBlock  = null;
+    var lastRet = undefined;
+    try {
+      newBlock = this.findStatement(this.getProgram(), nextStatement, false);
+      //console.dir(newBlock.block.value);
+    } catch(e) {
+      slog.e("Execution stops due to error");
+      sdebug(e.stack);
+      return;
+    }
+
+    let newParams = { ...this.params };
+
+    return {
+      run: async () => {
+        console.log("Run fork!");
+
+        let newContext = createContext({
+          plugins: this.plugins, 
+          services: this.services, 
+          utils: this.utils, 
+          program: newBlock.block, 
+          block: null, 
+          msg: null
+        });
+  
+        newContext.params = newParams;
+        newContext.msg = newContext.getVar('msg');
+
+        newContext.step();      
+  
+
+        while(newBlock != null) {
+          let codeBlock;
+    
+          try {
+            codeBlock = await this.getPlugins().getBlockSync(newBlock.block._attributes.type, this.services, this.utils);
+          } catch(e) {
+            sdebug("message: " + JSON.stringify(e.message));
+    //        sdebug(JSON.stringify(e.stack));
+            sdebug(e.stack);
+            slog.e("Block type not found:");
+            slog.e(newBlock.block);
+            throw new Error("Block not found: " + newBlock.block._attributes.type)
+          }
+    
+          newContext.push();
+          newContext.jump({
+            program: newBlock.block,
+            block: codeBlock
+          });
+    
+          newContext.runFlow.step++;
+          sdebug("RUN: " + newBlock.block._attributes.type);
+          await codeBlock.run(newContext);
+          newContext.pop();
+          if('next' in newBlock.block && !newContext.getRunFlow().flowState) {
+            newBlock = newBlock.block.next;
+          } else {
+            newBlock = null;
+          }
+    
+          //updateContext(this, context);
+        }        
+
+
+        return codeBlock.run(newContext);
+      }
+    };
+
+    while(newBlock != null) {
+      let codeBlock;
+
+      try {
+        codeBlock = await this.getPlugins().getBlockSync(newBlock.block._attributes.type, this.services, this.utils);
+      } catch(e) {
+        sdebug("message: " + JSON.stringify(e.message));
+//        sdebug(JSON.stringify(e.stack));
+        sdebug(e.stack);
+        slog.e("Block type not found:");
+        slog.e(newBlock.block);
+        throw new Error("Block not found: " + newBlock.block._attributes.type)
+      }
+
+      let newContext = createContext({
+        plugins: this.plugins, 
+        services: this.services, 
+        utils: this.utils, 
+        program: newBlock.block, 
+        block: codeBlock, 
+        msg: this.getVar('msg')
+      });
+
+      newContext.params = newParams;
+
+      newContext.step();      
+
+      // Run and keep promise
+      let runprom = codeBlock.run(newContext);
+
+      return;
+
+      //this.push();
+      this.jump({
+        program: newBlock.block,
+        block: codeBlock
+      });
+
+      this.runFlow.step++;
+      sdebug("RUN: " + newBlock.block._attributes.type);
+      await codeBlock.run(this);
+      this.pop();
+      if('next' in newBlock.block && !this.getRunFlow().flowState) {
+        newBlock = newBlock.block.next;
+      } else {
+        newBlock = null;
+      }
+
+      //updateContext(this, context);
+    }
+    return this.getMsg();
+  }
+
   exit(code = 0, message = "") {
     sdebug("Exists execution: " + code + ", " + message);
   }
@@ -293,7 +471,20 @@ class Context {
     this.vars["msg"] = options.msg;
   }
 
-  clone2(context, options) {
+  clone() {
+    let newContext = createContext({
+      plugins: this.plugins, 
+      services: this.services, 
+      utils: this.utils, 
+      program: this.program,  
+      block: this.block, 
+      msg: null
+    });
+
+    newContext.params = { ...this.params };
+    newContext.msg = newContext.getVar('msg');
+    return newContext;
+
     if(!options.program || !options.block) {
       throw new Error("Parameters program and block are mandatory");
     }

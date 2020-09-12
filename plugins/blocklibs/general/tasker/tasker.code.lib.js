@@ -1,5 +1,7 @@
 const debug = require('debug')('blockbrain:script:tasker');
 
+var jobs = {};
+var lastJob = 0;
 
 module.exports = {
     taskerScheduledEvent: async (context) => {
@@ -73,5 +75,46 @@ module.exports = {
         let sec = context.getField("SECOND", "X") || "X";
 
         return `${sec} ${min} ${hour}`;
+    }, 
+
+    programJob: async(context) => {
+        context.blockIn();
+
+        let i = context.getField('INTERVAL');
+        let intType = context.getField('TYPE');
+
+        switch(intType) {
+            case "HOURS": i *= 60;
+            case "MINUTES": i *= 60;
+            case "SECS": i *= 1000;
+            case "MS": break;
+        }
+
+        let max = Math.pow(2, 31) - 1;
+
+        if(i > max) {
+            debug(`Interval too long (${i}). Waiting 'only' 2^31-1 milliseconds`);
+            i = max;
+        }
+
+        var job = lastJob++;
+
+        var fork = await context.fork("CMD", false);
+
+        if(!fork) {
+            return;
+        }
+
+        debug(`Program fork in ${i} milliseconds`);
+
+        var handler = setTimeout(() => {
+            delete jobs[job]; // Remove job
+
+            debug("Fork execution");
+
+            fork.run();
+        }, i);
+
+        jobs[job] = handler; // Keep track in case of service stop (or similar)
     }
 }

@@ -165,5 +165,51 @@ module.exports = {
         "colour": 80,
         "tooltip": "Hour fine definition",
         "helpUrl": ""
-    }
+    }, 
+    programJob: {
+        "type": "program_job",
+        "message0": "Execute after %1 %2 %3 %4",
+        "args0": [
+          {
+            "type": "field_number",
+            "name": "INTERVAL",
+            "value": 0,
+            "min": 1
+          },
+          {
+            "type": "field_dropdown",
+            "name": "TYPE",
+            "options": [
+              [
+                "ms",
+                "MS"
+              ],
+              [
+                "secs",
+                "SECS"
+              ],
+              [
+                "mins",
+                "MINUTES"
+              ],
+              [
+                "hours",
+                "HOURS"
+              ]
+            ]
+          },
+          {
+            "type": "input_dummy"
+          },
+          {
+            "type": "input_statement",
+            "name": "CMD"
+          }
+        ],
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 60,
+        "tooltip": "Executes a command block after the specified interval",
+        "helpUrl": ""
+      }
 }

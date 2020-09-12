@@ -290,7 +290,6 @@ async function executeCode(json, vars, params = undefined) {
   }, params);
 }
 
-
 function clearEventRef(file) {
   let ids = Object.keys(eventIndex);
   for(let n = 0; n < ids.length; n++) {
