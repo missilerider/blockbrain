@@ -405,13 +405,15 @@ function getToolbox() {
       "Thing Events": ' \
         <block type="openhab2.onItemStateChangedEvent"></block> \
         <block type="openhab2.onThingStatusChangedEvent"></block> \
-        '
-    }
-/*        <block type="openhab2.onItemStateEvent"></block> \
         <block type="openhab2.onChannelStateEvent"></block> \
+        <block type="openhab2.onItemStateEvent"></block> \
+        ', 
+      "Channels": ' \
         <block type="openhab2.getThingChannels"></block> \
         <block type="openhab2.getThingChannelsParam"></block> \
-        <block type="openhab2.getChannelProperty"></block> \*/
+        <block type="openhab2.getChannelProperty"></block> \
+    '
+    }
 
   }
 }
