@@ -119,6 +119,9 @@ function loadConfig() {
 
   global.blockbrainVersion = conf.system.swVersion;
 
+  // If overwritten through env vars
+  if(global.vault_path) conf.blocks.path = global.vault_path;
+
   return conf;
 }
 

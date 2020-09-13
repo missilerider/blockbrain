@@ -110,7 +110,7 @@ module.exports = {
         var handler = setTimeout(() => {
             delete jobs[job]; // Remove job
 
-            debug("Fork execution");
+            debug(`Fork execution after ${i} milliseconds`);
 
             fork.run();
         }, i);

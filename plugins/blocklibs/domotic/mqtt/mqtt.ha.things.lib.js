@@ -21,7 +21,7 @@ class haThing {
         this.uniqueId = params.uniqueId;
 
         this.stateTopic = this.device + "/" + this.type + "/" + this.id + "/state";
-        this.availabilityTopic = params.availabilityTopic || this.device + "/" + this.id + "/status";
+        this.availabilityTopic = params.availabilityTopic || this.device + "/status";
         //this.discoveryTopic = params.discoveryTopic;
         this.discoveryTopic = params.discoveryPrefix + "/" + this.getType() + "/" + this.id + "/config", 
 

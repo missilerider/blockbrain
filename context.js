@@ -169,6 +169,7 @@ class Context {
     }
 
     var newContext = this.clone();
+    console.dir(this.vars);
 
     return {
       run: async () => {
@@ -176,7 +177,7 @@ class Context {
           let codeBlock;
 
           try {
-            codeBlock = await this.getPlugins().getBlockSync(newBlock.block._attributes.type, this.services, this.utils);
+            codeBlock = await newContext.getPlugins().getBlockSync(newBlock.block._attributes.type, newContext.services, newContext.utils);
           } catch(e) {
             sdebug("message: " + JSON.stringify(e.message));
     //        sdebug(JSON.stringify(e.stack));
@@ -186,83 +187,12 @@ class Context {
             throw new Error("Block not found: " + newBlock.block._attributes.type)
           }
 
-          this.push();
-          this.jump({
-            program: newBlock.block,
-            block: codeBlock
-          });
-
-          this.runFlow.step++;
-          sdebug("RUN: " + newBlock.block._attributes.type);
-          await codeBlock.run(this);
-          this.pop();
-          if('next' in newBlock.block && !this.getRunFlow().flowState) {
-            newBlock = newBlock.block.next;
-          } else {
-            newBlock = null;
-          }
-
-          //updateContext(this, context);
-        }
-      }
-    }
-  }
-
-
-  async fork2(nextStatement) {
-    sdebug("Execution " + this.executionId + " forks on " + nextStatement);
-    var newBlock  = null;
-    var lastRet = undefined;
-    try {
-      newBlock = this.findStatement(this.getProgram(), nextStatement, false);
-      //console.dir(newBlock.block.value);
-    } catch(e) {
-      slog.e("Execution stops due to error");
-      sdebug(e.stack);
-      return;
-    }
-
-    let newParams = { ...this.params };
-
-    return {
-      run: async () => {
-        console.log("Run fork!");
-
-        let newContext = createContext({
-          plugins: this.plugins, 
-          services: this.services, 
-          utils: this.utils, 
-          program: newBlock.block, 
-          block: null, 
-          msg: null
-        });
-  
-        newContext.params = newParams;
-        newContext.msg = newContext.getVar('msg');
-
-        newContext.step();      
-  
-
-        while(newBlock != null) {
-          let codeBlock;
-    
-          try {
-            codeBlock = await this.getPlugins().getBlockSync(newBlock.block._attributes.type, this.services, this.utils);
-          } catch(e) {
-            sdebug("message: " + JSON.stringify(e.message));
-    //        sdebug(JSON.stringify(e.stack));
-            sdebug(e.stack);
-            slog.e("Block type not found:");
-            slog.e(newBlock.block);
-            throw new Error("Block not found: " + newBlock.block._attributes.type)
-          }
-    
           newContext.push();
           newContext.jump({
             program: newBlock.block,
             block: codeBlock
           });
-    
+
           newContext.runFlow.step++;
           sdebug("RUN: " + newBlock.block._attributes.type);
           await codeBlock.run(newContext);
@@ -272,66 +202,9 @@ class Context {
           } else {
             newBlock = null;
           }
-    
-          //updateContext(this, context);
-        }        
-
-
-        return codeBlock.run(newContext);
+        }
       }
-    };
-
-    while(newBlock != null) {
-      let codeBlock;
-
-      try {
-        codeBlock = await this.getPlugins().getBlockSync(newBlock.block._attributes.type, this.services, this.utils);
-      } catch(e) {
-        sdebug("message: " + JSON.stringify(e.message));
-//        sdebug(JSON.stringify(e.stack));
-        sdebug(e.stack);
-        slog.e("Block type not found:");
-        slog.e(newBlock.block);
-        throw new Error("Block not found: " + newBlock.block._attributes.type)
-      }
-
-      let newContext = createContext({
-        plugins: this.plugins, 
-        services: this.services, 
-        utils: this.utils, 
-        program: newBlock.block, 
-        block: codeBlock, 
-        msg: this.getVar('msg')
-      });
-
-      newContext.params = newParams;
-
-      newContext.step();      
-
-      // Run and keep promise
-      let runprom = codeBlock.run(newContext);
-
-      return;
-
-      //this.push();
-      this.jump({
-        program: newBlock.block,
-        block: codeBlock
-      });
-
-      this.runFlow.step++;
-      sdebug("RUN: " + newBlock.block._attributes.type);
-      await codeBlock.run(this);
-      this.pop();
-      if('next' in newBlock.block && !this.getRunFlow().flowState) {
-        newBlock = newBlock.block.next;
-      } else {
-        newBlock = null;
-      }
-
-      //updateContext(this, context);
     }
-    return this.getMsg();
   }
 
   exit(code = 0, message = "") {
@@ -481,17 +354,9 @@ class Context {
       msg: null
     });
 
-    newContext.params = { ...this.params };
+    newContext.vars = { ...this.vars };
     newContext.msg = newContext.getVar('msg');
     return newContext;
-
-    if(!options.program || !options.block) {
-      throw new Error("Parameters program and block are mandatory");
-    }
-
-    this.runFlow = this.getRunFlow();
-    this.vars = this.getVars();
-    this.plugins = this.getPlugins();
   }
 
   update(options) {

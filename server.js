@@ -21,6 +21,9 @@ const sleep = (milliseconds) => {
 global.config_path = process.env.CONFIG_PATH || "./config";
 global.vault_path = process.env.VAULT_PATH || "./vault";
 
+debug(`Config path = ${global.vault_path}`);
+debug(`Vault path = ${global.vault_path}`);
+
 const log = Log.newLogger();
 const slog = Log.newLogger("S =>\t");
 global.log = log;
@@ -199,7 +202,7 @@ plugins.reload(utils).then(() => {
 
   // Preloads every script
   try {
-    debug("Script pre-load start");
+    debug(`Script pre-load start (${conf.blocks.path})`);
     utils.scriptReload(conf.blocks.path).then(() => {
       debug("Script pre-load ended");
     }).catch((e) => {
