@@ -1,9 +1,9 @@
 'use strict';
 
-const oh = require('./openhab2.lib.js');
-const blocks = require('./openhab2.blocks.lib.js');
+const lib = require('./snmp.lib.js');
+const blocks = require('./snmp.blocks.lib.js');
 
-const debug = require('debug')('blockbrain:service:openhab2');
+const debug = require('debug')('blockbrain:service:snmp');
 const log = global.log;
 
 const sleep = (milliseconds) => {
@@ -14,8 +14,6 @@ var runPromise = null;
 var runPromiseResolve = null;
 
 var tools = null;
-
-var metadataNamespace = "blockbrain";
 
 function entitiesCombo(base, all = false) {
   let ret = { ... base };
@@ -251,75 +249,6 @@ var getAttributesBlock = {
   }
 }
 
-var ohService = {
-  getInfo: () => { return {
-    methods: ["start", "stop"],
-    name: "Openhab2 REST API integration",
-    description: "Connects directly to a Openhab2 instance and exposes events and things"
-  }},
-  status: () => { return "TODO"; },
-  start: (srv) => {
-    return true;
-  },
-  stop: async (srv) => {
-    if(!runPromise || !runPromiseResolve) return false;
-    runPromiseResolve();
-    runPromise = null;
-    runPromiseResolve = null;
-  },
-  run: async (srv, srvTools) => {
-    tools = srvTools;
-
-    if(runPromise || runPromiseResolve) return false; // Must stop before
-    runPromise = new Promise(resolve => {
-      runPromiseResolve = resolve;
-    });
-
-    let host = srv.config.baseUrl || null;
-    metadataNamespace = srv.config.metadataNamespace || "blockbrain";
-
-    if(!host) {
-      log.f("openhab2.json baseUrl field must be defined at least for Openhab2 integration");
-      srv.status = 0;
-      return;
-    }
-
-    oh.config({
-      host: host, 
-      updateThingsDelay: srv.config.updateThingsDelay, 
-
-      // Events
-      onThingStatusChanged: onThingStatusChanged, 
-
-//      onItemStateEvent: onItemStateEvent, 
-//      onItemStateChangedEvent: onItemStateChangedEvent, 
-
-      onChannelValueChanged: onChannelValueChanged
-    });
-
-    if(!await oh.start()) {
-      log.e('Openhab2 service cannot subscribe to event bus');
-    } else {
-      debug(`Event bus subscription to host ${host} correct and running`);
-    }
-
-    srv.status = 1;
-  
-    debug("Openhab2 connection correct!");
-
-    await runPromise;
-
-    debug('OH stop');
-
-    oh.stop(); // Stops thing updates and everything
-   
-    //clearInterval(intervalHandler);
-
-    srv.status = 0;
-    debug("Openhab2 REST API service stopped");
-  }
-}
-
 function onItemStateEvent(data) {
   //log.f(`${data.thing.uid} [${data.channel.uid}]: ${data.value}`);
   tools.executeEvent('openhab2.onItemStateEvent', {}, {
@@ -410,13 +339,73 @@ function getToolbox() {
   }
 }
 
+var service = {
+  getInfo: () => { return {
+    methods: ["start", "stop"],
+    name: module.exports.getInfo().name,
+    description: "Simple Network Management Protocol"
+  }},
+  status: () => { return "TODO"; },
+  start: (srv) => {
+    return true;
+  },
+  stop: async (srv) => {
+    if(!runPromise || !runPromiseResolve) return false;
+    runPromiseResolve();
+    runPromise = null;
+    runPromiseResolve = null;
+  },
+  run: async (srv, srvTools) => {
+    tools = srvTools;
+
+    if(runPromise || runPromiseResolve) return false; // Must stop before
+    runPromise = new Promise(resolve => {
+      runPromiseResolve = resolve;
+    });
+
+    lib.config({
+      host: host, 
+      updateThingsDelay: srv.config.updateThingsDelay, 
+
+      // Events
+      onThingStatusChanged: onThingStatusChanged, 
+
+//      onItemStateEvent: onItemStateEvent, 
+//      onItemStateChangedEvent: onItemStateChangedEvent, 
+
+      onChannelValueChanged: onChannelValueChanged
+    });
+
+    if(!await oh.start()) {
+      log.e('Openhab2 service cannot subscribe to event bus');
+    } else {
+      debug(`Event bus subscription to host ${host} correct and running`);
+    }
+
+    srv.status = 1;
+  
+    debug("Openhab2 connection correct!");
+
+    await runPromise;
+
+    debug('OH stop');
+
+    oh.stop(); // Stops thing updates and everything
+   
+    //clearInterval(intervalHandler);
+
+    srv.status = 0;
+    debug("Openhab2 REST API service stopped");
+  }
+}
+
 module.exports = {
   getInfo: () => { return {
-      "id": "openhab2",
-      "name": "Openhab2 REST API integration",
-      "author": "Alfonso Vila"
+      id: "snmp",
+      name: "SNMP",
+      author: "Alfonso Vila"
     } }, 
   getBlocks: getBlocks,
-  getServices: () => { return { "openhab2": ohService } },
+  getServices: () => { return { "opesnmpnhab2": service } },
   getToolbox: getToolbox
 }

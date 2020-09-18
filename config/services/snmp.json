@@ -1,0 +1,15 @@
+{
+    "communities": [
+        "public", 
+        "publicRO", 
+        "1234", 
+        "FlynnsRO"
+    ], 
+    "credentials": {
+        "blockbrain": [ "1234", "Next32go" ]
+    }, 
+    "alias": {
+        "systemInfo": "iso.3.6.1.2.1.1.1.0", 
+        "hostname": "iso.3.6.1.2.1.1.5.0"
+    }
+}

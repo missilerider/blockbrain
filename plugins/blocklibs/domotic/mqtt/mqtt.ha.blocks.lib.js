@@ -119,7 +119,7 @@ module.exports = {
             context.blockIn();
             let thingName = context.getField('THING');
             let newStatus = context.getField('NEWSTATUS');
-            debug("newStatus" + JSON.stringify(newStatus));
+            sdebug("newStatus" + JSON.stringify(newStatus));
             let srv = context.getService('mqtt');
             let thing = srv.getThing(thingName);
             if(newStatus != "disable") {

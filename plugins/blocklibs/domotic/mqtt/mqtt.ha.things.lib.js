@@ -6,6 +6,44 @@ const log = global.log;
 var mqtt = null;
 var mqttSrv = null;
 
+var timer = null;
+
+var timedThings = {};
+
+function startTimer(thing) {
+    debug(`Stop timer called from ${thing.id}`);
+
+    // Add thing to update list
+    if(!(thing.id in timedThings))
+        timedThings[thing.id] = thing;
+    
+    // Timer not set. Start!
+    if(timer === null) {
+        debug("Start timer");
+        timer = setInterval(() => {
+            let keys = Object.keys(timedThings);
+
+            for(let n = 0; n < keys.length; n++) {
+                // Self update, please
+                timedThings[keys[n]].updateTimer();
+            }
+        }, 1000);
+    }
+}
+
+function stopTimer(thing) {
+    debug(`Stop timer called from ${thing.id}`);
+
+    if(thing.id in timedThings)
+        delete timedThings[thing.id];
+
+    if(Object.keys(timedThings).length == 0 && timer != null) {
+        debug("Stop timer");
+        clearInterval(timer);
+        timer = null;
+    }
+}
+
 class haThing {
     constructor(params) {
         mqtt = params.mqtt;
@@ -175,7 +213,7 @@ class haThing_binary_sensor extends haThing {
 }
 
 class haThing_switch extends haThing {
-    getType() { return "sensor"; }
+    getType() { return "switch"; }
 
     constructor(params) {
         super(params);
@@ -245,15 +283,76 @@ class haThing_timer extends haThing {
 
     constructor(params) {
         super(params);
+
+        // Change secs to UTC secs and start timer if needed
+        this.setValue(this.value);
     }
 
     toString() {
-        console.dir(this);
-        return (this.value || 0) + " secs";
+        let secs = parseInt(this.value - this.now());
+
+        if(secs > 24*60*60) { // > 1 day
+            let days = Math.floor(secs / (24*60*60));
+            return days.toString() + "d";
+        }
+
+        if(secs > 3600) { // > 1 hour
+            let hours = Math.floor(secs / (3600));
+            return hours.toString() + "h";
+        }
+
+        if(secs > 60) { // > 1 min => 5:13
+            return Math.floor(secs / 60) + ":" + ("00" + (secs % 60)).slice(-2);
+        }
+
+        if(secs > 0) {
+            return Math.max(0, secs).toString() + "s";
+        }
+
+        return "stopped";
     }
 
     buildDiscovery() {
         return super.buildDiscovery();
+    }
+
+    now() {
+        return Math.round((new Date()).getTime() / 1000);
+    }
+
+    remainingSecs() {
+        return this.value - this.now();
+    }
+
+    // newValue is seconds from now
+    async setValue(newValue) {
+        debug(`SetValue for ${this.id} = ${newValue}`);
+        debug(`now = ${this.now()}`);
+        let secs;
+        switch(typeof newValue) {
+            case "string": secs = parseInt(newValue); break;
+            case "number": secs = Math.round(newValue); break;
+            case "boolean": secs = 0;
+            default: secs = parseInt(newValue.toString()); break;
+        }
+
+        if(secs < 0) secs = 0;
+
+        this.value = this.now() + secs;
+
+        this.updateTimer();
+
+        if(secs > 0) startTimer(this);
+        else stopTimer(this);
+
+    }
+
+    updateTimer() {
+        let secs = this.remainingSecs();
+
+        if(secs <= 0) stopTimer(this);
+
+        mqtt.publish(this.stateTopic, this.toString(), { qos: 0 });
     }
 }
 

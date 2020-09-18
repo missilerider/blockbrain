@@ -169,7 +169,6 @@ class Context {
     }
 
     var newContext = this.clone();
-    console.dir(this.vars);
 
     return {
       run: async () => {

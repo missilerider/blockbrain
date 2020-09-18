@@ -82,7 +82,7 @@ app.use(helmet());
 app.use(cookieParser(conf.security.cookie.secret));
 app.use(expressSession({
   secret: conf.security.cookie.secret,
-  key:conf.security.cookie.name,
+  key: conf.security.cookie.name,
   cookie: {
     path: '/',
     httpOnly: false,
@@ -102,22 +102,22 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride());
 
 function checkAuth(req, res, next, done, errRedirect = true) {
-  if(req.session)
-    if(req.session.user)
+  if (req.session)
+    if (req.session.user)
       return done(req, res, next);
 
-  if(req.headers && req.headers['x-blockbrain-api-key'])
-    if(runtime.apiKeys[req.headers['x-blockbrain-api-key']] &&
+  if (req.headers && req.headers['x-blockbrain-api-key'])
+    if (runtime.apiKeys[req.headers['x-blockbrain-api-key']] &&
       runtime.apiKeys[req.headers['x-blockbrain-api-key']].enabled) {
-        return done(req, res, next);
-      }
+      return done(req, res, next);
+    }
 
-  if(errRedirect) {
+  if (errRedirect) {
     res.redirect(302, '/login.html?last=' + encodeURIComponent(req.url));
     res.end();
     return false;
   } else {
-    res.status(401).send({message: 'Authorization needed. Please refer to the user manual'});
+    res.status(401).send({ message: 'Authorization needed. Please refer to the user manual' });
     return false;
   }
 }
@@ -137,7 +137,7 @@ app.post('/login.run', (req, res, next) => {
   debug("User: " + username);
   debug("Pwd: " + password);
 
-  for(var n = 0; n < conf.security.users.length; n++) {
+  for (var n = 0; n < conf.security.users.length; n++) {
     var u = conf.security.users[n];
     debug("Check: " + u.name + " / " + u.sha256);
     if (username.valueOf() === u.name && password.valueOf() === u.sha256) {
@@ -156,16 +156,16 @@ app.post('/login.run', (req, res, next) => {
 app.get('/', (req, res, next) => { res.redirect(301, '/index.html'); });
 
 // API calls
-app.use('/api/v1/*', (req, res, next) =>  {
+app.use('/api/v1/*', (req, res, next) => {
   checkAuth(req, res, next, serverApi.dispatcher, false);
 });
 
 //app.post('/' + conf.endpoint.path, utils.endpoint);
-app.post('/' + conf.endpoint.path, (req, res, next) =>  {
+app.post('/' + conf.endpoint.path, (req, res, next) => {
   checkAuth(req, res, next, utils.endpoint, false);
 });
 
-app.get('/' + conf.endpoint.path, (req, res, next) =>  {
+app.get('/' + conf.endpoint.path, (req, res, next) => {
   res.send("Endpoint ready for requests. Please refer to the manual.");
 });
 
@@ -175,18 +175,18 @@ app.use('/blockly', express.static('blockly'));
 app.use('/closure-library', express.static('closure-library'));
 app.use('/login.html', express.static(__dirname + '/public/login.html'));
 app.use('/assets', express.static('public/assets'));
-app.use('/', function(req, res, next) {
-  checkAuth(req, res, next, function(req, res, next) {
+app.use('/', function (req, res, next) {
+  checkAuth(req, res, next, function (req, res, next) {
     const path = req.originalUrl.replace(/\?.*$/, '');
-    debug("Static: " + path  + " = " + __dirname + '/public' + path);
+    debug("Static: " + path + " = " + __dirname + '/public' + path);
     try {
-      res.sendFile(path, {root: __dirname + '/public'}, (err) => {
+      res.sendFile(path, { root: __dirname + '/public' }, (err) => {
         res.end();
 
         if (err) res.status(404);
       });
-    } catch(e) {
-        res.status(404);
+    } catch (e) {
+      res.status(404);
     }
   })
 });
@@ -196,7 +196,7 @@ plugins.reload(utils).then(() => {
   // Starts automatic services
   debug("Starting services on startup");
   Object.keys(conf.startupServices).forEach(id => {
-    if(conf.startupServices[id])
+    if (conf.startupServices[id])
       services.start(id);
   });
 
@@ -210,25 +210,25 @@ plugins.reload(utils).then(() => {
       log.e(e.message);
       log.e(e.stack);
     })
-  } catch(e) {
+  } catch (e) {
     log.e(e.message);
-  }  
+  }
 });
 
 var server = app.listen(PORT, HOST);
 debug(`Running on http://${HOST}:${PORT}`);
 
 // Graceful exit
-process.on('SIGINT', async function() {
+process.on('SIGINT', async function () {
   console.log("SIGINT received");
   debug("SIGINT received");
   log.f("Blockbrain is closing!");
   debug("Stopping HTTP server...");
   await server.close();
 
-  for(let s = 0; s < Object.keys(services.getServices()).length; s++) {
+  for (let s = 0; s < Object.keys(services.getServices()).length; s++) {
     let id = Object.keys(services.getServices())[s];
-    if(
+    if (
       services.status(id).status == "running") {
       debug("Stopping service " + id + "...");
       await services.stop(id);

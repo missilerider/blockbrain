@@ -28,7 +28,6 @@
   "dependencies": {
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
-    "cloudtuya": "github:unparagoned/cloudtuya",
     "colors": "^1.4.0",
     "common": "^0.2.5",
     "cookie-parser": "^1.4.5",
@@ -41,10 +40,10 @@
     "lodash": "^4.17.20",
     "method-override": "^3.0.0",
     "mqtt": "^4.2.1",
+    "net-snmp": "^2.9.1",
     "passport": "^0.4.1",
     "passport-http": "^0.3.0",
     "socket.io-client": "^2.3.0",
-    "tuyapi": "^5.3.1",
     "xml-js": "^1.6.11"
   }
 }
