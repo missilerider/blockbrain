@@ -411,9 +411,8 @@ function processEventBuffer(buffer) {
                     break;
 
                 default:
-                    log.d(`Event not managed: ${data.type}`);
-                    log.dump('topic', data.topic);
-                    log.dump('payload', data.payload);
+                    debug(`Event not managed: ${data.type}`);
+                    debug(data);
                     break;
             }
         }

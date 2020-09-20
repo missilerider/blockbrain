@@ -1,28 +1,36 @@
 {
-    "hosts": {
-        "tronV2": {
-            "host": "172.16.0.4", 
-            "auth": {
-                "version": "2c", 
-                "community": "public"
-            }
-        }, 
-        "tronV3": {
-            "host": "172.16.0.4", 
-            "auth": {
-                "version": "3", 
-                "security": "authNoPriv", 
-                "user": "blockbrain", 
-                "authProtocol": "sha",
-                "authKey": "Next32gen",
-                "privProtocol": "des",
-                "privKey": "12341234"
-            }
-        }, 
-        "asus": {
+    "tronV2": {
+        "host": "172.16.0.4", 
+        "auth": {
             "version": "2c", 
-            "host": "172.16.0.1", 
+            "community": "public"
+        }
+    }, 
+    "tronV3": {
+        "host": "172.16.0.4", 
+        "auth": {
+            "version": "3", 
+            "security": "authNoPriv", 
+            "user": "blockbrain", 
+            "authProtocol": "md5",
+            "authKey": "Next32go",
+            "privProtocol": "des",
+            "privKey": "12341234"
+        }
+    }, 
+    "asus": {
+        "host": "172.16.0.1", 
+        "auth": {
+            "version": "2c", 
             "community": "FlynnsRO"
+        }
+    }, 
+    "meraki": {
+        "host": "snmp.meraki.com", 
+        "port": 16100, 
+        "auth": {
+            "version": "2c", 
+            "community": "o/gYxa_b"
         }
     }
 }

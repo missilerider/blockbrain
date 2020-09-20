@@ -11,5 +11,13 @@
     "alias": {
         "systemInfo": "iso.3.6.1.2.1.1.1.0", 
         "hostname": "iso.3.6.1.2.1.1.5.0"
+    },
+    "mibs": {
+        "path": "./config/services/snmp-mibs", 
+        "load": [
+            "IANAifType-MIB.mib", 
+            "IF-MIB.mib", 
+            "MERAKI-CLOUD-CONTROLLER-MIB.mib"
+        ]
     }
 }

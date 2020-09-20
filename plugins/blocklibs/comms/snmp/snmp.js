@@ -1,7 +1,10 @@
 'use strict';
 
-const lib = require('./snmp.lib.js');
 const blocks = require('./snmp.blocks.lib.js');
+
+console.log(blocks);
+
+const code = require('./snmp.code.lib.js');
 
 const debug = require('debug')('blockbrain:service:snmp');
 const log = global.log;
@@ -14,8 +17,9 @@ var runPromise = null;
 var runPromiseResolve = null;
 
 var tools = null;
+var hosts = {};
 
-function entitiesCombo(base, all = false) {
+function hostsCombo(base, all = false) {
   let ret = { ... base };
   let things = oh.getThings();
   let thingLabels = [];
@@ -303,37 +307,24 @@ function onThingStatusChanged(data, status, oldStatus) {
 }
 
 async function getBlocks() {
-  var blocks = {
-    // Events
-    "onItemStateEvent": onItemStateEventBlock, 
-    "onChannelStateEvent": onChannelStateEventBlock, 
-    "onItemStateChangedEvent": onItemStateChangedEventBlock, 
-    "onThingStatusChangedEvent": onThingStatusChangedBlock, 
-
-    // Channel Methods
-    "getThingChannels": getThingChannelsBlock, 
-    "getThingChannelsParam": getThingChannelsParamBlock, 
-    "getChannelProperty": getChannelPropertyBlock
+  return {
+    // Query
+    "readOids": { 
+      block: (services) => { return hostsCombo(blocks.readOids, false); }, 
+      run: code.readOids }, 
   };
-
-  return blocks;
 }
 
 function getToolbox() {
   return {
-    "openhab2": {
-      "Things": '', 
-      "Thing Events": ' \
-        <block type="openhab2.onItemStateChangedEvent"></block> \
-        <block type="openhab2.onThingStatusChangedEvent"></block> \
-        <block type="openhab2.onChannelStateEvent"></block> \
-        <block type="openhab2.onItemStateEvent"></block> \
+    "snmp": {
+      "Query": ' \
+        <block type="snmp.readOids"></block> \
+      ', 
+      "Libraries": ' \
         ', 
-      "Channels": ' \
-        <block type="openhab2.getThingChannels"></block> \
-        <block type="openhab2.getThingChannelsParam"></block> \
-        <block type="openhab2.getChannelProperty"></block> \
-    '
+      "User": ' \
+        '
     }
 
   }
@@ -346,7 +337,9 @@ var service = {
     description: "Simple Network Management Protocol"
   }},
   status: () => { return "TODO"; },
-  start: (srv) => {
+  start: (srv, tools) => {
+    utils = tools.utils;
+    hosts = utils.loadServiceAdditionalConfig(SERVICE_NAME, "devices");
     return true;
   },
   stop: async (srv) => {
@@ -406,6 +399,6 @@ module.exports = {
       author: "Alfonso Vila"
     } }, 
   getBlocks: getBlocks,
-  getServices: () => { return { "opesnmpnhab2": service } },
+  getServices: () => { return { "snmp": service } },
   getToolbox: getToolbox
 }
