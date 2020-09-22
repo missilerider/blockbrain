@@ -98,6 +98,7 @@ function connectV3(host, auth) {
 async function readOid(host, oids) {
     return new Promise((resolve, reject) => {
         let session = createSession(host);
+        console.dir(session);
         session.get(oids, (error, varbinds) => {
             if (error) {
                 console.error (error.toString ());
@@ -106,11 +107,8 @@ async function readOid(host, oids) {
                 if (varbinds[0].type != snmp.ErrorStatus.NoSuchObject
                         && varbinds[0].type != snmp.ErrorStatus.NoSuchInstance
                         && varbinds[0].type != snmp.ErrorStatus.EndOfMibView) {
-//                    var sysName = varbinds[0].value;
 
-                    console.log("OID GET OK");
-                    console.log(Buffer.from(varbinds[0].value).toString());
-                    resolve();
+                    resolve(Buffer.from(varbinds[0].value).toString());
                 } else {
                     console.error (snmp.ObjectType[varbinds[0].type] + ": "
                             + varbinds[0].oid);

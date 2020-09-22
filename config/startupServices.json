@@ -6,5 +6,6 @@
   "homeAssistant": false,
   "openhab2": true,
   "tuya": false,
-  "tasker": true
+  "tasker": true,
+  "snmp": true
 }

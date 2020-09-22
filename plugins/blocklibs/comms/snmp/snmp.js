@@ -1,10 +1,11 @@
 'use strict';
 
+const SERVICE_NAME = "snmp";
+
 const blocks = require('./snmp.blocks.lib.js');
-
-console.log(blocks);
-
 const code = require('./snmp.code.lib.js');
+
+const lib = require('./snmp.lib.js');
 
 const debug = require('debug')('blockbrain:service:snmp');
 const log = global.log;
@@ -17,32 +18,25 @@ var runPromise = null;
 var runPromiseResolve = null;
 
 var tools = null;
+var utils = null;
 var hosts = {};
 
 function hostsCombo(base, all = false) {
   let ret = { ... base };
-  let things = oh.getThings();
-  let thingLabels = [];
-  let thingsByLabel = {};
-  let thingIds = Object.keys(things);
+  let hostsIds = Object.keys(hosts);
 
-  for(let n = 0; n < thingIds.length; n++) {
-    thingsByLabel[things[thingIds[n]].label] = things[thingIds[n]].uid;
-    thingLabels.push(things[thingIds[n]].label);
-  }
-
-  thingLabels = thingLabels.sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
-
-  if(all) {
-    thingsByLabel["<any thing>"] = "___ALL___";
-    thingLabels.unshift("<any thing>");
-  }
+  hostsIds = hostsIds.sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
 
   let combo = [];
 
-  for(let n = 0; n < thingLabels.length; n++) {
-      combo.push([ thingLabels[n], thingsByLabel[thingLabels[n]]]);
+  if(all) {
+    combo.push([ "<all hosts>", "___ALL___" ]);
   }
+
+  for(let n = 0; n < hostsIds.length; n++) {
+      combo.push([ hostsIds[n], hostsIds[n] ]);
+  }
+
   ret.args0[0].options = combo;
   if(ret.args0[0].options.length == 0)
       ret.args0[0].options = [[ "<no things>", "___NONE___" ]];
@@ -337,9 +331,11 @@ var service = {
     description: "Simple Network Management Protocol"
   }},
   status: () => { return "TODO"; },
-  start: (srv, tools) => {
+  start: (srv, srvTools) => {
+    tools = srvTools;
     utils = tools.utils;
-    hosts = utils.loadServiceAdditionalConfig(SERVICE_NAME, "devices");
+    hosts = utils.loadServiceAdditionalConfig(SERVICE_NAME, "hosts");
+    debug("Hosts loaded");
     return true;
   },
   stop: async (srv) => {
@@ -356,39 +352,32 @@ var service = {
       runPromiseResolve = resolve;
     });
 
-    lib.config({
-      host: host, 
-      updateThingsDelay: srv.config.updateThingsDelay, 
-
-      // Events
-      onThingStatusChanged: onThingStatusChanged, 
-
-//      onItemStateEvent: onItemStateEvent, 
-//      onItemStateChangedEvent: onItemStateChangedEvent, 
-
-      onChannelValueChanged: onChannelValueChanged
+    code.config({
+      hosts: hosts, 
     });
 
+    /* TODO: Listen SNMP traps ******************************
     if(!await oh.start()) {
       log.e('Openhab2 service cannot subscribe to event bus');
     } else {
       debug(`Event bus subscription to host ${host} correct and running`);
     }
+    */
 
     srv.status = 1;
   
-    debug("Openhab2 connection correct!");
+    debug("snmp startup complete");
 
     await runPromise;
 
-    debug('OH stop');
+    debug('snmp stop');
 
     oh.stop(); // Stops thing updates and everything
    
     //clearInterval(intervalHandler);
 
     srv.status = 0;
-    debug("Openhab2 REST API service stopped");
+    debug("snmp service completely stopped");
   }
 }
 
