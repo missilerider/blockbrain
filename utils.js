@@ -217,25 +217,37 @@ async function endpoint(req, res, next) {
   debug("Endpoint request");
 
   let proms = [];
+  let data = {
+    path: req.baseUrl + req.path, 
+    get: req.query, 
+    post: req.body, 
+    res: res
+  };
+
   switch(req.method) {
     case "GET":
-      proms.push(executeEvent('http_endpoint', {}, req.body));
-      proms.push(executeEvent('http_endpoint_get', {}, req.body));
+      proms = [ ...proms, executeEvent('http_endpoint', {}, data) ];
+      proms = [ ...proms, executeEvent('http_endpoint_get', {}, data) ];
       break;
+
+    case "POST":
+      proms = [ ...proms, executeEvent('http_endpoint', {}, data) ];
+      proms = [ ...proms, executeEvent('http_endpoint_post', {}, data) ];
+      break;
+    
+    default:
+      log.f(`The ${req.method} method is not allowed on "${data.path}"`);
+      res.status(405).send(`The ${req.method} method is not allowed on "${data.path}"`);
+      return;
   }
   
-  
+  await Promise.all(proms); // res is fulfilled from HTTP response (or never!)
 
-  let ret = await executeEvent('http_endpoint', {}, req.body);
-
-  ret = ret.filter(r => r != null);
-
-  if(ret.length > 1)
-    res.json(ret);
-  else if(ret.length == 1)
-    res.json(ret[0]);
-  else
-    res.json({});
+  if(!res.headersSent) {
+    log.i("HTTP response not send through script. Sending empty 404");
+    debug("HTTP response not send through script. Sending empty 404");
+    res.status(404).send(); // Don't let the client stuck!
+  }
 }
 
 async function executeEvent(eventName, vars, params = undefined) {

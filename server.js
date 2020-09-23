@@ -166,6 +166,13 @@ app.use('/blockly', express.static('blockly'));
 app.use('/closure-library', express.static('closure-library'));
 app.use('/login.html', express.static(__dirname + '/public/login.html'));
 app.use('/assets', express.static('public/assets'));
+
+// Almost last and least
+app.all('/' + conf.endpoint.path + '*', (req, res, next) => {
+  checkAuth(req, res, next, utils.endpoint, false);
+});
+
+// Static resources
 app.use('/', function (req, res, next) {
   checkAuth(req, res, next, function (req, res, next) {
     const path = req.originalUrl.replace(/\?.*$/, '');
@@ -180,11 +187,6 @@ app.use('/', function (req, res, next) {
       res.status(404);
     }
   })
-});
-
-// Last and least
-app.use('/' + conf.endpoint.path, (req, res, next) => {
-  checkAuth(req, res, next, utils.endpoint, false);
 });
 
 /*

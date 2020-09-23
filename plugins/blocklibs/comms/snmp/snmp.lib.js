@@ -98,7 +98,6 @@ function connectV3(host, auth) {
 async function readOid(host, oids) {
     return new Promise((resolve, reject) => {
         let session = createSession(host);
-        console.dir(session);
         session.get(oids, (error, varbinds) => {
             if (error) {
                 console.error (error.toString ());
