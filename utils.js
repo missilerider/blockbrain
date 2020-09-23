@@ -216,7 +216,17 @@ function stringify(o, depth = 1) {
 async function endpoint(req, res, next) {
   debug("Endpoint request");
 
-  let ret = await executeEvent('http_endpoint', req.body);
+  let proms = [];
+  switch(req.method) {
+    case "GET":
+      proms.push(executeEvent('http_endpoint', {}, req.body));
+      proms.push(executeEvent('http_endpoint_get', {}, req.body));
+      break;
+  }
+  
+  
+
+  let ret = await executeEvent('http_endpoint', {}, req.body);
 
   ret = ret.filter(r => r != null);
 

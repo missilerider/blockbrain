@@ -160,15 +160,6 @@ app.use('/api/v1/*', (req, res, next) => {
   checkAuth(req, res, next, serverApi.dispatcher, false);
 });
 
-//app.post('/' + conf.endpoint.path, utils.endpoint);
-app.post('/' + conf.endpoint.path, (req, res, next) => {
-  checkAuth(req, res, next, utils.endpoint, false);
-});
-
-app.get('/' + conf.endpoint.path, (req, res, next) => {
-  res.send("Endpoint ready for requests. Please refer to the manual.");
-});
-
 app.use('/assets/dyn/*', serverDyn.dispatcher);
 
 app.use('/blockly', express.static('blockly'));
@@ -190,6 +181,16 @@ app.use('/', function (req, res, next) {
     }
   })
 });
+
+// Last and least
+app.use('/' + conf.endpoint.path, (req, res, next) => {
+  checkAuth(req, res, next, utils.endpoint, false);
+});
+
+/*
+app.get('/' + conf.endpoint.path, (req, res, next) => {
+  res.send("Endpoint ready for requests. Please refer to the manual.");
+});*/
 
 // General load
 plugins.reload(utils).then(() => {
