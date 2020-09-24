@@ -16,11 +16,13 @@ module.exports = {
         });
     }, 
 
-    readOids: async (context) => {
+    readOid: async (context) => {
         let host = context.getField('HOST');
         let oids = await context.getValue('OID');
 
-        if(!isArray(oids)) oids = [ oids ];
+        if(!Array.isArray(oids)) oids = [ oids ];
+
+        debug(oids);
 
         if(!host in hosts) {
             log.e(`Host ${host} could not be found. Review your snmp.hosts.json file`);
@@ -34,5 +36,26 @@ module.exports = {
             return null;
         }
         return ret;
+    }, 
+
+    walkOid: async (context) => {
+        let host = context.getField('HOST');
+        let oid = (await context.getValue('OID')).toString();
+
+        debug("Walk " + oid);
+
+        if(!host in hosts) {
+            log.e(`Host ${host} could not be found. Review your snmp.hosts.json file`);
+            return;
+        }
+
+        let ret = "";
+        try {
+            ret = await lib.walkOid(hosts[host], oid);
+        } catch(e) {
+            return null;
+        }
+        return ret;
     }
+
 }

@@ -82,230 +82,17 @@ function entitiyChannelsCombo(base, all = false) {
   return ret;
 }
 
-var onItemStateEventBlock = {
-  "block": function(services) {
-    return entitiesCombo(blocks.onItemState, true);
-  },
-  "run": async (context) => {
-    context.blockIn();
-
-    var thingId = context.getField('THING');
-    var channelVar = context.getField('CHANNEL');
-    var valueVar = context.getField('VALUE');
-
-    if(thingId === '___ALL___' || thingId == context.params.thing) {
-      context.setVar(channelVar, context.params.channel);
-      context.setVar(valueVar, context.params.value);
-
-      return await context.continue("CMD");
-    }
-  }
-}
-
-var onChannelStateEventBlock = {
-  "block": function(services) {
-    return entitiyChannelsCombo(blocks.onChannelState, true);
-  },
-  "run": async (context) => {
-    context.blockIn();
-
-    var channelId = context.getField('CHANNEL');
-//    var channelVar = context.getField('CHANNEL');
-    var valueVar = context.getField('VALUE');
-
-    if(channelId === '___ALL___' || channelId == context.params.channel) {
-      context.setVar(valueVar, context.params.value);
-
-      return await context.continue("CMD");
-    }
-  }
-}
-
-var onThingStatusChangedBlock = {
-  "block": function(services) {
-    return entitiesCombo(blocks.onThingStatusChanged, true);
-  },
-  "run": async (context) => {
-    context.blockIn();
-
-    var thingId = context.getField('THING');
-    var oldStatusVar = context.getField('OLDSTATUS');
-    var statusVar = context.getField('STATUS');
-
-    debug(thingId);
-    debug(context.params);
-
-    if(thingId === '___ALL___' || thingId == context.params.thing) {
-      context.setVar(oldStatusVar, context.params.oldStatus);
-      context.setVar(statusVar, context.params.status);
-
-      return await context.continue("CMD");
-    }
-  }
-}
-
-var onItemStateChangedEventBlock = {
-  "block": function(services) {
-    return entitiesCombo(blocks.onItemStateChanged, true);
-  },
-  "run": async (context) => {
-    context.blockIn();
-
-    var thingId = context.getField('THING');
-    var channelVar = context.getField('CHANNEL');
-    var oldValueVar = context.getField('OLDVALUE');
-    var valueVar = context.getField('VALUE');
-
-    if(thingId === '___ALL___' || thingId == context.params.thing) {
-      context.setVar(channelVar, context.params.channel);
-      context.setVar(oldValueVar, context.params.oldValue);
-      context.setVar(valueVar, context.params.value);
-
-      return await context.continue("CMD");
-    }
-  }
-}
-
-var getThingChannelsBlock = {
-  "block": function(services) {
-    return entitiesCombo(blocks.getThingChannels);
-  },
-  "run": async (context) => {
-    context.blockIn();
-    let thing = await context.getValue('THING');
-
-    let things = oh.getThings();
-    if(!(thing in things)) return null;
-    return Object.keys(things[thing].channels);
-  }
-}
-
-var getThingChannelsParamBlock = {
-  "block": blocks.getThingChannelsParam,
-  "run": async (context) => {
-    context.blockIn();
-    var entity = context.getField('THING');
-    var newState = await context.getValue('NEWSTATE');
-    var newAttr = await context.getValue('NEWATTR');
-
-    oh.setState(entity, errornewState, newAttr);
-  }
-}
-
-var getChannelPropertyBlock = {
-  "block": blocks.getChannelProperty,
-  "run": async (context) => {
-    context.blockIn();
-    var channel = await context.getValue('CHANNEL');
-    var prop = await context.getField('PROP');
-
-    let ch = oh.getChannel(channel);
-
-    switch(prop) {
-      case "LABEL": return ch.label;
-      case "THING": return ch.thing.uid;
-      case "PROPERTIES": return ch.properties;
-      case "UID": return ch.uid;
-      case "DEFAULTTAGS": return ch.defaultTags;
-      case "KIND": return ch.kind;
-      case "ITEMTYPE": return ch.itemType;
-      case "CONFIGURATION": return ch.configuration;
-    }
-
-    log.f(`Openhab2 library cannot understand channel property ${prop}. Is script saved using a greater OH2 lib version?`);
-    return null;
-  }
-}
-
-var getStateBlock = {
-  "block": function(services) {
-    return entitiesCombo(blocks.getState);
-  },
-  "run": async (context) => {
-    context.blockIn();
-    var entity = context.getField('THING');
-    var entities = oh.getThings();
-
-    if(entity in entities) return entities[entity].state;
-    log.e(`Openhab2 entity ${entity} not found!`);
-    return "";
-  }
-}
-
-var getAttributesBlock = {
-  "block": function(services) {
-    return entitiesCombo(blocks.getAttributes);
-  },
-  "run": async (context) => {
-    context.blockIn();
-    var entity = context.getField('THING');
-    var entities = oh.getThings();
-
-    if(entity in entities) return entities[entity].attributes;
-    log.e(`Openhab2 entity ${entity} not found!`);
-    return "";
-  }
-}
-
-function onItemStateEvent(data) {
-  //log.f(`${data.thing.uid} [${data.channel.uid}]: ${data.value}`);
-  tools.executeEvent('openhab2.onItemStateEvent', {}, {
-    thing: data.thing.uid,
-    channel: data.channel.uid, 
-    value: data.value
-  });
-
-//  log.f("Evento onItemStateEvent / channel");
-//  console.dir(data);
-  log.d("Dispara eventos onChannelStateEvent: " + data.channel.uid);
-  tools.executeEvent('openhab2.onChannelStateEvent', {}, {
-//    thing: data.thing.uid,
-    channel: data.channel.uid, 
-    value: data.value, 
-    data: data
-  });
-}
-
-function onItemStateChangedEvent(data) {
-  //log.f(`${data.thing.uid} [${data.channel.uid}]: ${data.oldValue} => ${data.value}`);
-  tools.executeEvent('openhab2.onItemStateChangedEvent', {}, {
-    thing: data.thing.uid,
-    channel: data.channel.uid, 
-    value: data.value, 
-    oldValue: data.oldValue
-  });
-}
-function onChannelValueChanged(data, value, oldValue) {
-  //log.f(`${data.thing.uid} [${data.channel.uid}]: ${data.oldValue} => ${data.value}`);
-  tools.executeEvent('openhab2.onChannelStateEvent', {}, {
-    thing: data.thing.uid,
-    channel: data.channel.uid, 
-    value: value, 
-    oldValue: oldValue
-  });
-
-  tools.executeEvent('openhab2.onItemStateChangedEvent', {}, {
-    thing: data.thing.uid,
-    channel: data.channel.uid, 
-    value: value, 
-    oldValue: oldValue
-  });
-}
-
-function onThingStatusChanged(data, status, oldStatus) {
-  tools.executeEvent('openhab2.onThingStatusChangedEvent', {}, {
-    thing: data.thing.uid,
-    oldStatus: oldStatus.status, 
-    status: status.status
-  });
-}
-
 async function getBlocks() {
   return {
     // Query
-    "readOids": { 
-      block: (services) => { return hostsCombo(blocks.readOids, false); }, 
-      run: code.readOids }, 
+    "readOid": { 
+      block: (services) => { return hostsCombo(blocks.readOid, false); }, 
+      run: code.readOid
+    }, 
+    "walkOid": {
+      block: () => { return hostsCombo(blocks.walkOid, false); }, 
+      run: code.walkOid
+    }
   };
 }
 
@@ -313,11 +100,14 @@ function getToolbox() {
   return {
     "snmp": {
       "Query": ' \
-        <block type="snmp.readOids"></block> \
+        <block type="snmp.readOid"></block> \
+        <block type="snmp.walkOid"></block> \
       ', 
-      "Libraries": ' \
+      "System": ' \
         ', 
-      "User": ' \
+      "Network": ' \
+        ', 
+      "Meraki": ' \
         '
     }
 

@@ -226,13 +226,17 @@ async function endpoint(req, res, next) {
 
   switch(req.method) {
     case "GET":
-      proms = [ ...proms, executeEvent('http_endpoint', {}, data) ];
-      proms = [ ...proms, executeEvent('http_endpoint_get', {}, data) ];
+      proms = [
+        executeEvent('http_endpoint', {}, data), 
+        executeEvent('http_endpoint_get', {}, data)
+      ];
       break;
 
     case "POST":
-      proms = [ ...proms, executeEvent('http_endpoint', {}, data) ];
-      proms = [ ...proms, executeEvent('http_endpoint_post', {}, data) ];
+      proms = [
+        executeEvent('http_endpoint', {}, data), 
+        executeEvent('http_endpoint_post', {}, data)
+      ];
       break;
     
     default:

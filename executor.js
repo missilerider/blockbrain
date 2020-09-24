@@ -37,7 +37,8 @@ async function executeProgramJson(json, options, params = undefined) {
     let block = blocks[b];
 
     // Filtered type?
-    if(!options.nodeTypeFilter || options.nodeTypeFilter.indexOf(block._attributes.type) > -1) {
+    //if(!options.nodeTypeFilter || options.nodeTypeFilter.indexOf(block._attributes.type) > -1) {
+    if(!options.nodeTypeFilter || options.nodeTypeFilter == block._attributes.type) {
       // Get block from plugin library
       debug("Get block " + block._attributes.type);
       let codeBlock = await plugins.getBlockSync(block._attributes.type);

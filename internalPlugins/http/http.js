@@ -18,9 +18,6 @@ async function getBlocks() {
 
           context.blockIn();
 
-          let variable = context.getField('PARAMS');
-          context.setVar(variable, context.params.get);
-
           return await context.continue("CODE");
       }
     }, 
@@ -60,6 +57,24 @@ async function getBlocks() {
           return await context.continue("CODE");
       }
     },
+    "http_endpoint_extended": {
+      "block": blocks.httpEndpointEx,
+      "run":
+        async (context) => {
+          var path = context.getField('PATH');
+          if(path !== context.params.path) {
+            debug(`Path does not match: ${path} !== ${context.params.path}`);
+            return; // Not my path! Bail silently
+          }
+      
+          context.blockIn();
+
+          let variable = context.getField('PARAMS');
+          context.setVar(variable, context.params.post);
+
+          return await context.continue("CODE");
+      }
+    },
     "http_response": {
       "block": blocks.httpResponse,
       "run":
@@ -81,7 +96,7 @@ async function getBlocks() {
             }
 
             if(Array.isArray(body) || (typeof body == 'object')) {
-              res.json(code, body);
+              res.status(code).json(body);
               return;
             } else {
               res.status(code).send(body.toString());
@@ -102,6 +117,7 @@ function getToolbox() {
         <block type="http_endpoint"></block> \
         <block type="http_endpoint_get"></block> \
         <block type="http_endpoint_post"></block> \
+        <block type="http_endpoint_extended"></block> \
         <block type="http_response"></block> \
         '
     }

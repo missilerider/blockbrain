@@ -3,7 +3,7 @@
 const snmp = require ("net-snmp");
 const pathResolve = require('path').resolve;
 
-const debug = require('debug')('blockbrain:service:snmp');
+const debug = require('debug')('blockbrain:script:snmp');
 
 var store = null;
 
@@ -16,18 +16,23 @@ function config(cfg) {
 }
 
 function createSession(host) {
+    debug(`Create session to ${host.host}:${host.port || 161}`);
     if('auth' in host) {
         if('version' in host.auth) {
             switch(host.auth.version) {
                 case "1":
+                    debug("v1");
                     return connect(host, 1, host.auth.community || "public");
 
                 default:
+                    log.e(`SNMP version ${host.auth.version} not accepted. Assumed v2c`);
                 case "2":
                 case "2c":
+                    debug("v2c");
                     return connect(host, 2, host.auth.community || "public");
 
                 case "3":
+                    debug("v3");
                     return connectV3(host);
                 }
         }
@@ -67,7 +72,7 @@ function connectV3(host, auth) {
         authProtocol: undefined,
         authKey: host.auth.authKey,
         privProtocol: undefined,
-        privKey: "privycouncil"
+        privKey: host.auth.privKey || ""
     };
 
     switch(host.auth.security) {
@@ -103,21 +108,76 @@ async function readOid(host, oids) {
                 console.error (error.toString ());
                 return reject(error);
             } else {
-                if (varbinds[0].type != snmp.ErrorStatus.NoSuchObject
-                        && varbinds[0].type != snmp.ErrorStatus.NoSuchInstance
-                        && varbinds[0].type != snmp.ErrorStatus.EndOfMibView) {
+                let ret = [];
+                for(let n = 0; n < varbinds.length; n++) {
+                    if (varbinds[n].type != snmp.ErrorStatus.NoSuchObject
+                            && varbinds[n].type != snmp.ErrorStatus.NoSuchInstance
+                            && varbinds[n].type != snmp.ErrorStatus.EndOfMibView) {
 
-                    resolve(Buffer.from(varbinds[0].value).toString());
-                } else {
-                    console.error (snmp.ObjectType[varbinds[0].type] + ": "
-                            + varbinds[0].oid);
+                        ret.push(filterVarbind(varbinds[n]));
+                    } else {
+                        log.e(snmp.ObjectType[varbinds[n].type] + ": " + varbinds[n].oid);
+                    }
+                }
+
+                if(ret.length < 1) {
+                    debug("No valid SNMP reads");
                     reject();
                 }
+
+                if(ret.length == 1) {
+                    resolve(ret[0]);
+                } else {
+                    resolve(ret);
+                }
+
+                return;
             }
         });
     });
 }
 
+async function walkOid(host, oid) {
+    return new Promise((resolve, reject) => {
+        let session = createSession(host);
+
+        const maxRepetitions = 20;
+
+        var ret = {};
+
+        session.subtree(oid.toString(), maxRepetitions, 
+            (varbinds) => {
+                debug(`Walked ${varbinds.length} varbinds`);
+                for(let n = 0; n < varbinds.length; n++) {
+                    if(snmp.isVarbindError(varbinds[n])) {
+                        log.e(snmp.ObjectType[varbinds[n].type] + ": " + varbinds[n].oid);
+                    } else {
+                        ret[varbinds[n].oid] = filterVarbind(varbinds[n]);
+                    }
+                }
+
+
+                return;
+            }, 
+            (error) => {
+                debug("Walk finished");
+                if(error) {
+                    log.e(error.toString());
+                    return reject(error);
+                } else {
+                    if(ret == {}) {
+                        debug("No valid SNMP walked");
+                        reject("No valid SNMP walked from " + oid);
+                    }
+        
+                    if(ret.length == 0)
+                        resolve(ret[0]);
+                    else
+                        resolve(ret);
+                    }
+            });
+    });
+}
 function addMib(mibFile) {
     store.loadFromFile(pathResolve(mibFile));
 }
@@ -144,9 +204,41 @@ function listOids() {
     return ret;    
 }
 
+function filterVarbind(vb) {
+    switch(vb.type) {
+        case snmp.ObjectType.Boolean:
+        case snmp.ObjectType.Integer:
+        case snmp.ObjectType.IpAddress:
+        case snmp.ObjectType.Counter:
+        case snmp.ObjectType.Gauge:
+        case snmp.ObjectType.TimeTicks:
+        case snmp.ObjectType.Integer32:
+        case snmp.ObjectType.Counter32:
+        case snmp.ObjectType.Gauge32:
+        case snmp.ObjectType.Unsigned32:
+        case snmp.ObjectType.Counter64:
+        case snmp.ObjectType.Integer:
+        case snmp.ObjectType.Integer:
+            return vb.value;
+
+        case snmp.ObjectType.OctetString:
+        case snmp.ObjectType.Opaque:
+            return Buffer.from(vb.value).toString();
+
+        case snmp.ObjectType.Null:
+        case snmp.ObjectType.EndOfMibView:
+            return null;
+
+        case snmp.ObjectType.NoSuchObject:
+        case snmp.ObjectType.NoSuchInstance:
+            return undefined;
+    }
+}
+
 module.exports = {
     config: config, 
     readOid: readOid, 
+    walkOid: walkOid, 
 
     addMib: addMib, 
     listOids: listOids

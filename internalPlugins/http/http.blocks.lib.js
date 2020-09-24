@@ -85,6 +85,108 @@ module.exports = {
         "helpUrl": ""
     }, 
     
+    httpEndpointEx: {
+        "type": "http_endpoint_extended",
+        "message0": "http endpoint %1 %2 method %3 %4 GET params %5 %6 POST params %7 %8 %9",
+        "args0": [
+            {
+                "type": "field_input",
+                "name": "PATH",
+                "text": "/path/to/event"
+            },
+            {
+                "type": "input_dummy"
+            },
+            {
+                "type": "field_dropdown",
+                "name": "METHOD",
+                "options": [
+                    [
+                        "GET",
+                        "GET"
+                    ],
+                    [
+                        "POST",
+                        "POST"
+                    ],
+                    [
+                        "PUT",
+                        "PUT"
+                    ],
+                    [
+                        "PATCH",
+                        "PATCH"
+                    ],
+                    [
+                        "DELETE",
+                        "DELETE"
+                    ],
+                    [
+                        "COPY",
+                        "COPY"
+                    ],
+                    [
+                        "OPTIONS",
+                        "OPTIONS"
+                    ],
+                    [
+                        "LINK",
+                        "LINK"
+                    ],
+                    [
+                        "UNLINK",
+                        "UNLINK"
+                    ],
+                    [
+                        "PURGE",
+                        "PURGE"
+                    ],
+                    [
+                        "LOCK",
+                        "LOCK"
+                    ],
+                    [
+                        "UNLOCK",
+                        "UNLOCK"
+                    ],
+                    [
+                        "PROPFIND",
+                        "PROPFIND"
+                    ]
+                ]
+            },
+            {
+                "type": "input_dummy",
+                "align": "RIGHT"
+            },
+            {
+                "type": "field_variable",
+                "name": "GET",
+                "variable": "getParams"
+            },
+            {
+                "type": "input_dummy",
+                "align": "RIGHT"
+            },
+            {
+                "type": "field_variable",
+                "name": "POST",
+                "variable": "postParams"
+            },
+            {
+                "type": "input_dummy",
+                "align": "RIGHT"
+            },
+            {
+                "type": "input_statement",
+                "name": "CODE"
+            }
+        ],
+        "colour": 210,
+        "tooltip": "",
+        "helpUrl": ""
+    },
+    
     httpResponse: {
         "type": "http_response",
         "message0": "return HTTP %1 with body %2",
