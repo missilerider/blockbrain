@@ -44,44 +44,6 @@ function hostsCombo(base, all = false) {
   return ret;
 }
 
-function entitiyChannelsCombo(base, all = false) {
-  let ret = { ... base };
-  let things = oh.getThings();
-  let labels = [];
-  let itemsByLabel = {};
-  let thingIds = Object.keys(things);
-
-  for(let n = 0; n < thingIds.length; n++) {
-    let chs = things[thingIds[n]].channels;
-    let chIds = Object.keys(chs);
-
-    for(let m = 0; m < chIds.length; m++) {
-      let label = things[thingIds[n]].label + "/" + chs[chIds[m]].label;
-
-      itemsByLabel[label] = chs[chIds[m]].uid;
-      labels.push(label);
-    }
-  }
-
-  labels = labels.sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
-
-  if(all) {
-    itemsByLabel["<any thing/channel>"] = "___ALL___";
-    labels.unshift("<any thing/channel>");
-  }
-
-  let combo = [];
-
-  for(let n = 0; n < labels.length; n++) {
-      combo.push([ labels[n], itemsByLabel[labels[n]]]);
-  }
-  ret.args0[0].options = combo;
-  if(ret.args0[0].options.length == 0)
-      ret.args0[0].options = [[ "<no things/channels>", "___NONE___" ]];
-
-  return ret;
-}
-
 async function getBlocks() {
   return {
     // Query
@@ -92,6 +54,10 @@ async function getBlocks() {
     "walkOid": {
       block: () => { return hostsCombo(blocks.walkOid, false); }, 
       run: code.walkOid
+    }, 
+    "systemInfo": {
+      block: () => { return hostsCombo(blocks.systemInfo, false); }, 
+      run: code.systemInfo
     }
   };
 }
@@ -104,7 +70,8 @@ function getToolbox() {
         <block type="snmp.walkOid"></block> \
       ', 
       "System": ' \
-        ', 
+        <block type="snmp.systemInfo"></block> \
+      ', 
       "Network": ' \
         ', 
       "Meraki": ' \
@@ -161,8 +128,11 @@ var service = {
     await runPromise;
 
     debug('snmp stop');
+    log.i("snmp stop");
 
+    /* TODO: stop SNMP listening
     oh.stop(); // Stops thing updates and everything
+    */
    
     //clearInterval(intervalHandler);
 

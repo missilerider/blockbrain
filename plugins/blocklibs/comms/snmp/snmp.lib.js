@@ -100,9 +100,9 @@ function connectV3(host, auth) {
     return snmp.createV3Session(host.host, user, options);
 }
 
-async function readOid(host, oids) {
+async function readOid(host, oids, openSession = null) {
     return new Promise((resolve, reject) => {
-        let session = createSession(host);
+        let session = host != null ? createSession(host) : openSession;
         session.get(oids, (error, varbinds) => {
             if (error) {
                 console.error (error.toString ());
@@ -137,28 +137,90 @@ async function readOid(host, oids) {
     });
 }
 
-async function walkOid(host, oid) {
+async function walkOid(host, oid, openSession = null, format = 1) {
     return new Promise((resolve, reject) => {
-        let session = createSession(host);
+        let session = host != null ? createSession(host) : openSession;
 
         const maxRepetitions = 20;
 
-        var ret = {};
+        var ret;
 
-        session.subtree(oid.toString(), maxRepetitions, 
-            (varbinds) => {
-                debug(`Walked ${varbinds.length} varbinds`);
-                for(let n = 0; n < varbinds.length; n++) {
-                    if(snmp.isVarbindError(varbinds[n])) {
-                        log.e(snmp.ObjectType[varbinds[n].type] + ": " + varbinds[n].oid);
-                    } else {
-                        ret[varbinds[n].oid] = filterVarbind(varbinds[n]);
-                    }
+        var storeObj = (varbinds) => {
+            debug(`Walked ${varbinds.length} varbinds`);
+            for(let n = 0; n < varbinds.length; n++) {
+                if(snmp.isVarbindError(varbinds[n])) {
+                    log.e(snmp.ObjectType[varbinds[n].type] + ": " + varbinds[n].oid);
+                } else {
+                    ret[varbinds[n].oid] = filterVarbind(varbinds[n]);
                 }
+            }
 
+            return;
+        }
 
-                return;
-            }, 
+        var storeArray = (varbinds) => {
+            debug(`Walked ${varbinds.length} varbinds`);
+            for(let n = 0; n < varbinds.length; n++) {
+                if(snmp.isVarbindError(varbinds[n])) {
+                    log.e(snmp.ObjectType[varbinds[n].type] + ": " + varbinds[n].oid);
+                } else {
+                    ret.push(filterVarbind(varbinds[n]));
+                }
+            }
+
+            return;
+        }
+
+        var storeObjMin = (varbinds) => {
+            debug(`Walked ${varbinds.length} varbinds`);
+            for(let n = 0; n < varbinds.length; n++) {
+                if(snmp.isVarbindError(varbinds[n])) {
+                    log.e(snmp.ObjectType[varbinds[n].type] + ": " + varbinds[n].oid);
+                } else {
+                    ret[varbinds[n].oid.substring(oid.length + 1)] = filterVarbind(varbinds[n]);
+                }
+            }
+
+            return;
+        }
+
+        var storeObjMinRaw = (varbinds) => {
+            debug(`Walked ${varbinds.length} varbinds`);
+            for(let n = 0; n < varbinds.length; n++) {
+                if(snmp.isVarbindError(varbinds[n])) {
+                    log.e(snmp.ObjectType[varbinds[n].type] + ": " + varbinds[n].oid);
+                } else {
+                    ret[varbinds[n].oid.substring(oid.length + 1)] = varbinds[n];
+                }
+            }
+
+            return;
+        }
+
+        var storeFn;
+        switch(format) {
+            default:
+            case 1:
+                storeFn = storeObj;
+                ret = {};
+                break;
+
+            case 2:
+                storeFn = storeArray;
+                ret = [];
+                break;
+
+            case 3:
+                storeFn = storeObjMin;
+                ret = {};
+                break;
+
+            case 4:
+                storeFn = storeObjMinRaw;
+                ret = {};
+        }
+
+        session.subtree(oid.toString(), maxRepetitions, storeFn, 
             (error) => {
                 debug("Walk finished");
                 if(error) {
@@ -205,6 +267,23 @@ function listOids() {
 }
 
 function filterVarbind(vb) {
+/*
+    1: "Boolean",
+	2: "Integer",
+	4: "OctetString",
+	5: "Null",
+	6: "OID",
+	64: "IpAddress",
+	65: "Counter",
+	66: "Gauge",
+	67: "TimeTicks",
+	68: "Opaque",
+	70: "Counter64",
+	128: "NoSuchObject",
+	129: "NoSuchInstance",
+	130: "EndOfMibView"
+*/
+
     switch(vb.type) {
         case snmp.ObjectType.Boolean:
         case snmp.ObjectType.Integer:
@@ -219,11 +298,12 @@ function filterVarbind(vb) {
         case snmp.ObjectType.Counter64:
         case snmp.ObjectType.Integer:
         case snmp.ObjectType.Integer:
+        case snmp.ObjectType.OID:
             return vb.value;
 
         case snmp.ObjectType.OctetString:
         case snmp.ObjectType.Opaque:
-            return Buffer.from(vb.value).toString();
+            return Buffer.from(vb.value).toString('utf8');
 
         case snmp.ObjectType.Null:
         case snmp.ObjectType.EndOfMibView:
@@ -237,6 +317,9 @@ function filterVarbind(vb) {
 
 module.exports = {
     config: config, 
+
+    createSession: createSession, 
+
     readOid: readOid, 
     walkOid: walkOid, 
 
