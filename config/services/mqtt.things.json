@@ -1,0 +1,59 @@
+{
+    "test_device_ok": {
+        "items": {
+            "sensor1": {
+                "type": "sensor", 
+                "icon": "wifi", 
+                "initialState": 999
+            }, 
+            "sensor3": {
+                "type": "sensor", 
+                "icon": "spider"
+            }, 
+            "sensor2": {
+                "type": "switch", 
+                "icon": "puzzle"
+            }
+        }
+    }, 
+    "bbBot": {
+        "items": {
+            "testSwitch": {
+                "type": "switch", 
+                "icon": "battery"
+            }, 
+            "testTimer": {
+                "type": "timer", 
+                "icon": "puzzle", 
+                "initialState": 5, 
+                "updateSeconds": 1
+            }
+        }
+    }, 
+    "controlFuente": {
+        "items": {
+            "fuente": {
+                "type": "switch", 
+                "icon": "battery"
+            }, 
+            "tiempoFuente": {
+                "type": "timer", 
+                "icon": "puzzle", 
+                "initialState": 0, 
+                "updateSeconds": 1
+            }, 
+            "tiempo1h": {
+                "type": "switch", 
+                "icon": "puzzle"
+            }, 
+            "tiempo2h": {
+                "type": "switch", 
+                "icon": "puzzle"
+            }, 
+            "tiempo4h": {
+                "type": "switch", 
+                "icon": "puzzle"
+            }
+        }
+    }
+}

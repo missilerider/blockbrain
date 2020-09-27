@@ -5,6 +5,8 @@ const debug = require('debug')('blockbrain:service:mqtt:ha');
 var client;
 var config;
 var service;
+var tools;
+var utils;
 var initialized = false;
 const thingClasses = require("./mqtt.ha.things.lib.js");
 
@@ -17,6 +19,8 @@ function start(options) {
     config = options.config;
     client = options.mqttLib;
     service = options.service;
+    tools = options.tools;
+    utils = tools.utils;
 
     client.on('message', onMessage);
     client.subscribe(config.homeAssistant.prefix + "/+/+", function() {
@@ -42,8 +46,15 @@ async function stop() {
 
 function createThings() {
     debug("HA thing creation");
-    if(!"devices" in config.homeAssistant) return;
-    let devices = config.homeAssistant.devices;
+    //if(!"devices" in config.homeAssistant) return;
+    //let devices = config.homeAssistant.devices;
+
+    let devices = utils.loadServiceAdditionalConfig("mqtt", "things");
+    if(!devices) {
+        log.e("Devices not defined in mqtt.things.json. Cannot start block things");
+        return;
+    }
+
     Object.keys(devices).forEach((deviceName) => {
         let device = devices[deviceName];
         let deviceIdentifier = device.identifier || 
@@ -124,6 +135,19 @@ function getThing(thingName) {
     return null;
 }
 
+function getItemFromLabel(label) {
+    let things = getThings();
+    let thingIds = Object.keys(things);
+
+    for(let n = 0; n < thingIds.length; n++) {
+        let l = `${things[thingIds[n]].device}/${things[thingIds[n]].id}`;
+
+        if(l == label) return things[thingIds[n]];
+    }
+
+    return null;
+}
+
 function getThings(thingClass = null) {
     if(thingClass === null) return things;
     let ret = [];
@@ -136,6 +160,19 @@ function getThings(thingClass = null) {
     return ret;
 }
 
+function getItemLabels(thingClass = null) {
+    let things = getThings(thingClass);
+    let thingIds = Object.keys(things);
+    let labels = [];
+
+    for(let n = 0; n < thingIds.length; n++)
+        labels.push(`${things[thingIds[n]].device}/${things[thingIds[n]].id}`);
+
+    labels = labels.sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
+
+    return labels;
+}
+
 async function getBlocks() {
     return require('./mqtt.ha.blocks.lib.js');
 }
@@ -145,5 +182,7 @@ module.exports = {
     start: start, 
     stop: stop, 
     getThing: getThing, 
-    getThings: getThings
+    getThings: getThings, 
+    getItemLabels: getItemLabels, 
+    getItemFromLabel: getItemFromLabel
 }

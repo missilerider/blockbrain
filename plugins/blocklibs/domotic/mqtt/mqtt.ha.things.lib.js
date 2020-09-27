@@ -179,6 +179,7 @@ class haThing {
     }
 
     async setValue(newValue, retain = false) {
+        debug("Thing setValue: " + newValue);
         let value;
         switch(typeof newValue) {
             case "string": value = newValue; break;
@@ -196,7 +197,8 @@ class haThing {
             };
         }
 
-        mqtt.publish(this.stateTopic, this.toString(), ops);
+        debug(`Publishing ${value} to ${this.stateTopic}`);
+        mqtt.publish(this.stateTopic, value.toString(), ops);
     }
 }
 

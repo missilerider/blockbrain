@@ -91,8 +91,17 @@ async function start(srvName, callbackFinish) {
     return false;
   }
 
+
   // Reload config when service starts
-  serviceData[srvName].config = utils.loadServiceConfig(srvName);
+  let ops = services[srvName].getInfo().options;
+  if(ops && Array.isArray(ops) && ops.includes("noConfig")) {
+    debug(`Service ${srvName} does not use configuration file`);
+
+    serviceData[srvName].config = {};
+
+  } else {
+    serviceData[srvName].config = utils.loadServiceConfig(srvName);
+  }
 
   serviceData[srvName].stop = false;
   serviceData[srvName].desiredStatus = 1;

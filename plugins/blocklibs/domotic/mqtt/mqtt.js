@@ -135,7 +135,7 @@ function getToolbox() {
         <block type="mqtt.publish"></block> \
         <block type="mqtt.publishEx"></block>'
     }, 
-    "home assistant": {
+    "block things": {
       "Sensor": ' \
         <block type="mqtt.haSetSensor"></block>', 
       "Switch": ' \
@@ -323,7 +323,8 @@ var mqttService = {
         ha.start({
           mqttLib: client, 
           config: config, 
-          service: mqttService
+          service: mqttService, 
+          tools: tools
         });
       }
     });
@@ -335,10 +336,13 @@ var mqttService = {
     srv2.status = 0;
     debug("MQTT service stopped");
   }, 
-  getThing(thingName) {
-    return ha.getThing(thingName);
-  }, 
+  getThing(thingName) { return ha.getThing(thingName); }, 
   getThings(p) { return ha.getThings(p); }, 
+  getItemLabels(thingClass = null) { return ha.getItemLabels(thingClass); }, 
+  getItemFromLabel(thingClass = null) { return ha.getItemFromLabel(thingClass); }, 
+
+
+
   addThingSubscription: function(topic, thing) {
     thingSubs[topic] = thing;
   }

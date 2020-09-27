@@ -2,9 +2,9 @@
   "keyValue": true,
   "testService": false,
   "telegram": false,
-  "mqtt": false,
+  "mqtt": true,
   "homeAssistant": false,
-  "openhab2": false,
+  "openhab2": true,
   "tuya": false,
   "tasker": true,
   "snmp": true

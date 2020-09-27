@@ -22,17 +22,14 @@ module.exports.getServices = () => {
       getInfo: () => { return {
         methods: ["start", "stop", "status", "onSave"],
         name: "Tasker",
-        description: "Executes scheduled tasks defined inside scripts"
+        description: "Executes scheduled tasks defined inside scripts", 
+        version: 1, 
+        options: [ "noConfig" ]
       }},
       status: () => { return "TODO"; },
       start: (srv, tools) => {
         serviceConfig = srv.config;
         utils = tools.utils;
-    
-        // Preloads keys and values if necesary
-        if(serviceConfig.persistence) {
-          loadKeys(serviceConfig);
-        }
     
         return true;
       },
