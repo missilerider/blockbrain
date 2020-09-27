@@ -25,11 +25,6 @@
   <script type="application/javascript" src="assets/js/blocksLogic.js"></script>
   <script src="assets/js/vue.js"></script>
   <script src="assets/js/axios.min.js"></script>
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
-  
   <!-- item template -->
   <script type="text/x-template" id="item-template">
     <li>
@@ -65,119 +60,7 @@ ul {
   line-height: 1.5em;
   list-style-type: dot;
 }
-
-.jstree-anchor {
-  font-size: 14px;
-}
-
-.jstree-leaf {
- font-size: 14px;
-}
-
-/*.jstree-leaf a.jstree-hovered {
- height: 18px;
-}
-
-.jstree-leaf a.jstree-clicked {
- height: 18px;
-}*/
   </style>
-
-  <script>
-    $(function() {
-      $('#jstree').jstree({
-                'core' : {
-                    'data': {
-                      'url' : '/assets/dyn/blockJsTree.json',
-                      'data' : function (node) {
-                        return { 'id' : node.id };
-                      }
-                    },
-                }, 
-                "plugins": ["contextmenu"],
-                "contextmenu": {
-                    "items": function ($node) {
-                        var tree = $("#jstree").jstree(true);
-                        return {
-                            "Open": {
-                              "seperator_before": false,
-                              "seperator_after": false,
-                              "label": "Open",
-                              action: function (obj) {
-                                if('editorPath' in $node.original)
-                                  window.location.href = "editor.html?id=" + $node.original.editorPath;
-                                else {
-                                  tree.open_node($node);
-                                }
-                              }
-                            }, 
-                            "New": {
-                                "separator_before": false,
-                                "separator_after": true,
-                                "label": "New",
-                                "action": false,
-                                "submenu": {
-                                    "Script": {
-                                        "seperator_before": false,
-                                        "seperator_after": false,
-                                        "label": "Script",
-                                        action: function (obj) {
-                                          tree.create_node(null, "cacota", "last", function (node) {
-                                            console.dir(node);
-                                            this.edit(node);
-                                          });
-/*                                            $node = tree.create_node($node, { text: 'New File', type: 'file', icon: 'glyphicon glyphicon-file' });
-                                            tree.deselect_all();
-                                            tree.select_node($node);*/
-                                        }
-                                    },
-                                    "Folder": {
-                                        "seperator_before": false,
-                                        "seperator_after": false,
-                                        "label": "Folder",
-                                        action: function (obj) {
-                                            /*$node = tree.create_node($node, { text: 'New Folder', type: 'default' });
-                                            tree.deselect_all();
-                                            tree.select_node($node);*/
-                                        }
-                                    }
-                                }
-                            },
-                            "Rename": {
-                                "separator_before": false,
-                                "separator_after": false,
-                                "label": "Rename",
-                                "action": function (obj) {
-                                  
-                                  tree.edit($node);
-                                  console.log($node);
-                                }
-                            },
-                            "Delete": {
-                                "separator_before": true,
-                                "separator_after": false,
-                                "label": "Delete",
-                                "action": function (obj) {
-                                    tree.delete_node($node);
-                                }
-                            }
-                        };
-                    }
-                }
-            });
-
-      $('#jstree').on("changed.jstree", function (e, data) {
-        //console.log(data.selected);
-      });
-
-      $('#jstree').on('dblclick.jstree', function(data) {
-        var nodes = $('#jstree').jstree('get_selected', 'full');
-        if(nodes.length < 1 || !('editorPath' in nodes[0].original)) return; // Non editable as script
-        //console.log(nodes[0].original.editorPath); //return NodeID
-        window.location.href = "editor.html?id=" + nodes[0].original.editorPath;
-      });
-    });
-  </script>
 </head>
 
 <body>
@@ -208,10 +91,7 @@ ul {
                   <h3 class="card-title">Block browser</h3>
                 </div>
                 <div class="card-body">
-
-                  <div id="jstree"></div>
-
-<!--                  <ul id="browser" class="file-browser"></ul>
+                  <ul id="browser" class="file-browser">
                     <li v-if="currentFiles.parent" v-on:click="browseParent()">
                       <i class="material-icons">keyboard_return</i>
                     </li>
@@ -221,7 +101,7 @@ ul {
                       </i>
                       {{f.text}}
                     </li>
-                  </ul> -->
+                  </ul>
                 </div>
                 <div class="card-footer">
                   <div class="stats">
@@ -230,8 +110,6 @@ ul {
                 </div>
               </div>
             </div>
-          </div>
-          <div class="row">
             <div class="col-lg-3 col-md-6 col-sm-6">
               <div class="card">
                 <div class="card-header card-header-primary card-header-icon">

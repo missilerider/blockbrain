@@ -16,6 +16,7 @@ function dispatcher(req, res, next) {
 	switch(req._parsedUrl.pathname) {
 		case '/assets/dyn/blockLoader.js': return blockLoader(req, res, next);
 		case '/assets/dyn/blockTree.json': return blockTree(req, res, next);
+		case '/assets/dyn/blockJsTree.json': return blockJsTree(req, res, next);
 		case '/assets/dyn/blocks.js': return blocksJs(req, res, next);
 		case '/assets/dyn/blocks.json': return blocks(req, res, next);
 		case '/assets/dyn/blockProps.js': return blockPropsJs(req, res, next);
@@ -111,6 +112,37 @@ async function getFolderContents(path) {
     return result;
 }
 
+async function getFolderContentsJsTree(path) {
+  let result = Array();
+  let files = fs.readdirSync(path);
+  for (let i = 0; i < files.length; i++) {
+      var filePath = path + '/' + files[i];
+      if (fs.statSync(filePath).isDirectory()) {
+        if(!files[i].startsWith('.')) {
+          result.push({
+            text: files[i],
+            //path: filePath, 
+            //type: "dir",
+            //icon: "folder", 
+            children: await getFolderContentsJsTree(filePath).then().catch((e) => {})
+          });
+        }
+      } else {
+        if(files[i].endsWith('.xml')) {
+          result.push({
+            text: files[i],
+            //path: filePath,
+            editorPath: Buffer.from(filePath.substring(conf.blocks.path.length + 1).slice(0, -4)).toString("base64"),
+            //type: "file",
+            icon: "jstree-file"
+          });
+        }
+      }
+  }
+
+  return result;
+}
+
 async function buildBlockTree() {
   /*const cacheFile = conf.blocks.path + cacheDir + "/" + cacheTree;
   if(!fs.existsSync(conf.blocks.path + cacheDir)) {
@@ -130,6 +162,17 @@ async function blockTree(req, res) {
   let data;
 
   data = await buildBlockTree().then().catch((e)=>{
+    throw e;
+  });
+  res.json(data);
+}
+
+async function blockJsTree(req, res) {
+  prepareJson(res);
+
+  let data;
+
+  data = await getFolderContentsJsTree(conf.blocks.path).then().catch((e)=>{
     throw e;
   });
   res.json(data);

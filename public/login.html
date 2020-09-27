@@ -17,6 +17,8 @@
   function onLoad() {
     var url = new URL(window.location.href);
     document.getElementById("last").value = url.searchParams.get("last");
+
+    document.getElementById("pwd").select();
   }
   </script>
 </head>
@@ -70,7 +72,7 @@
                     <div class="col-md-8">
                       <div class="form-group bmd-form-group is-filled">
                         <label class="bmd-label-floating">Password</label>
-                        <input type="password" name="pwd" class="form-control">
+                        <input type="password" id="pwd" name="pwd" class="form-control">
                       </div>
                     </div>
                   </div>

@@ -35,17 +35,22 @@ var app = new Vue({
     searchTimer: null
   },
   mounted() {
-    let that = this;
-    axios.get("/assets/dyn/blockTree.json", {
-    })
+/*    let that = this;
+//    axios.get("/assets/dyn/blockTree.json", {
+    axios.get("/assets/dyn/blockJsTree.json", {
+      })
     .then(function(resp) {
       if(resp.headers["content-type"].includes("application/json")) {
-        that.files = resp.data;
-        that.currentFiles = that.files;
+        console.dir($('#jstree').jstree(true));
+        $('#jstree').jstree(true).settings.core.data = resp.data;
+        $('#jstree').jstree(true).refresh();
+        //that.files = resp.data;
+
+        //that.currentFiles = that.files;
       } else {
         console.error("Bad response from API server: " + resp.body + ": " + resp.headers["content-type"]);
       }
-    });
+    });*/
   }, 
   methods: {
     browseItem: function(item) {
@@ -87,6 +92,11 @@ var app = new Vue({
           this.findScript(t, f[n].children, data);
         }
       }
+    }, 
+    test: function(t) {
+      console.log("test!");
+      if(t)
+        console.dir(t);
     }
   }
-})
+});
