@@ -136,6 +136,7 @@ function getThing(thingName) {
 }
 
 function getItemFromLabel(label) {
+    debug(`getItemFromLabel ${label}`);
     let things = getThings();
     let thingIds = Object.keys(things);
 

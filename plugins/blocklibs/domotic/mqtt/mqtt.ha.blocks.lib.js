@@ -65,6 +65,10 @@ module.exports = {
             let newStatus = context.getField('NEWSTATUS');
             let srv = context.getService('mqtt');
             let thing = srv.getThing(thingName);
+            if(!thing) {
+                log.e(`Could not find thing ${thingName}`);
+                return;
+            }
             thing.setValue(newStatus !== "off" ? thing.stateOn : thing.stateOff);
             sdebug("HA sensor value of " + thingName + " set to " + newStatus);
         }
@@ -73,12 +77,20 @@ module.exports = {
         "block": function(services) {
             let ret = { ... blocks.blockSwitchEvent };
             let srv = services['mqtt'];
+            let labels = srv.getItemLabels('switch');
+/*
             let things = srv.getThings('switch');
             let thingIds = Object.keys(things);
             let combo = [];
             for(let n = 0; n < thingIds.length; n++) {
                 combo.push([ things[thingIds[n]].id, things[thingIds[n]].id ]);
-            }
+            }*/
+
+            let combo = [];
+
+            for(let n = 0; n < labels.length; n++)
+                combo.push([ labels[n], labels[n] ]);
+
             ret.args0[0].options = combo;
             if(ret.args0[0].options.length == 0)
                 ret.args0[0].options = [[

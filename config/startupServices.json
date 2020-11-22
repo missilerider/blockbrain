@@ -3,7 +3,7 @@
   "testService": false,
   "telegram": false,
   "mqtt": true,
-  "homeAssistant": false,
+  "homeAssistant": true,
   "openhab2": true,
   "tuya": false,
   "tasker": true,
