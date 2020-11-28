@@ -2,8 +2,26 @@
     "endpoint": {
       "port": 8000,
       "bind": "0.0.0.0",
-      "path": "msg"
+      "path": "msg", 
+      "domainName": ["tron", "flynns.asuscomm.com"], 
+      "https": {
+        "enabled": true, 
+        "generateCertificate": true, 
+        "serverKey": "./config/certs/server.key", 
+        "serverCert": "./config/certs/server.crt"
+      }
     },
+    "ca": {
+      "autoGenerate": false, 
+      "rootKey": "./config/certs/root.key", 
+      "rootCert": "./config/certs/root.crt", 
+      "cn": "flynns.asuscomm.com",  
+      "c": "ES", 
+      "st": "Madrid", 
+      "l": "Valdemorillo", 
+      "o": "Flynns", 
+      "ou": "Flynns"
+  }, 
     "blocks": {
       "path": "./vault"
     },
@@ -27,6 +45,7 @@
     },
     "system": {
       "disableCache": true,
+      "tmpDir": "/tmp/openssl", 
       "log": {
         "level": "DEBUG", 
         "stdout": true

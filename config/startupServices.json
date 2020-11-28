@@ -7,5 +7,6 @@
   "openhab2": true,
   "tuya": false,
   "tasker": true,
-  "snmp": true
+  "snmp": true,
+  "blockremote": true
 }

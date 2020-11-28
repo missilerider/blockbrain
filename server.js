@@ -4,6 +4,7 @@ process.on('warning', (warning) => {
   console.log(warning.stack);
 });
 
+const fs = require('fs');
 const express = require('express');
 const helmet = require('helmet');
 var cookieParser = require('cookie-parser');
@@ -37,6 +38,9 @@ const serverDyn = require('./serverDyn.js');
 
 var plugins = require('./plugins.js');
 var services = require('./services.js');
+const ca = require('./ca.js');
+const { config } = require('process');
+const { endpoint } = require('./utils.js');
 
 var conf = utils.loadConfig();
 
@@ -56,6 +60,7 @@ utils.config(globalSetup);
 services.config(globalSetup);
 serverApi.config(globalSetup);
 serverDyn.config(globalSetup);
+ca.init(globalSetup);
 
 var runtime = {
   apiKeys: {
@@ -218,8 +223,60 @@ plugins.reload(utils).then(() => {
   }
 });
 
-var server = app.listen(PORT, HOST);
-debug(`Running on http://${HOST}:${PORT}`);
+var server;
+if(conf.endpoint.https && conf.endpoint.https.enabled) {
+  if(!fs.existsSync(conf.endpoint.https.serverKey) ||  
+    !fs.existsSync(conf.endpoint.https.serverCert)) {
+
+    // Cert files errors...
+    if(!conf.endpoint.https.generateCertificate) {
+      log.f("Could not load cert+key. Cannot start https. Aborting now");
+      process.exit();
+    }
+
+    log.i("Could not load cert+key for https");
+
+    if(!ca.isEnabled) {
+      log.e("Local CA not started. Cannot generate server certificate. Aborting nows");
+      process.exit();
+    }
+
+    let cn = [ ];
+    if(conf.endpoint.domainName) cn = Array.isArray(conf.endpoint.domainName) ? conf.endpoint.domainName : [conf.endpoint.domainName];
+    else cn = [ca.cn];
+
+    cn = [ ...cn, ...utils.getIps() ];
+
+    let cert = ca.generateCertificate({
+      cn: cn, 
+      c: ca.c, 
+      st: ca.st, 
+      l: ca.l, 
+      o: ca.o, 
+      ou: ca.ou
+    });
+
+    try {
+      fs.writeFileSync(conf.endpoint.https.serverKey, cert.privateKey);
+      fs.writeFileSync(conf.endpoint.https.serverCert, cert.certificate + ca.cert);
+    } catch {
+      log.f(`Could not write generated cert files to ${conf.endpoint.https.serverKey} and ${conf.endpoint.https.serverCert} Aborting now`);
+      process.exit();
+    }
+  }
+
+  var https = require('https');
+  server = https.createServer({
+    key: fs.readFileSync(conf.endpoint.https.serverKey),
+    cert: fs.readFileSync(conf.endpoint.https.serverCert)
+  }, app).listen(PORT, HOST, () => {
+    debug(`Running on http://${HOST}:${PORT}`);
+  });
+} else {
+  server = app.listen(PORT, HOST, () => {
+    debug(`Running on http://${HOST}:${PORT}`);
+  });
+}
 
 // Graceful exit
 process.on('SIGINT', async function () {

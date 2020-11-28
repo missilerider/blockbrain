@@ -2,6 +2,8 @@
 
 const swVersion = 0.1;
 
+const { networkInterfaces } = require('os');
+
 const crypto = require('crypto');
 const fs = require('fs');
 const xml_js = require('xml-js');
@@ -406,6 +408,33 @@ async function scriptReload(dirname) {
   }
 }
 
+function getIps() {
+  const nets = networkInterfaces();
+
+  const results = [];
+
+  for (const name of Object.keys(nets)) {
+      var ip = null;
+      for (const net of nets[name]) {
+          if(net.mac != "00:00:00:00:00:00") {
+              if (net.family === 'IPv4') {
+                  ip = net.address;
+              } else if (net.family === 'IPv6' && !ip && !net.address.toLowerCase().startsWith("fe80")) {
+                  ip = net.address;
+              }
+          }
+      }
+
+      if(ip) results.push(ip);
+  }
+
+  results.filter(function(elem, pos) {
+      return results.indexOf(elem) == pos;
+  });
+
+  return results;
+}
+
 module.exports = {
   config: config, 
   loadConfig: loadConfig, 
@@ -423,5 +452,6 @@ module.exports = {
   executeCode: executeCode, 
   buildScriptRefs: buildScriptRefs, 
   getScript: getScript, 
-  scriptReload: scriptReload
+  scriptReload: scriptReload, 
+  getIps: getIps
 };
