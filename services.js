@@ -6,6 +6,7 @@ var plugins = null;
 var conf = null;
 var services = [];
 var utils = null;
+var server = null;
 
 var serviceData = {};
 var servicePromise = {};
@@ -31,6 +32,7 @@ function config(params) {
   plugins = params.plugins;
   conf = params.config;
   utils = params.utils;
+  server = params.server;
 
   commonTools = {
     utils: utils, 
@@ -91,6 +93,23 @@ async function start(srvName, callbackFinish) {
     return false;
   }
 
+  if('html' in services[srvName].getInfo() && 'htmlCallback' in services[srvName]) {
+    // Associate HTML server endpoints
+    let methods = services[srvName].getInfo().html;
+    if('get' in methods) {
+      for(const mg of Object.keys(methods.get)) {
+        debug(`Associates server GET path /srv/${srvName}/${mg}`);
+        server.app.get(`/srv/${srvName}/${mg}`, methods.get[mg]);
+      }
+    }
+
+    if('post' in methods) {
+      for(const mp of Object.keys(methods.post)) {
+        debug(`Associates server POST path /srv/${srvName}/${mp}`);
+        server.app.post(`/srv/${srvName}/${mp}`, methods.post[mp]);
+      }
+    }
+  }
 
   // Reload config when service starts
   let ops = services[srvName].getInfo().options;

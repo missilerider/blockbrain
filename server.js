@@ -43,6 +43,7 @@ const { config } = require('process');
 const { endpoint } = require('./utils.js');
 
 var conf = utils.loadConfig();
+var server = {};
 
 log.setLogLevel(conf.system.log.level);
 log.setLogOutput(conf.system.log.stdout);
@@ -53,7 +54,8 @@ var globalSetup = {
   config: conf,
   plugins: plugins,
   services: services,
-  utils: utils
+  utils: utils, 
+  server: server
 };
 
 utils.config(globalSetup);
@@ -181,49 +183,26 @@ app.all('/' + conf.endpoint.path + '*', (req, res, next) => {
 app.use('/', function (req, res, next) {
   checkAuth(req, res, next, function (req, res, next) {
     const path = req.originalUrl.replace(/\?.*$/, '');
-    debug("Static: " + path + " = " + __dirname + '/public' + path);
-    try {
-      res.sendFile(path, { root: __dirname + '/public' }, (err) => {
-        res.end();
 
-        if (err) res.status(404);
-      });
-    } catch (e) {
-      res.status(404);
+    if(fs.existsSync(`./public${path}`)) {
+      debug("Static: " + path + " = " + __dirname + '/public' + path);
+      try {
+        res.sendFile(path, { root: __dirname + '/public' }, (err) => {
+          res.end();
+
+          if (err) res.status(404);
+        });
+      } catch (e) {
+        res.status(404);
+      }
+    } else {
+      next();
     }
-  })
-});
-
-/*
-app.get('/' + conf.endpoint.path, (req, res, next) => {
-  res.send("Endpoint ready for requests. Please refer to the manual.");
-});*/
-
-// General load
-plugins.reload(utils).then(() => {
-  // Starts automatic services
-  debug("Starting services on startup");
-  Object.keys(conf.startupServices).forEach(id => {
-    if (conf.startupServices[id])
-      services.start(id);
   });
-
-  // Preloads every script
-  try {
-    debug(`Script pre-load start (${conf.blocks.path})`);
-    utils.scriptReload(conf.blocks.path).then(() => {
-      debug("Script pre-load ended");
-    }).catch((e) => {
-      log.e("scriptReload");
-      log.e(e.message);
-      log.e(e.stack);
-    })
-  } catch (e) {
-    log.e(e.message);
-  }
 });
 
-var server;
+
+// HTTP(S) server
 if(conf.endpoint.https && conf.endpoint.https.enabled) {
   if(!fs.existsSync(conf.endpoint.https.serverKey) ||  
     !fs.existsSync(conf.endpoint.https.serverCert)) {
@@ -266,17 +245,52 @@ if(conf.endpoint.https && conf.endpoint.https.enabled) {
   }
 
   var https = require('https');
-  server = https.createServer({
+  server.server = https.createServer({
     key: fs.readFileSync(conf.endpoint.https.serverKey),
     cert: fs.readFileSync(conf.endpoint.https.serverCert)
   }, app).listen(PORT, HOST, () => {
-    debug(`Running on http://${HOST}:${PORT}`);
+    debug(`Running on https://${HOST}:${PORT}`);
   });
+
+  server.app = app;
+  server.secure = true;
+
 } else {
-  server = app.listen(PORT, HOST, () => {
+
+  server.server = app.listen(PORT, HOST, () => {
     debug(`Running on http://${HOST}:${PORT}`);
   });
+
+  server.app = app;
+  server.secure = false;
 }
+
+// General load
+plugins.reload(utils).then(() => {
+  // Starts automatic services
+  var srvs = services.getServices();
+
+  debug("Starting services on startup");
+  Object.keys(conf.startupServices).forEach(id => {
+    if (conf.startupServices[id]) {
+      services.start(id);
+    }
+  });
+
+  // Preloads every script
+  try {
+    debug(`Script pre-load start (${conf.blocks.path})`);
+    utils.scriptReload(conf.blocks.path).then(() => {
+      debug("Script pre-load ended");
+    }).catch((e) => {
+      log.e("scriptReload");
+      log.e(e.message);
+      log.e(e.stack);
+    })
+  } catch (e) {
+    log.e(e.message);
+  }
+});
 
 // Graceful exit
 process.on('SIGINT', async function () {
@@ -284,7 +298,7 @@ process.on('SIGINT', async function () {
   debug("SIGINT received");
   log.f("Blockbrain is closing!");
   debug("Stopping HTTP server...");
-  await server.close();
+  await server.server.close();
 
   for (let s = 0; s < Object.keys(services.getServices()).length; s++) {
     let id = Object.keys(services.getServices())[s];
