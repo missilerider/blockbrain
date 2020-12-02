@@ -50,20 +50,6 @@ log.setLogOutput(conf.system.log.stdout);
 slog.setLogLevel(conf.system.scriptLog.level);
 slog.setLogOutput(conf.system.log.stdout);
 
-var globalSetup = {
-  config: conf,
-  plugins: plugins,
-  services: services,
-  utils: utils, 
-  server: server
-};
-
-utils.config(globalSetup);
-services.config(globalSetup);
-serverApi.config(globalSetup);
-serverDyn.config(globalSetup);
-ca.init(globalSetup);
-
 var runtime = {
   apiKeys: {
     "abc": {
@@ -74,6 +60,21 @@ var runtime = {
     }
   }
 };
+
+var globalSetup = {
+  config: conf,
+  plugins: plugins,
+  services: services,
+  utils: utils, 
+  server: server, 
+  runtime: runtime
+};
+
+utils.config(globalSetup);
+services.config(globalSetup);
+serverApi.config(globalSetup);
+serverDyn.config(globalSetup);
+ca.init(globalSetup);
 
 debug("Server start");
 

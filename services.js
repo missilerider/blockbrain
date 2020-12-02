@@ -7,6 +7,7 @@ var conf = null;
 var services = [];
 var utils = null;
 var server = null;
+var runtime = null;
 
 var serviceData = {};
 var servicePromise = {};
@@ -33,9 +34,11 @@ function config(params) {
   conf = params.config;
   utils = params.utils;
   server = params.server;
+  runtime = params.runtime;
 
   commonTools = {
     utils: utils, 
+    runtime: runtime, 
     executeEvent: async (block, data, params) => {
       let ret = await utils.executeEvent(block, data, params);
       if(ret === null) return null;

@@ -9,6 +9,7 @@ const debug = require('debug')('blockbrain:service:blockremote');
 const log = global.log;
 
 var utils = null; // Set at "start" from service "commonTools"
+var runtime = null;
 
 var runPromise = null;
 var runPromiseResolve = null;
@@ -18,6 +19,7 @@ var serviceConfig = null;
 var otpCodes = {};
 
 function getQr_svg(req, res) {
+  // Generate OTP
   const chars = 'abcdefghijklmopqrstuvwxyzABCDEFGHIJKLMNOPQRRSTUVWXYZ0123456789';
 
   let otp = '';
@@ -25,12 +27,18 @@ function getQr_svg(req, res) {
     otp += chars[Math.floor(Math.random() * chars.length)];
   }
 
-  otp = '1234';
+  // Add temporary OTP access
+  runtime.apiKeys["blockremote." + otp] = {
+    enabled: true, 
+    permissions: { service: true }
+  };
 
+  // Add OTP + APIKey
   otpCodes[otp] = setTimeout(() => {
-    delete otpCodes[otp];
+    delete otpCodes[otp]; // Remove OTP from list
+    delete runtime.apiKeys["blockremote." + otp]; // Remove temporary OTP
     debug("Removing OTP " + otp);
-  }, (serviceConfig.otpSeconds || 60) * 1000 );
+  }, (serviceConfig.otpSeconds || 60) * 1000);
 
   const cfg = utils.loadConfig();
 
@@ -52,7 +60,9 @@ function postTest(req, res) {
 }
 
 function getCert(req, res) {
+  debug("getCert: " + req.query.otp);
   // Param "otp" or otp not found => 404
+  /*
   if(!('otp' in req.query) || !(req.query.otp in otpCodes)) {
     try {
       res.sendStatus(404);
@@ -64,7 +74,7 @@ function getCert(req, res) {
 
   // Remove OTP
   clearTimeout(otpCodes[req.query.otp]);
-  delete otpCodes[req.query.otp];
+  delete otpCodes[req.query.otp];/**/
 
   let cert = ca.generateClientCertificate({
     cn: serviceConfig.cert.cn, 
@@ -110,6 +120,7 @@ module.exports.getServices = () => {
       start: (srv, tools) => {
         serviceConfig = srv.config;
         utils = tools.utils;
+        runtime = tools.runtime;
 
         let cfg = utils.loadConfig();
 
