@@ -3,9 +3,9 @@
       "port": 8000,
       "bind": "0.0.0.0",
       "path": "msg", 
-      "domainName": ["tron", "flynns.asuscomm.com"], 
+      "domainName": ["blockbrain", "127.0.0.1", "tron", "flynns.asuscomm.com"], 
       "https": {
-        "enabled": true, 
+        "enabled": false, 
         "generateCertificate": true, 
         "serverKey": "./config/certs/server.key", 
         "serverCert": "./config/certs/server.crt"

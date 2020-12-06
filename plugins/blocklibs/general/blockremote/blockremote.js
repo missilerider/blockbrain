@@ -33,6 +33,8 @@ function getQr_svg(req, res) {
     permissions: { service: true }
   };
 
+  console.dir(runtime);
+
   // Add OTP + APIKey
   otpCodes[otp] = setTimeout(() => {
     delete otpCodes[otp]; // Remove OTP from list
@@ -62,7 +64,7 @@ function postTest(req, res) {
 function getCert(req, res) {
   debug("getCert: " + req.query.otp);
   // Param "otp" or otp not found => 404
-  /*
+
   if(!('otp' in req.query) || !(req.query.otp in otpCodes)) {
     try {
       res.sendStatus(404);
@@ -73,8 +75,10 @@ function getCert(req, res) {
   }
 
   // Remove OTP
-  clearTimeout(otpCodes[req.query.otp]);
-  delete otpCodes[req.query.otp];/**/
+  clearTimeout(otpCodes[req.query.otp]); // Delete job
+  delete otpCodes[req.query.otp]; // Remove OTP
+  delete runtime.apiKeys["blockremote." + req.query.otp]; // Remove temporary apikey access
+  
 
   let cert = ca.generateClientCertificate({
     cn: serviceConfig.cert.cn, 
