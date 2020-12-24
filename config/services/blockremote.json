@@ -14,5 +14,8 @@
         "o": "Flynns", 
         "ou": "Flynns"
     }, 
-    "otpSeconds": 86400
+    "tokens": {
+    }, 
+    "otpSeconds": 86400,
+    "mode": "token"
 }

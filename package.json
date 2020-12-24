@@ -32,6 +32,7 @@
     "common": "^0.2.5",
     "cookie-parser": "^1.4.5",
     "cron": "^1.8.2",
+    "dateformat": "^4.3.1",
     "debug": "^4.3.1",
     "express": "^4.17.1",
     "express-session": "^1.17.1",

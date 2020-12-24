@@ -1,3 +1,5 @@
+const dateFormat = require("dateformat");
+
 const server = require('./blockremote.server.lib');
 const ca = require('../../../../ca.js');
 const qr = require('qr-image');
@@ -17,8 +19,9 @@ var runPromiseResolve = null;
 var serviceConfig = null;
 
 var otpCodes = {};
+var tokens = {};
 
-function getQr_svg(req, res) {
+function generateOtp() {
   // Generate OTP
   const chars = 'abcdefghijklmopqrstuvwxyzABCDEFGHIJKLMNOPQRRSTUVWXYZ0123456789';
 
@@ -26,6 +29,61 @@ function getQr_svg(req, res) {
   for(let n = 0; n < 16; n++) {
     otp += chars[Math.floor(Math.random() * chars.length)];
   }
+
+  return otp;
+}
+
+function getQr_svg(req, res) {
+  if(serviceConfig.mode == "token") {
+    return qrToken(req, res);
+  } else {
+    return qrOtp(req, res);
+  }
+}
+
+function qrToken(req, res) {
+  let otp = "blockremote." + generateOtp();
+
+  while(otp in tokens) {
+    otp = "blockremote." + generateOtp();
+  }
+
+  var now = new Date();
+
+  tokens[otp] = {
+    created: dateFormat(now, "yyyy-mm-dd hh:MM:ss"), 
+    lastUsed: "unknown", 
+    name: otp
+  }
+
+  debug("Added token " + otp);
+
+  const cfg = utils.loadConfig();
+
+  let domains = cfg.endpoint.domainName || [];
+  if(!Array.isArray(domains)) domains = [ domains ];
+
+  if('domainName' in serviceConfig.endpoint) {
+    domains = [ serviceConfig.endpoint.domainName, ...domains ];
+  }
+
+  domains = [ ...utils.getIps(), ...domains ];
+  
+  let data = "token|" + 
+    domains.toString() + "|" + 
+    serviceConfig.endpoint.port + "|" + 
+    otp;
+
+  console.dir(data);
+
+  var qr_svg = qr.image(data, { type: 'svg' });
+  res.setHeader('Content-type', 'image/svg');
+  qr_svg.pipe(res);
+
+}
+
+function qrOtp(req, res) {
+  let otp = generateOtp();
 
   // Add temporary OTP access
   runtime.apiKeys["blockremote." + otp] = {
@@ -50,7 +108,7 @@ function getQr_svg(req, res) {
 
   domains = domains.join('?');
 
-  let data = `${domains}|${cfg.endpoint.port}|${otp}`;
+  let data = `cert|${domains}|${cfg.endpoint.port}|${otp}`;
 
   var qr_svg = qr.image(data, { type: 'svg' });
   res.setHeader('Content-type', 'image/svg');
