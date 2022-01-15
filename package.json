@@ -43,7 +43,7 @@
     "method-override": "^3.0.0",
     "mqtt": "^4.2.6",
     "net-snmp": "^2.9.8",
-    "node-forge": "^0.10.0",
+    "node-forge": "^1.0.0",
     "openssl-nodejs-promise": "0.0.4",
     "passport": "^0.4.1",
     "passport-http": "^0.3.0",
